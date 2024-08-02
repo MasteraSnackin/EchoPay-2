@@ -1,0 +1,25 @@
+{
+    "name": "voicepay",
+    "version": "1.0.0",
+    "description": "Voice-activated Ethereum transaction application",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+      "compromise": "^12.4.0",
+      "web3": "^1.5.2"
+    },
+    "devDependencies": {
+      "@nomiclabs/hardhat-ethers": "^2.0.2",
+      "@nomiclabs/hardhat-waffle": "^2.0.1",
+      "@nomiclabs/hardhat-web3": "^2.0.0",
+      "@openzeppelin/contracts": "^4.3.2",
+      "chai": "^4.3.4",
+      "dotenv": "^10.0.0",
+      "ethers": "^5.4.7",
+      "hardhat": "^2.6.4"
+    },
+    "author": "",
+    "license": "ISC"
+  }
