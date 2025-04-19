@@ -36,10 +36,10 @@ Technical consideration regarding how smart contract work on polkadot
 ](docs/Screenshot%202025-04-19%20174748.png)
 
 Smart Contract Plan (ink!)
-![Smart Contract Plan (ink!)](docs/Screenshot%202025-04-13%20064458.png)
+![Smart Contract Plan (ink!)](docs/Screenshot%202025-04-19%20175055.png)
 
 Summary of Workflow:
-![Summary of Workflow:](docs/Screenshot%202025-04-13%20064458.png)
+![Summary of Workflow:](docs/Screenshot%202025-04-19%20175150.png)
 
 
 ## Project Structure
