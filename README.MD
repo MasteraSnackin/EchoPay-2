@@ -27,6 +27,18 @@ By integrating advanced AI voice recognition with Polkadot’s blockchain infras
 *   **Voice Input:** Web Speech API (Browser-native)
 *   **Mock Backend:** Node.js, Express, CORS
 
+
+Technical consideration regarding how smart contract work on polkadot
+![Technical consideration regarding how smart contract work on polkadot
+](docs/Screenshot%202025-04-13%20064458.png)
+
+Smart Contract Plan (ink!)
+![Smart Contract Plan (ink!)](docs/Screenshot%202025-04-13%20064458.png)
+
+Summary of Workflow:
+![Summary of Workflow:](docs/Screenshot%202025-04-13%20064458.png)
+
+
 ## Project Structure
 
 ```
