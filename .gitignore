@@ -1,0 +1,16 @@
+# User-specific files
+*.mp4
+changes.txt
+
+# Temporary/Unwanted directories
+temp-frontend/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
