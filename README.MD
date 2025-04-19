@@ -2,6 +2,9 @@
 
 EchoPay is an innovative payment platform concept enabling users to conduct secure, cross-chain transactions through voice commands. This repository contains the initial proof-of-concept implementation focusing on the frontend interface, wallet connection, and voice input simulation.
 
+
+Demo: https://www.youtube.com/watch?v=lrFvO2qnxU0
+
 ## Overview (Vision)
 
 By integrating advanced AI voice recognition with Polkadot’s blockchain infrastructure, EchoPay aims to eliminate traditional payment friction while prioritizing accessibility, security, and interoperability. The ultimate goal is to allow users to execute transactions via natural language (e.g., “Pay 50 DOT to Alice on Ethereum”).
@@ -30,7 +33,7 @@ By integrating advanced AI voice recognition with Polkadot’s blockchain infras
 
 Technical consideration regarding how smart contract work on polkadot
 ![Technical consideration regarding how smart contract work on polkadot
-](docs/Screenshot%202025-04-13%20064458.png)
+](docs/Screenshot%202025-04-19%20174748.png)
 
 Smart Contract Plan (ink!)
 ![Smart Contract Plan (ink!)](docs/Screenshot%202025-04-13%20064458.png)
