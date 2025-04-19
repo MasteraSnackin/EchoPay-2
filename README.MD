@@ -2,7 +2,6 @@
 
 EchoPay is an innovative payment platform concept enabling users to conduct secure, cross-chain transactions through voice commands. This repository contains the initial proof-of-concept implementation focusing on the frontend interface, wallet connection, and voice input simulation.
 
-
 Demo: https://www.youtube.com/watch?v=lrFvO2qnxU0
 
 ## Overview (Vision)
@@ -132,7 +131,22 @@ This is a proof-of-concept demonstrating the basic UI flow and integration point
 *   **Backend Logic:** Replace the mock backend with actual logic to parse commands and construct transactions.
 *   **AI/ML Integration:** Integrate a real voice processing pipeline (like the envisioned Gemma model) to parse natural language commands into structured transaction data.
 *   **Parachain/Smart Contract:** Connect to the actual EchoPay parachain runtime or smart contracts on Westend/Polkadot.
-*   **Cross-Chain Functionality:** Implement XCM calls or bridge interactions based on parsed commands.
 *   **Dynamic Contact List:** Fetch contacts from on-chain storage, user settings, or other sources.
 *   **Error Handling:** More robust error handling and user feedback.
 *   **UI/UX Refinements:** Improve the overall user experience.
+
+UPDATE:
+*  Colour scheme
+*  GUI interefe from CLI
+*  Link to subWallet / Acitivation 
+*  Animation for loading
+*  Better Layout
+*  Better AI for voice input
+*  Create dedicated status message area
+*  Responsive layout (stacking columns)
+*  Can now read the balance from wallet 
+*  By signing out of wallet from echo pay doesn't sign up or lock you out of subwallet
+*  Let you select multiple wallet
+*  Moved off moonbase network
+
+
