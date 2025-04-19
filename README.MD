@@ -1,138 +1,123 @@
-# EchoPay
-A voice-activated payment application using MetaMask and Web3.js.
-# EchoPay
+# EchoPay: Voice-Activated Cross-Chain Payment System (Proof of Concept)
 
-EchoPay is a voice-activated Ethereum transaction application that interacts with the Moonbase Alpha network (a test network for the Moonbeam blockchain). It allows users to send transactions and check balances using voice commands.
+EchoPay is an innovative payment platform concept enabling users to conduct secure, cross-chain transactions through voice commands. This repository contains the initial proof-of-concept implementation focusing on the frontend interface, wallet connection, and voice input simulation.
 
-## Features
+## Overview (Vision)
 
-- **Voice Command Recognition**: Captures and processes voice commands using the Web Speech API.
-- **Command Confirmation**: Confirms commands with the user before execution.
-- **MetaMask Integration**: Connects to MetaMask and ensures the correct network (Moonbase Alpha).
-- **Moonbase Alpha Transactions**: Sends transactions and provides transaction feedback.
-- **Balance Checking**: Checks and displays Moonbase Alpha balances.
-- **Natural Language Processing**: Parses commands to extract actionable information.
+By integrating advanced AI voice recognition with Polkadot’s blockchain infrastructure, EchoPay aims to eliminate traditional payment friction while prioritizing accessibility, security, and interoperability. The ultimate goal is to allow users to execute transactions via natural language (e.g., “Pay 50 DOT to Alice on Ethereum”).
 
-## Prerequisites
+*(Note: The AI/ML layer and actual blockchain transaction signing/cross-chain functionality are **not** implemented in this current PoC).*
 
-- Node.js and npm
-- MetaMask extension installed in your browser
+## Features (Current Implementation)
 
-## Installation
+*   **React Frontend:** User interface built with React and Vite (TypeScript).
+*   **Wallet Connection:** Connects to Polkadot JS compatible browser extensions (e.g., SubWallet, Talisman) using `@polkadot/extension-dapp`.
+*   **Account Selection:** Lists accounts from the connected extension and allows selection.
+*   **Balance Display:** Shows the selected account's balance by querying the Westend testnet using `@polkadot/api`.
+*   **Voice Input:** Uses the browser's Web Speech API to capture voice commands.
+*   **Manual Processing Trigger:** Requires clicking a button to process the recognized voice command (currently sends to a mock backend).
+*   **Mock Backend:** A simple Node.js/Express server that simulates receiving and acknowledging commands.
+*   **Contact List:** Displays a static, hardcoded list of contacts in a sidebar.
+*   **Disconnect:** Allows disconnecting the wallet within the application's state.
 
-1. **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-username/echopay.git
-    cd echopay
-    ```
+## Tech Stack
 
-2. **Install dependencies**:
-    ```bash
-    npm install
-    ```
-
-3. **Set up environment variables**:
-    Create a `.env` file in the root directory with your private key:
-    ```env
-    PRIVATE_KEY=your-private-key-here
-    ```
-
-4. **Install Hardhat and set up the project**:
-    ```bash
-    npx hardhat
-    ```
-
-5. **Compile the smart contracts**:
-    ```bash
-    npx hardhat compile
-    ```
-
-6. **Deploy the smart contracts to Moonbase Alpha**:
-    ```bash
-    npx hardhat run scripts/deploy.js --network moonbaseAlpha
-    ```
+*   **Frontend:** React, Vite, TypeScript, CSS
+*   **Blockchain Interaction (Client-side):** `@polkadot/api`, `@polkadot/extension-dapp`, `@polkadot/util`
+*   **Voice Input:** Web Speech API (Browser-native)
+*   **Mock Backend:** Node.js, Express, CORS
 
 ## Project Structure
-echopay/
-├── contracts/
-│ └── SimpleToken.sol
-├── scripts/
-│ └── deploy.js
-├── src/
-│ ├── constants.js
-│ ├── index.html
-│ └── script.js
-├── .env
-├── hardhat.config.js
-├── package.json
-└── node_modules/
 
-### `contracts/SimpleToken.sol`
+```
+.
+├── backend/         # Mock Node.js backend server
+│   ├── node_modules/
+│   ├── package.json
+│   ├── package-lock.json
+│   └── server.js
+├── docs/            # Original project description
+│   └── README.md
+├── frontend/        # React frontend application
+│   ├── node_modules/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── ContactList.tsx
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── README.md
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── .gitignore       # (Optional: Add a root gitignore if needed)
+└── README.md        # This file
+```
 
-A simple ERC-20 token contract.
+## Setup and Running
 
-### `scripts/deploy.js`
+**Prerequisites:**
 
-Script to deploy the `SimpleToken` contract.
+*   Node.js (v18 or later recommended)
+*   npm (usually comes with Node.js)
+*   A Polkadot JS compatible browser extension (e.g., SubWallet, Talisman) installed in your browser.
+*   An account within the extension, preferably funded on the **Westend testnet** (for balance display).
 
-### `src/constants.js`
+**Steps:**
 
-Defines constants for network IDs and RPC URLs.
-
-### `src/index.html`
-
-Provides the HTML structure for the frontend.
-
-### `src/script.js`
-
-Contains the JavaScript logic for interacting with MetaMask and handling voice commands.
-
-### `.env`
-
-Stores environment variables such as private keys.
-
-### `hardhat.config.js`
-
-Configures the Hardhat environment.
-
-### `package.json`
-
-Manages your project's dependencies and scripts.
-
-## Usage
-
-1. **Start a local server**:
-    You can use a simple HTTP server to serve your application. If you have Python installed, you can run:
+1.  **Clone the repository:**
     ```bash
-    python -m http.server
+    git clone <repository-url>
+    cd <repository-directory>
     ```
-    Open your browser and navigate to `http://localhost:8000`.
+2.  **Install Backend Dependencies:**
+    ```bash
+    cd backend
+    npm install
+    ```
+3.  **Install Frontend Dependencies:**
+    ```bash
+    cd ../frontend
+    npm install
+    ```
+4.  **Run Backend Server:**
+    *   Open a terminal in the `backend` directory.
+    *   Run: `node server.js`
+    *   *(Expected output: `Mock backend server listening at http://localhost:3001`)*
+5.  **Run Frontend Development Server:**
+    *   Open a *separate* terminal in the `frontend` directory.
+    *   Run: `npm run dev`
+    *   Open the URL provided (usually `http://localhost:5173`) in your browser.
 
-2. **Open MetaMask**:
-    Make sure MetaMask is open and connected to the Moonbase Alpha network.
+**Using the App:**
 
-3. **Start Voice Recognition**:
-    Click the "Start Recording" button to begin using voice commands to interact with the application.
+1.  Click "Connect Wallet" and approve the connection request in your browser extension.
+2.  Select an account from the dropdown (balance from Westend should appear).
+3.  Click "Start Listening", grant microphone permission if requested, and speak a command (e.g., "Pay 1 WND to Bob").
+4.  Click "Process Command (Mock)" to send the recognized text to the mock backend.
+5.  Observe the status updates.
+6.  Use the "Disconnect Wallet" button to clear the app's connection state.
 
-## Commands
+## Current Status & Future Work
 
-- **Check Balance**:
-    - To check the balance of your own account: "Check my balance."
-    - To check the balance of a specific address: "Check balance of 0xYourEthereumAddress."
-  
-- **Send Transaction**:
-    - To send a transaction: "Send 1 Ether to 0xRecipientAddress."
+This is a proof-of-concept demonstrating the basic UI flow and integration points.
 
-## Contributing
+**Next Steps / Potential Improvements:**
 
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
-
-## License
-
-This project is licensed under the MIT License.
-
-## Acknowledgments
-
-- [Hardhat](https://hardhat.org/)
-- [Web3.js](https://web3js.readthedocs.io/)
-- [Moonbeam](https://moonbeam.network/)
+*   **Actual Transaction Signing:** Integrate `@polkadot/extension-dapp` signer to sign real transactions based on voice commands.
+*   **Backend Logic:** Replace the mock backend with actual logic to parse commands and construct transactions.
+*   **AI/ML Integration:** Integrate a real voice processing pipeline (like the envisioned Gemma model) to parse natural language commands into structured transaction data.
+*   **Parachain/Smart Contract:** Connect to the actual EchoPay parachain runtime or smart contracts on Westend/Polkadot.
+*   **Cross-Chain Functionality:** Implement XCM calls or bridge interactions based on parsed commands.
+*   **Dynamic Contact List:** Fetch contacts from on-chain storage, user settings, or other sources.
+*   **Error Handling:** More robust error handling and user feedback.
+*   **UI/UX Refinements:** Improve the overall user experience.
