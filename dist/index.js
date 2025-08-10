@@ -14186,6 +14186,43 @@ var IntentSchema = external_exports.object({
   condition: external_exports.string().nullable().optional().default(null)
 });
 
+// src/integrations/prices.ts
+var COINGECKO_IDS = {
+  DOT: "polkadot",
+  USDT: "tether",
+  GLMR: "moonbeam"
+};
+async function fetchUsdPrices(symbols) {
+  const ids = symbols.map((s) => COINGECKO_IDS[s.toUpperCase()]).filter(Boolean);
+  if (!ids.length) return {};
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=usd`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Price API error: ${res.status}`);
+  const data = await res.json();
+  const out = {};
+  for (const sym of symbols) {
+    const id = COINGECKO_IDS[sym.toUpperCase()];
+    if (id && data[id]?.usd != null) out[sym.toUpperCase()] = Number(data[id].usd);
+  }
+  return out;
+}
+function convertAmount(amount, fromPriceUsd, toPriceUsd) {
+  if (!fromPriceUsd || !toPriceUsd) return 0;
+  const usd = amount * fromPriceUsd;
+  return usd / toPriceUsd;
+}
+
+// src/integrations/tokens.ts
+var TOKENS = {
+  DOT: { symbol: "DOT", chain: "polkadot", isNative: true, decimals: 10 },
+  USDT: { symbol: "USDT", chain: "asset-hub-polkadot", isNative: false, assetId: 1984, decimals: 6 },
+  GLMR: { symbol: "GLMR", chain: "moonbeam", isNative: true, decimals: 18 }
+};
+function getTokenInfo(symbol) {
+  const s = symbol.toUpperCase();
+  return TOKENS[s];
+}
+
 // src/integrations/perplexity.ts
 var SYSTEM_PROMPT = `You are a transaction intent parser for a voice-controlled Polkadot payments system.
 Return ONLY JSON matching this schema:
@@ -14195,7 +14232,7 @@ Return ONLY JSON matching this schema:
   "items": [
     {
       "action": "transfer",
-      "amount": string,           // human units as string
+      "amount": string,           // human units as string or prefixed with $ for USD e.g. "$10"
       "token": string,            // e.g., DOT, USDT, GLMR
       "recipient": string,        // address or contact name
       "origin_chain": string,     // e.g., polkadot, asset-hub-polkadot, moonbeam
@@ -14234,12 +14271,26 @@ async function parseIntentWithPerplexity(env, transcription) {
   const content = data.choices?.[0]?.message?.content;
   const parsed = typeof content === "string" ? JSON.parse(content) : content;
   const intent = IntentSchema.parse(parsed);
-  intent.items = intent.items.map((it) => ({
-    ...it,
-    token: it.token.toUpperCase(),
-    origin_chain: normalizeChain(it.origin_chain, it.token),
-    destination_chain: normalizeChain(it.destination_chain || it.origin_chain, it.token)
-  }));
+  const symbols = Array.from(new Set(intent.items.map((i) => i.token.toUpperCase())));
+  const prices2 = await fetchUsdPrices(symbols);
+  intent.items = intent.items.map((it) => {
+    const token = it.token.toUpperCase();
+    const info6 = getTokenInfo(token);
+    let amount = it.amount;
+    if (amount.trim().startsWith("$")) {
+      const usd = Number(amount.replace(/[^0-9.]/g, "")) || 0;
+      const p = prices2[token] || 0;
+      const tokenAmount = p ? usd / p : 0;
+      amount = String(tokenAmount);
+    }
+    return {
+      ...it,
+      token,
+      origin_chain: normalizeChain(it.origin_chain, token),
+      destination_chain: normalizeChain(it.destination_chain || it.origin_chain, token),
+      amount
+    };
+  });
   return intent;
 }
 function normalizeChain(chain2, token) {
@@ -69939,16 +69990,14 @@ async function buildXcmTransferExtrinsic(req) {
   const extrinsic = api.tx.xcmPallet.limitedReserveTransferAssets(dest, beneficiary, assets, feeAssetItem, weightLimit);
   return extrinsic;
 }
-
-// src/integrations/tokens.ts
-var TOKENS = {
-  DOT: { symbol: "DOT", chain: "polkadot", isNative: true },
-  USDT: { symbol: "USDT", chain: "asset-hub-polkadot", isNative: false, assetId: 1984 },
-  GLMR: { symbol: "GLMR", chain: "moonbeam", isNative: true }
-};
-function getTokenInfo(symbol) {
-  const s = symbol.toUpperCase();
-  return TOKENS[s];
+async function estimateXcmFee(req) {
+  const extrinsic = await buildXcmTransferExtrinsic(req);
+  try {
+    const info6 = await extrinsic.paymentInfo(req.sender || req.recipient);
+    return String(info6.partialFee?.toString?.() ?? "0");
+  } catch (e) {
+    return "0";
+  }
 }
 
 // src/utils/units.ts
@@ -70071,6 +70120,24 @@ tx.post("/build", async (c) => {
     return c.json({ error: String(e) }, 500);
   }
 });
+tx.get("/xcm/estimate", async (c) => {
+  const url = new URL(c.req.url);
+  const origin = (url.searchParams.get("origin") || "").toString();
+  const destination = (url.searchParams.get("destination") || "").toString();
+  const symbol = (url.searchParams.get("symbol") || "").toUpperCase();
+  const amount = (url.searchParams.get("amount") || "0").toString();
+  const sender = (url.searchParams.get("sender") || "").toString();
+  const recipient = (url.searchParams.get("recipient") || "").toString();
+  if (!origin || !destination || !symbol || !amount || !recipient) {
+    return c.json({ error: "missing fields" }, 400);
+  }
+  try {
+    const fee = await estimateXcmFee({ origin, destination, asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 }, amount, sender, recipient });
+    return c.json({ fee });
+  } catch (e) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
 
 // src/integrations/balances.ts
 async function getTokenBalance(address, symbol) {
@@ -70137,32 +70204,6 @@ health.get("/status/polkadot", async (c) => {
     return c.json({ connected: false, error: String(e) }, 500);
   }
 });
-
-// src/integrations/prices.ts
-var COINGECKO_IDS = {
-  DOT: "polkadot",
-  USDT: "tether",
-  GLMR: "moonbeam"
-};
-async function fetchUsdPrices(symbols) {
-  const ids = symbols.map((s) => COINGECKO_IDS[s.toUpperCase()]).filter(Boolean);
-  if (!ids.length) return {};
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=usd`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Price API error: ${res.status}`);
-  const data = await res.json();
-  const out = {};
-  for (const sym of symbols) {
-    const id = COINGECKO_IDS[sym.toUpperCase()];
-    if (id && data[id]?.usd != null) out[sym.toUpperCase()] = Number(data[id].usd);
-  }
-  return out;
-}
-function convertAmount(amount, fromPriceUsd, toPriceUsd) {
-  if (!fromPriceUsd || !toPriceUsd) return 0;
-  const usd = amount * fromPriceUsd;
-  return usd / toPriceUsd;
-}
 
 // src/routes/prices.ts
 var prices = new Hono2();

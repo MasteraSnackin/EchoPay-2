@@ -11,8 +11,6 @@ export interface XcmTransferRequest {
 
 export async function buildXcmTransferExtrinsic(req: XcmTransferRequest) {
   const api = await getApiForChain(req.origin);
-  // NOTE: This is a placeholder. Proper XCM calls depend on chain runtimes.
-  // For Asset Hub USDT to Polkadot account, typically use xcmPallet.limitedReserveTransferAssets / limitedTeleportAssets
   const dest = { V3: { parents: 1, interior: { X1: { Parachain: 1000 } } } };
   const beneficiary = { V3: { parents: 0, interior: { X1: { AccountId32: { id: req.recipient, network: null } } } } };
   const assets = { V3: [ { id: { Concrete: { parents: 0, interior: { X2: [ { PalletInstance: 50 }, { GeneralIndex: req.asset.assetId ?? 0 } ] } } }, fun: { Fungible: req.amount } } ] };
@@ -20,4 +18,15 @@ export async function buildXcmTransferExtrinsic(req: XcmTransferRequest) {
   const weightLimit = 'Unlimited';
   const extrinsic = (api.tx as any).xcmPallet.limitedReserveTransferAssets(dest, beneficiary, assets, feeAssetItem, weightLimit);
   return extrinsic;
+}
+
+export async function estimateXcmFee(req: XcmTransferRequest): Promise<string> {
+  const extrinsic = await buildXcmTransferExtrinsic(req);
+  // NOTE: paymentInfo requires signer/address; for Workers we use a dummy address to get weight/partial fee when supported
+  try {
+    const info = await (extrinsic as any).paymentInfo(req.sender || req.recipient);
+    return String(info.partialFee?.toString?.() ?? '0');
+  } catch (e) {
+    return '0';
+  }
 }

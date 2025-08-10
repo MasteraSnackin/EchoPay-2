@@ -4,7 +4,7 @@ import { ExecuteTxSchema } from '../utils/validators';
 import { transactions } from '../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { submitExtrinsic } from '../integrations/papi';
-import { buildXcmTransferExtrinsic } from '../integrations/xcm';
+import { buildXcmTransferExtrinsic, estimateXcmFee } from '../integrations/xcm';
 import { buildAssetHubUsdtTransfer, buildNativeTransfer } from '../integrations/transfers';
 import { getTokenInfo } from '../integrations/tokens';
 
@@ -108,6 +108,25 @@ tx.post('/build', async (c) => {
       }
     }
     return c.json({ call_hex: hex });
+  } catch (e: any) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
+
+tx.get('/xcm/estimate', async (c) => {
+  const url = new URL(c.req.url);
+  const origin = (url.searchParams.get('origin') || '').toString();
+  const destination = (url.searchParams.get('destination') || '').toString();
+  const symbol = (url.searchParams.get('symbol') || '').toUpperCase();
+  const amount = (url.searchParams.get('amount') || '0').toString();
+  const sender = (url.searchParams.get('sender') || '').toString();
+  const recipient = (url.searchParams.get('recipient') || '').toString();
+  if (!origin || !destination || !symbol || !amount || !recipient) {
+    return c.json({ error: 'missing fields' }, 400);
+  }
+  try {
+    const fee = await estimateXcmFee({ origin: origin as any, destination: destination as any, asset: { symbol: symbol as any, assetId: symbol === 'USDT' ? 1984 : undefined }, amount, sender, recipient });
+    return c.json({ fee });
   } catch (e: any) {
     return c.json({ error: String(e) }, 500);
   }

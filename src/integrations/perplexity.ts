@@ -1,5 +1,7 @@
 import { Env } from '../db/client';
 import { Intent, IntentSchema } from '../utils/intent';
+import { fetchUsdPrices } from './prices';
+import { getTokenInfo } from './tokens';
 
 const SYSTEM_PROMPT = `You are a transaction intent parser for a voice-controlled Polkadot payments system.
 Return ONLY JSON matching this schema:
@@ -9,7 +11,7 @@ Return ONLY JSON matching this schema:
   "items": [
     {
       "action": "transfer",
-      "amount": string,           // human units as string
+      "amount": string,           // human units as string or prefixed with $ for USD e.g. "$10"
       "token": string,            // e.g., DOT, USDT, GLMR
       "recipient": string,        // address or contact name
       "origin_chain": string,     // e.g., polkadot, asset-hub-polkadot, moonbeam
@@ -49,13 +51,30 @@ export async function parseIntentWithPerplexity(env: Env, transcription: string)
   const content = data.choices?.[0]?.message?.content;
   const parsed = typeof content === 'string' ? JSON.parse(content) : content;
   const intent = IntentSchema.parse(parsed);
-  // Normalize chains/tokens
-  intent.items = intent.items.map((it) => ({
-    ...it,
-    token: it.token.toUpperCase(),
-    origin_chain: normalizeChain(it.origin_chain, it.token),
-    destination_chain: normalizeChain(it.destination_chain || it.origin_chain, it.token),
-  }));
+
+  // Normalize and convert $ amounts to token amounts using current prices
+  const symbols = Array.from(new Set(intent.items.map((i) => i.token.toUpperCase())));
+  const prices = await fetchUsdPrices(symbols);
+
+  intent.items = intent.items.map((it) => {
+    const token = it.token.toUpperCase();
+    const info = getTokenInfo(token);
+    let amount = it.amount;
+    if (amount.trim().startsWith('$')) {
+      const usd = Number(amount.replace(/[^0-9.]/g, '')) || 0;
+      const p = prices[token] || 0;
+      const tokenAmount = p ? (usd / p) : 0;
+      amount = String(tokenAmount);
+    }
+    return {
+      ...it,
+      token,
+      origin_chain: normalizeChain(it.origin_chain, token),
+      destination_chain: normalizeChain(it.destination_chain || it.origin_chain, token),
+      amount,
+    };
+  });
+
   return intent;
 }
 
