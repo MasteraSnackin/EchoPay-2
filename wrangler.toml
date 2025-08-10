@@ -1,0 +1,17 @@
+name = "voicedot-api"
+main = "dist/index.js"
+compatibility_date = "2024-08-25"
+workers_dev = true
+
+[vars]
+# Set these via `wrangler secret put` for sensitive values in production
+POLKADOT_RPC_ENDPOINT = "wss://rpc.polkadot.io"
+ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM" # default voice id, override in env
+# Optional Perplexity for NLP intent parsing
+PERPLEXITY_MODEL = "sonar-small-online"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "voicedot-db"
+database_id = "voicedot-db"
+migrations_dir = "drizzle"
