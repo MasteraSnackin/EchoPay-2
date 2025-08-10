@@ -71156,8 +71156,8 @@ var DEFAULT_ENDPOINTS = {
   moonbeam: "wss://wss.api.moonbeam.network"
 };
 var apiCache = /* @__PURE__ */ new Map();
-async function getApiForChain(chain2, overrideEndpoint) {
-  const endpoint = overrideEndpoint || DEFAULT_ENDPOINTS[chain2];
+async function getApiForChain(chain2, overrideEndpoint, env) {
+  const endpoint = overrideEndpoint || env && chain2 === "polkadot" && env.POLKADOT_RPC_ENDPOINT || env && chain2 === "asset-hub-polkadot" && env.ASSETHUB_RPC_ENDPOINT || env && chain2 === "moonbeam" && env.MOONBEAM_RPC_ENDPOINT || DEFAULT_ENDPOINTS[chain2];
   if (!apiCache.has(endpoint)) {
     const provider = new WsProvider(endpoint);
     apiCache.set(endpoint, ApiPromise.create({ provider }));
@@ -71812,6 +71812,11 @@ function isValidSs58Address(address) {
 var voice = new Hono2();
 var MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024;
 var ALLOWED_FORMATS = /* @__PURE__ */ new Set(["mp3", "wav", "webm"]);
+async function putAudioToR2(env, key, data, contentType) {
+  if (!env.AUDIO) return void 0;
+  await env.AUDIO.put(key, data, { httpMetadata: { contentType } });
+  return `/r2/${key}`;
+}
 voice.post("/process", async (c) => {
   const env = c.env;
   const body = await c.req.json();
@@ -71880,8 +71885,13 @@ voice.post("/process", async (c) => {
   const confirmAudio = await textToSpeech(env, confirmText);
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
   const sessionId = v4_default();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
-  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
+  let audioUrl;
+  try {
+    audioUrl = await putAudioToR2(env, `tts/${sessionId}.mp3`, confirmAudio, "audio/mpeg");
+  } catch {
+  }
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText, responseAudioUrl: audioUrl });
+  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3", audio_url: audioUrl } });
 });
 voice.post("/confirm", async (c) => {
   const env = c.env;
@@ -71911,8 +71921,13 @@ voice.post("/confirm", async (c) => {
   const responseAudio = await textToSpeech(env, `Transaction ${message}.`);
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, responseAudio);
   const sessionId = v4_default();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.` });
-  return c.json({ status: decision, transaction_ids: ids, response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
+  let audioUrl;
+  try {
+    audioUrl = await putAudioToR2(env, `tts/${sessionId}.mp3`, responseAudio, "audio/mpeg");
+  } catch {
+  }
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.`, responseAudioUrl: audioUrl });
+  return c.json({ status: decision, transaction_ids: ids, response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3", audio_url: audioUrl } });
 });
 function simpleFallbackIntent(text2) {
   const words = text2.split(/\s+/);
@@ -71940,7 +71955,7 @@ function shortAddr(addr) {
 
 // src/integrations/papi.ts
 async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
-  const api = await getApiForChain(chain2);
+  const api = await getApiForChain(chain2, void 0, env);
   const hash = await api.rpc.author.submitExtrinsic(`0x${signedExtrinsicHex}`);
   return hash.toString();
 }

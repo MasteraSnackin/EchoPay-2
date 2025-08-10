@@ -19,6 +19,12 @@ export const voice = new Hono<{ Bindings: Env }>();
 const MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024; // ~5MB base64
 const ALLOWED_FORMATS = new Set(['mp3', 'wav', 'webm']);
 
+async function putAudioToR2(env: Env, key: string, data: ArrayBuffer, contentType: string): Promise<string | undefined> {
+  if (!env.AUDIO) return undefined;
+  await env.AUDIO.put(key, data, { httpMetadata: { contentType } });
+  return `/r2/${key}`; // reverse proxy path if configured
+}
+
 voice.post('/process', async (c) => {
   const env = c.env;
   const body = await c.req.json();
@@ -98,9 +104,14 @@ voice.post('/process', async (c) => {
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
 
   const sessionId = uuidv4();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
+  let audioUrl: string | undefined;
+  try {
+    audioUrl = await putAudioToR2(env, `tts/${sessionId}.mp3`, confirmAudio, 'audio/mpeg');
+  } catch {}
 
-  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: 'mp3' } });
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText, responseAudioUrl: audioUrl });
+
+  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: 'mp3', audio_url: audioUrl } });
 });
 
 voice.post('/confirm', async (c) => {
@@ -136,9 +147,14 @@ voice.post('/confirm', async (c) => {
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, responseAudio);
 
   const sessionId = uuidv4();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.` });
+  let audioUrl: string | undefined;
+  try {
+    audioUrl = await putAudioToR2(env, `tts/${sessionId}.mp3`, responseAudio, 'audio/mpeg');
+  } catch {}
 
-  return c.json({ status: decision, transaction_ids: ids, response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: 'mp3' } });
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.`, responseAudioUrl: audioUrl });
+
+  return c.json({ status: decision, transaction_ids: ids, response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: 'mp3', audio_url: audioUrl } });
 });
 
 function simpleFallbackIntent(text: string): Intent {

@@ -2,7 +2,10 @@ import { drizzle } from 'drizzle-orm/d1';
 
 export type Env = {
   DB: D1Database;
-  POLKADOT_RPC_ENDPOINT: string;
+  AUDIO?: R2Bucket;
+  POLKADOT_RPC_ENDPOINT?: string;
+  ASSETHUB_RPC_ENDPOINT?: string;
+  MOONBEAM_RPC_ENDPOINT?: string;
   ELEVENLABS_API_KEY: string;
   ELEVENLABS_VOICE_ID?: string;
   PERPLEXITY_API_KEY?: string;
