@@ -7,6 +7,7 @@ export interface XcmTransferRequest {
   amount: string; // planck or smallest units as string
   sender: string;
   recipient: string;
+  minReceive?: string; // planck of destination asset as safeguard
 }
 
 export async function buildXcmTransferExtrinsic(req: XcmTransferRequest) {
@@ -22,7 +23,6 @@ export async function buildXcmTransferExtrinsic(req: XcmTransferRequest) {
 
 export async function estimateXcmFee(req: XcmTransferRequest): Promise<string> {
   const extrinsic = await buildXcmTransferExtrinsic(req);
-  // NOTE: paymentInfo requires signer/address; for Workers we use a dummy address to get weight/partial fee when supported
   try {
     const info = await (extrinsic as any).paymentInfo(req.sender || req.recipient);
     return String(info.partialFee?.toString?.() ?? '0');

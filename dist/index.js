@@ -70040,6 +70040,15 @@ async function buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman) 
   }
   throw new Error("Token is not native on this chain");
 }
+async function estimateNativeFee(chain2, tokenSymbol, senderAddress, recipient, amountHuman) {
+  const extrinsic = await buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman);
+  try {
+    const info6 = await extrinsic.paymentInfo(senderAddress || recipient);
+    return String(info6.partialFee?.toString?.() ?? "0");
+  } catch {
+    return "0";
+  }
+}
 async function buildAssetHubUsdtTransfer(recipient, amountHuman) {
   const info6 = getTokenInfo("USDT");
   const api = await getApiForChain("asset-hub-polkadot");
@@ -70107,7 +70116,7 @@ tx.post("/xcm/build", async (c) => {
 });
 tx.post("/build", async (c) => {
   const body = await c.req.json();
-  const { token, amount, recipient, origin_chain, destination_chain } = body || {};
+  const { token, amount, recipient, origin_chain, destination_chain, min_receive, slippage_bps } = body || {};
   if (!token || !amount || !recipient || !origin_chain || !destination_chain) {
     return c.json({ error: "missing fields" }, 400);
   }
@@ -70115,9 +70124,11 @@ tx.post("/build", async (c) => {
   if (!info6) return c.json({ error: "unsupported token" }, 400);
   try {
     let hex8;
+    let fee;
     if (origin_chain === destination_chain) {
       const extrinsic = await buildNativeTransfer(origin_chain, token, recipient, amount);
       hex8 = extrinsic.method.toHex();
+      fee = await estimateNativeFee(origin_chain, token, recipient, recipient, amount);
     } else {
       if (token.toUpperCase() === "USDT") {
         const extrinsic = await buildAssetHubUsdtTransfer(recipient, amount);
@@ -70129,12 +70140,22 @@ tx.post("/build", async (c) => {
           asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === "USDT" ? 1984 : void 0 },
           amount,
           sender: "0x",
-          recipient
+          recipient,
+          minReceive: min_receive ? decimalToUnits(min_receive, info6.decimals) : void 0
         });
         hex8 = extrinsic.method.toHex();
+        fee = await estimateXcmFee({
+          origin: origin_chain,
+          destination: destination_chain,
+          asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === "USDT" ? 1984 : void 0 },
+          amount,
+          sender: recipient,
+          recipient,
+          minReceive: min_receive ? decimalToUnits(min_receive, info6.decimals) : void 0
+        });
       }
     }
-    return c.json({ call_hex: hex8 });
+    return c.json({ call_hex: hex8, fee });
   } catch (e) {
     return c.json({ error: String(e) }, 500);
   }
@@ -70147,11 +70168,12 @@ tx.get("/xcm/estimate", async (c) => {
   const amount = (url.searchParams.get("amount") || "0").toString();
   const sender = (url.searchParams.get("sender") || "").toString();
   const recipient = (url.searchParams.get("recipient") || "").toString();
+  const minReceive = (url.searchParams.get("min_receive") || "").toString();
   if (!origin || !destination || !symbol || !amount || !recipient) {
     return c.json({ error: "missing fields" }, 400);
   }
   try {
-    const fee = await estimateXcmFee({ origin, destination, asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 }, amount, sender, recipient });
+    const fee = await estimateXcmFee({ origin, destination, asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 }, amount, sender, recipient, minReceive: minReceive || void 0 });
     return c.json({ fee });
   } catch (e) {
     return c.json({ error: String(e) }, 500);

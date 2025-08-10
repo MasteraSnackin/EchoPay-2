@@ -5,8 +5,9 @@ import { transactions } from '../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { submitExtrinsic } from '../integrations/papi';
 import { buildXcmTransferExtrinsic, estimateXcmFee } from '../integrations/xcm';
-import { buildAssetHubUsdtTransfer, buildNativeTransfer } from '../integrations/transfers';
+import { buildAssetHubUsdtTransfer, buildNativeTransfer, estimateNativeFee } from '../integrations/transfers';
 import { getTokenInfo } from '../integrations/tokens';
+import { decimalToUnits } from '../utils/units';
 
 export const tx = new Hono<{ Bindings: Env }>();
 
@@ -79,8 +80,8 @@ tx.post('/xcm/build', async (c) => {
 
 tx.post('/build', async (c) => {
   const body = await c.req.json();
-  // Expect: { token, amount, recipient, origin_chain, destination_chain }
-  const { token, amount, recipient, origin_chain, destination_chain } = body || {};
+  // Expect: { token, amount, recipient, origin_chain, destination_chain, min_receive, slippage_bps }
+  const { token, amount, recipient, origin_chain, destination_chain, min_receive, slippage_bps } = body || {};
   if (!token || !amount || !recipient || !origin_chain || !destination_chain) {
     return c.json({ error: 'missing fields' }, 400);
   }
@@ -88,13 +89,16 @@ tx.post('/build', async (c) => {
   if (!info) return c.json({ error: 'unsupported token' }, 400);
   try {
     let hex: string;
+    let fee: string | undefined;
     if (origin_chain === destination_chain) {
       const extrinsic = await buildNativeTransfer(origin_chain, token, recipient, amount);
       hex = extrinsic.method.toHex();
+      fee = await estimateNativeFee(origin_chain, token, recipient, recipient, amount);
     } else {
       if (token.toUpperCase() === 'USDT') {
         const extrinsic = await buildAssetHubUsdtTransfer(recipient, amount);
         hex = extrinsic.method.toHex();
+        // Native fee here is paid in origin native token; omit for simplicity
       } else {
         const extrinsic = await buildXcmTransferExtrinsic({
           origin: origin_chain,
@@ -103,11 +107,21 @@ tx.post('/build', async (c) => {
           amount,
           sender: '0x',
           recipient,
+          minReceive: min_receive ? decimalToUnits(min_receive, info.decimals) : undefined,
         });
         hex = extrinsic.method.toHex();
+        fee = await estimateXcmFee({
+          origin: origin_chain,
+          destination: destination_chain,
+          asset: { symbol: token.toUpperCase() as any, assetId: token.toUpperCase() === 'USDT' ? 1984 : undefined },
+          amount,
+          sender: recipient,
+          recipient,
+          minReceive: min_receive ? decimalToUnits(min_receive, info.decimals) : undefined,
+        });
       }
     }
-    return c.json({ call_hex: hex });
+    return c.json({ call_hex: hex, fee });
   } catch (e: any) {
     return c.json({ error: String(e) }, 500);
   }
@@ -121,11 +135,12 @@ tx.get('/xcm/estimate', async (c) => {
   const amount = (url.searchParams.get('amount') || '0').toString();
   const sender = (url.searchParams.get('sender') || '').toString();
   const recipient = (url.searchParams.get('recipient') || '').toString();
+  const minReceive = (url.searchParams.get('min_receive') || '').toString();
   if (!origin || !destination || !symbol || !amount || !recipient) {
     return c.json({ error: 'missing fields' }, 400);
   }
   try {
-    const fee = await estimateXcmFee({ origin: origin as any, destination: destination as any, asset: { symbol: symbol as any, assetId: symbol === 'USDT' ? 1984 : undefined }, amount, sender, recipient });
+    const fee = await estimateXcmFee({ origin: origin as any, destination: destination as any, asset: { symbol: symbol as any, assetId: symbol === 'USDT' ? 1984 : undefined }, amount, sender, recipient, minReceive: minReceive || undefined });
     return c.json({ fee });
   } catch (e: any) {
     return c.json({ error: String(e) }, 500);
