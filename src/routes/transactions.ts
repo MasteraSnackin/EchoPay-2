@@ -57,8 +57,24 @@ tx.post('/execute', async (c) => {
     const destination = parsedIntent.destination_chain;
     const isXcm = origin && destination && origin !== destination;
     if (isXcm) {
+      const info = getTokenInfo((token || row.tokenSymbol) as string);
+
+      // Guard against weakening/removal of previously logged min_receive
+      const priorMinReceive: string | undefined = parsedIntent?.constraints?.min_receive;
+      if (priorMinReceive) {
+        if (!min_receive) {
+          return c.json({ error: 'min_receive required by prior constraints' }, 400);
+        }
+        if (info) {
+          const priorUnits = decimalToUnits(priorMinReceive, info.decimals);
+          const providedUnits = decimalToUnits(min_receive, info.decimals);
+          if (BigInt(providedUnits) < BigInt(priorUnits)) {
+            return c.json({ error: 'min_receive weaker than previously set' }, 400);
+          }
+        }
+      }
+
       if (min_receive) {
-        const info = getTokenInfo((token || row.tokenSymbol) as string);
         if (info) {
           const minUnits = decimalToUnits(min_receive, info.decimals);
           const amtUnits = decimalToUnits(parsedIntent.amount, info.decimals);
