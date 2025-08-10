@@ -12,8 +12,12 @@ import { estimateXcmFee } from '../integrations/xcm';
 import { getChainNativeTokenInfo } from '../integrations/tokens';
 import { decimalToUnits, unitsToDecimal } from '../utils/units';
 import { estimateNativeFee } from '../integrations/transfers';
+import { isValidSs58Address } from '../utils/address';
 
 export const voice = new Hono<{ Bindings: Env }>();
+
+const MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024; // ~5MB base64
+const ALLOWED_FORMATS = new Set(['mp3', 'wav', 'webm']);
 
 voice.post('/process', async (c) => {
   const env = c.env;
@@ -21,6 +25,9 @@ voice.post('/process', async (c) => {
   const parsed = VoiceProcessSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const { audio_data, user_id, format } = parsed.data;
+
+  if (!ALLOWED_FORMATS.has(format)) return c.json({ error: 'unsupported audio format' }, 415);
+  if (audio_data.length > MAX_AUDIO_BASE64_SIZE) return c.json({ error: 'audio too large' }, 413);
 
   const db = getDb(env);
   await db.insert(users).values({ id: user_id, walletAddress: user_id }).onConflictDoNothing();
@@ -36,6 +43,13 @@ voice.post('/process', async (c) => {
     }
   } else {
     intent = simpleFallbackIntent(transcription);
+  }
+
+  // Basic address validation for each item
+  for (const item of intent.items) {
+    if (!isValidSs58Address(item.recipient)) {
+      return c.json({ error: `invalid recipient address: ${item.recipient}` }, 400);
+    }
   }
 
   const txIds: string[] = [];
@@ -96,6 +110,8 @@ voice.post('/confirm', async (c) => {
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const { audio_data, user_id } = parsed.data as any;
   const ids: string[] = parsed.data.transaction_ids ?? (parsed.data.transaction_id ? [parsed.data.transaction_id] : []);
+
+  if (audio_data && audio_data.length > MAX_AUDIO_BASE64_SIZE) return c.json({ error: 'audio too large' }, 413);
 
   const db = getDb(env);
   const found = ids.length ? await db.select().from(transactions).where(inArray(transactions.id, ids)) : [];

@@ -3138,50 +3138,6 @@ var require_eventemitter3 = __commonJS({
     }
   }
 });
-var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
-  return (context2, next) => {
-    let index = -1;
-    return dispatch(0);
-    async function dispatch(i) {
-      if (i <= index) {
-        throw new Error("next() called multiple times");
-      }
-      index = i;
-      let res;
-      let isError = false;
-      let handler;
-      if (middleware[i]) {
-        handler = middleware[i][0][0];
-        context2.req.routeIndex = i;
-      } else {
-        handler = i === middleware.length && next || void 0;
-      }
-      if (handler) {
-        try {
-          res = await handler(context2, () => dispatch(i + 1));
-        } catch (err) {
-          if (err instanceof Error && onError) {
-            context2.error = err;
-            res = await onError(err, context2);
-            isError = true;
-          } else {
-            throw err;
-          }
-        }
-      } else {
-        if (context2.finalized === false && onNotFound) {
-          res = await onNotFound(context2);
-        }
-      }
-      if (res && (context2.finalized === false || isError)) {
-        context2.res = res;
-      }
-      return context2;
-    }
-    __name(dispatch, "dispatch");
-  };
-}, "compose");
-var GET_MATCH_RESULT = Symbol();
 var parseBody = /* @__PURE__ */ __name(async (request, options = /* @__PURE__ */ Object.create(null)) => {
   const { all: all3 = false, dot = false } = options;
   const headers = request instanceof HonoRequest ? request.raw.headers : request.headers;
@@ -3230,11 +3186,7 @@ var handleParsingAllValues = /* @__PURE__ */ __name((form, key, value) => {
       form[key] = [form[key], value];
     }
   } else {
-    if (!key.endsWith("[]")) {
-      form[key] = value;
-    } else {
-      form[key] = [value];
-    }
+    form[key] = value;
   }
 }, "handleParsingAllValues");
 var handleParsingNestedValues = /* @__PURE__ */ __name((form, key, value) => {
@@ -3285,44 +3237,39 @@ var replaceGroupMarks = /* @__PURE__ */ __name((paths, groups) => {
   return paths;
 }, "replaceGroupMarks");
 var patternCache = {};
-var getPattern = /* @__PURE__ */ __name((label, next) => {
+var getPattern = /* @__PURE__ */ __name((label) => {
   if (label === "*") {
     return "*";
   }
   const match = label.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
   if (match) {
-    const cacheKey = `${label}#${next}`;
-    if (!patternCache[cacheKey]) {
+    if (!patternCache[label]) {
       if (match[2]) {
-        patternCache[cacheKey] = next && next[0] !== ":" && next[0] !== "*" ? [cacheKey, match[1], new RegExp(`^${match[2]}(?=/${next})`)] : [label, match[1], new RegExp(`^${match[2]}$`)];
+        patternCache[label] = [label, match[1], new RegExp("^" + match[2] + "$")];
       } else {
-        patternCache[cacheKey] = [label, match[1], true];
+        patternCache[label] = [label, match[1], true];
       }
     }
-    return patternCache[cacheKey];
+    return patternCache[label];
   }
   return null;
 }, "getPattern");
-var tryDecode = /* @__PURE__ */ __name((str, decoder5) => {
+var tryDecodeURI = /* @__PURE__ */ __name((str) => {
   try {
-    return decoder5(str);
+    return decodeURI(str);
   } catch {
     return str.replace(/(?:%[0-9A-Fa-f]{2})+/g, (match) => {
       try {
-        return decoder5(match);
+        return decodeURI(match);
       } catch {
         return match;
       }
     });
   }
-}, "tryDecode");
-var tryDecodeURI = /* @__PURE__ */ __name((str) => tryDecode(str, decodeURI), "tryDecodeURI");
+}, "tryDecodeURI");
 var getPath = /* @__PURE__ */ __name((request) => {
   const url = request.url;
-  const start = url.indexOf(
-    "/",
-    url.charCodeAt(9) === 58 ? 13 : 8
-  );
+  const start = url.indexOf("/", 8);
   let i = start;
   for (; i < url.length; i++) {
     const charCode = url.charCodeAt(i);
@@ -3338,16 +3285,32 @@ var getPath = /* @__PURE__ */ __name((request) => {
 }, "getPath");
 var getPathNoStrict = /* @__PURE__ */ __name((request) => {
   const result = getPath(request);
-  return result.length > 1 && result.at(-1) === "/" ? result.slice(0, -1) : result;
+  return result.length > 1 && result[result.length - 1] === "/" ? result.slice(0, -1) : result;
 }, "getPathNoStrict");
-var mergePath = /* @__PURE__ */ __name((base, sub, ...rest) => {
-  if (rest.length) {
-    sub = mergePath(sub, ...rest);
+var mergePath = /* @__PURE__ */ __name((...paths) => {
+  let p = "";
+  let endsWithSlash = false;
+  for (let path of paths) {
+    if (p[p.length - 1] === "/") {
+      p = p.slice(0, -1);
+      endsWithSlash = true;
+    }
+    if (path[0] !== "/") {
+      path = `/${path}`;
+    }
+    if (path === "/" && endsWithSlash) {
+      p = `${p}/`;
+    } else if (path !== "/") {
+      p = `${p}${path}`;
+    }
+    if (path === "/" && p === "") {
+      p = "/";
+    }
   }
-  return `${base?.[0] === "/" ? "" : "/"}${base}${sub === "/" ? "" : `${base?.at(-1) === "/" ? "" : "/"}${sub?.[0] === "/" ? sub.slice(1) : sub}`}`;
+  return p;
 }, "mergePath");
 var checkOptionalParameter = /* @__PURE__ */ __name((path) => {
-  if (path.charCodeAt(path.length - 1) !== 63 || !path.includes(":")) {
+  if (!path.match(/\:.+\?$/)) {
     return null;
   }
   const segments = path.split("/");
@@ -3380,7 +3343,7 @@ var _decodeURI = /* @__PURE__ */ __name((value) => {
   if (value.indexOf("+") !== -1) {
     value = value.replace(/\+/g, " ");
   }
-  return value.indexOf("%") !== -1 ? tryDecode(value, decodeURIComponent_) : value;
+  return /%/.test(value) ? decodeURIComponent_(value) : value;
 }, "_decodeURI");
 var _getQueryParam = /* @__PURE__ */ __name((url, key, multiple) => {
   let encoded;
@@ -3451,7 +3414,6 @@ var getQueryParams = /* @__PURE__ */ __name((url, key) => {
   return _getQueryParam(url, key, true);
 }, "getQueryParams");
 var decodeURIComponent_ = decodeURIComponent;
-var tryDecodeURIComponent = /* @__PURE__ */ __name((str) => tryDecode(str, decodeURIComponent_), "tryDecodeURIComponent");
 var HonoRequest = class {
   static {
     __name(this, "HonoRequest");
@@ -3469,25 +3431,25 @@ var HonoRequest = class {
     this.#validatedData = {};
   }
   param(key) {
-    return key ? this.#getDecodedParam(key) : this.#getAllDecodedParams();
+    return key ? this.getDecodedParam(key) : this.getAllDecodedParams();
   }
-  #getDecodedParam(key) {
+  getDecodedParam(key) {
     const paramKey = this.#matchResult[0][this.routeIndex][1][key];
-    const param = this.#getParamValue(paramKey);
-    return param ? /\%/.test(param) ? tryDecodeURIComponent(param) : param : void 0;
+    const param = this.getParamValue(paramKey);
+    return param ? /\%/.test(param) ? decodeURIComponent_(param) : param : void 0;
   }
-  #getAllDecodedParams() {
+  getAllDecodedParams() {
     const decoded = {};
     const keys2 = Object.keys(this.#matchResult[0][this.routeIndex][1]);
     for (const key of keys2) {
-      const value = this.#getParamValue(this.#matchResult[0][this.routeIndex][1][key]);
+      const value = this.getParamValue(this.#matchResult[0][this.routeIndex][1][key]);
       if (value && typeof value === "string") {
-        decoded[key] = /\%/.test(value) ? tryDecodeURIComponent(value) : value;
+        decoded[key] = /\%/.test(value) ? decodeURIComponent_(value) : value;
       }
     }
     return decoded;
   }
-  #getParamValue(paramKey) {
+  getParamValue(paramKey) {
     return this.#matchResult[1] ? this.#matchResult[1][paramKey] : paramKey;
   }
   query(key) {
@@ -3498,7 +3460,7 @@ var HonoRequest = class {
   }
   header(name) {
     if (name) {
-      return this.raw.headers.get(name) ?? void 0;
+      return this.raw.headers.get(name.toLowerCase()) ?? void 0;
     }
     const headerData = {};
     this.raw.headers.forEach((value, key) => {
@@ -3509,7 +3471,7 @@ var HonoRequest = class {
   async parseBody(options) {
     return this.bodyCache.parsedBody ??= await parseBody(this, options);
   }
-  #cachedBody = /* @__PURE__ */ __name((key) => {
+  cachedBody = /* @__PURE__ */ __name((key) => {
     const { bodyCache, raw: raw2 } = this;
     const cachedBody = bodyCache[key];
     if (cachedBody) {
@@ -3525,21 +3487,21 @@ var HonoRequest = class {
       });
     }
     return bodyCache[key] = raw2[key]();
-  }, "#cachedBody");
+  }, "cachedBody");
   json() {
-    return this.#cachedBody("text").then((text2) => JSON.parse(text2));
+    return this.cachedBody("json");
   }
   text() {
-    return this.#cachedBody("text");
+    return this.cachedBody("text");
   }
   arrayBuffer() {
-    return this.#cachedBody("arrayBuffer");
+    return this.cachedBody("arrayBuffer");
   }
   blob() {
-    return this.#cachedBody("blob");
+    return this.cachedBody("blob");
   }
   formData() {
-    return this.#cachedBody("formData");
+    return this.cachedBody("formData");
   }
   addValidatedData(target, data) {
     this.#validatedData[target] = data;
@@ -3552,9 +3514,6 @@ var HonoRequest = class {
   }
   get method() {
     return this.raw.method;
-  }
-  get [GET_MATCH_RESULT]() {
-    return this.#matchResult;
   }
   get matchedRoutes() {
     return this.#matchResult[0].map(([[, route]]) => route);
@@ -3604,12 +3563,10 @@ var resolveCallback = /* @__PURE__ */ __name(async (str, phase, preserveCallback
   }
 }, "resolveCallback");
 var TEXT_PLAIN = "text/plain; charset=UTF-8";
-var setDefaultContentType = /* @__PURE__ */ __name((contentType, headers) => {
-  return {
-    "Content-Type": contentType,
-    ...headers
-  };
-}, "setDefaultContentType");
+var setHeaders = /* @__PURE__ */ __name((headers, map3 = {}) => {
+  Object.entries(map3).forEach(([key, value]) => headers.set(key, value));
+  return headers;
+}, "setHeaders");
 var Context = class {
   static {
     __name(this, "Context");
@@ -3620,13 +3577,15 @@ var Context = class {
   #var;
   finalized = false;
   error;
-  #status;
+  #status = 200;
   #executionCtx;
+  #headers;
+  #preparedHeaders;
   #res;
+  #isFresh = true;
   #layout;
   #renderer;
   #notFoundHandler;
-  #preparedHeaders;
   #matchResult;
   #path;
   constructor(req, options) {
@@ -3658,25 +3617,36 @@ var Context = class {
     }
   }
   get res() {
-    return this.#res ||= new Response(null, {
-      headers: this.#preparedHeaders ??= new Headers()
-    });
+    this.#isFresh = false;
+    return this.#res ||= new Response("404 Not Found", { status: 404 });
   }
   set res(_res) {
+    this.#isFresh = false;
     if (this.#res && _res) {
-      _res = new Response(_res.body, _res);
-      for (const [k, v] of this.#res.headers.entries()) {
-        if (k === "content-type") {
-          continue;
-        }
-        if (k === "set-cookie") {
-          const cookies = this.#res.headers.getSetCookie();
-          _res.headers.delete("set-cookie");
-          for (const cookie of cookies) {
-            _res.headers.append("set-cookie", cookie);
+      try {
+        for (const [k, v] of this.#res.headers.entries()) {
+          if (k === "content-type") {
+            continue;
           }
+          if (k === "set-cookie") {
+            const cookies = this.#res.headers.getSetCookie();
+            _res.headers.delete("set-cookie");
+            for (const cookie of cookies) {
+              _res.headers.append("set-cookie", cookie);
+            }
+          } else {
+            _res.headers.set(k, v);
+          }
+        }
+      } catch (e) {
+        if (e instanceof TypeError && e.message.includes("immutable")) {
+          this.res = new Response(_res.body, {
+            headers: _res.headers,
+            status: _res.status
+          });
+          return;
         } else {
-          _res.headers.set(k, v);
+          throw e;
         }
       }
     }
@@ -3693,19 +3663,42 @@ var Context = class {
     this.#renderer = renderer;
   }, "setRenderer");
   header = /* @__PURE__ */ __name((name, value, options) => {
-    if (this.finalized) {
-      this.#res = new Response(this.#res.body, this.#res);
-    }
-    const headers = this.#res ? this.#res.headers : this.#preparedHeaders ??= new Headers();
     if (value === void 0) {
-      headers.delete(name);
-    } else if (options?.append) {
-      headers.append(name, value);
+      if (this.#headers) {
+        this.#headers.delete(name);
+      } else if (this.#preparedHeaders) {
+        delete this.#preparedHeaders[name.toLocaleLowerCase()];
+      }
+      if (this.finalized) {
+        this.res.headers.delete(name);
+      }
+      return;
+    }
+    if (options?.append) {
+      if (!this.#headers) {
+        this.#isFresh = false;
+        this.#headers = new Headers(this.#preparedHeaders);
+        this.#preparedHeaders = {};
+      }
+      this.#headers.append(name, value);
     } else {
-      headers.set(name, value);
+      if (this.#headers) {
+        this.#headers.set(name, value);
+      } else {
+        this.#preparedHeaders ??= {};
+        this.#preparedHeaders[name.toLowerCase()] = value;
+      }
+    }
+    if (this.finalized) {
+      if (options?.append) {
+        this.res.headers.append(name, value);
+      } else {
+        this.res.headers.set(name, value);
+      }
     }
   }, "header");
   status = /* @__PURE__ */ __name((status) => {
+    this.#isFresh = false;
     this.#status = status;
   }, "status");
   set = /* @__PURE__ */ __name((key, value) => {
@@ -3721,59 +3714,91 @@ var Context = class {
     }
     return Object.fromEntries(this.#var);
   }
-  #newResponse(data, arg, headers) {
-    const responseHeaders = this.#res ? new Headers(this.#res.headers) : this.#preparedHeaders ?? new Headers();
-    if (typeof arg === "object" && "headers" in arg) {
-      const argHeaders = arg.headers instanceof Headers ? arg.headers : new Headers(arg.headers);
-      for (const [key, value] of argHeaders) {
-        if (key.toLowerCase() === "set-cookie") {
-          responseHeaders.append(key, value);
-        } else {
-          responseHeaders.set(key, value);
-        }
-      }
+  newResponse = /* @__PURE__ */ __name((data, arg, headers) => {
+    if (this.#isFresh && !headers && !arg && this.#status === 200) {
+      return new Response(data, {
+        headers: this.#preparedHeaders
+      });
     }
-    if (headers) {
-      for (const [k, v] of Object.entries(headers)) {
-        if (typeof v === "string") {
-          responseHeaders.set(k, v);
-        } else {
-          responseHeaders.delete(k);
-          for (const v22 of v) {
-            responseHeaders.append(k, v22);
+    if (arg && typeof arg !== "number") {
+      const header = new Headers(arg.headers);
+      if (this.#headers) {
+        this.#headers.forEach((v, k) => {
+          if (k === "set-cookie") {
+            header.append(k, v);
+          } else {
+            header.set(k, v);
           }
+        });
+      }
+      const headers2 = setHeaders(header, this.#preparedHeaders);
+      return new Response(data, {
+        headers: headers2,
+        status: arg.status ?? this.#status
+      });
+    }
+    const status = typeof arg === "number" ? arg : this.#status;
+    this.#preparedHeaders ??= {};
+    this.#headers ??= new Headers();
+    setHeaders(this.#headers, this.#preparedHeaders);
+    if (this.#res) {
+      this.#res.headers.forEach((v, k) => {
+        if (k === "set-cookie") {
+          this.#headers?.append(k, v);
+        } else {
+          this.#headers?.set(k, v);
+        }
+      });
+      setHeaders(this.#headers, this.#preparedHeaders);
+    }
+    headers ??= {};
+    for (const [k, v] of Object.entries(headers)) {
+      if (typeof v === "string") {
+        this.#headers.set(k, v);
+      } else {
+        this.#headers.delete(k);
+        for (const v22 of v) {
+          this.#headers.append(k, v22);
         }
       }
     }
-    const status = typeof arg === "number" ? arg : arg?.status ?? this.#status;
-    return new Response(data, { status, headers: responseHeaders });
-  }
-  newResponse = /* @__PURE__ */ __name((...args) => this.#newResponse(...args), "newResponse");
-  body = /* @__PURE__ */ __name((data, arg, headers) => this.#newResponse(data, arg, headers), "body");
+    return new Response(data, {
+      status,
+      headers: this.#headers
+    });
+  }, "newResponse");
+  body = /* @__PURE__ */ __name((data, arg, headers) => {
+    return typeof arg === "number" ? this.newResponse(data, arg, headers) : this.newResponse(data, arg);
+  }, "body");
   text = /* @__PURE__ */ __name((text2, arg, headers) => {
-    return !this.#preparedHeaders && !this.#status && !arg && !headers && !this.finalized ? new Response(text2) : this.#newResponse(
-      text2,
-      arg,
-      setDefaultContentType(TEXT_PLAIN, headers)
-    );
+    if (!this.#preparedHeaders) {
+      if (this.#isFresh && !headers && !arg) {
+        return new Response(text2);
+      }
+      this.#preparedHeaders = {};
+    }
+    this.#preparedHeaders["content-type"] = TEXT_PLAIN;
+    return typeof arg === "number" ? this.newResponse(text2, arg, headers) : this.newResponse(text2, arg);
   }, "text");
   json = /* @__PURE__ */ __name((object, arg, headers) => {
-    return this.#newResponse(
-      JSON.stringify(object),
-      arg,
-      setDefaultContentType("application/json", headers)
-    );
+    const body = JSON.stringify(object);
+    this.#preparedHeaders ??= {};
+    this.#preparedHeaders["content-type"] = "application/json; charset=UTF-8";
+    return typeof arg === "number" ? this.newResponse(body, arg, headers) : this.newResponse(body, arg);
   }, "json");
   html = /* @__PURE__ */ __name((html, arg, headers) => {
-    const res = /* @__PURE__ */ __name((html2) => this.#newResponse(html2, arg, setDefaultContentType("text/html; charset=UTF-8", headers)), "res");
-    return typeof html === "object" ? resolveCallback(html, HtmlEscapedCallbackPhase.Stringify, false, {}).then(res) : res(html);
+    this.#preparedHeaders ??= {};
+    this.#preparedHeaders["content-type"] = "text/html; charset=UTF-8";
+    if (typeof html === "object") {
+      return resolveCallback(html, HtmlEscapedCallbackPhase.Stringify, false, {}).then((html2) => {
+        return typeof arg === "number" ? this.newResponse(html2, arg, headers) : this.newResponse(html2, arg);
+      });
+    }
+    return typeof arg === "number" ? this.newResponse(html, arg, headers) : this.newResponse(html, arg);
   }, "html");
   redirect = /* @__PURE__ */ __name((location2, status) => {
-    const locationString = String(location2);
-    this.header(
-      "Location",
-      !/[^\x00-\xFF]/.test(locationString) ? locationString : encodeURI(locationString)
-    );
+    this.#headers ??= new Headers();
+    this.#headers.set("Location", location2);
     return this.newResponse(null, status ?? 302);
   }, "redirect");
   notFound = /* @__PURE__ */ __name(() => {
@@ -3781,6 +3806,53 @@ var Context = class {
     return this.#notFoundHandler(this);
   }, "notFound");
 };
+var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
+  return (context2, next) => {
+    let index = -1;
+    return dispatch(0);
+    async function dispatch(i) {
+      if (i <= index) {
+        throw new Error("next() called multiple times");
+      }
+      index = i;
+      let res;
+      let isError = false;
+      let handler;
+      if (middleware[i]) {
+        handler = middleware[i][0][0];
+        if (context2 instanceof Context) {
+          context2.req.routeIndex = i;
+        }
+      } else {
+        handler = i === middleware.length && next || void 0;
+      }
+      if (!handler) {
+        if (context2 instanceof Context && context2.finalized === false && onNotFound) {
+          res = await onNotFound(context2);
+        }
+      } else {
+        try {
+          res = await handler(context2, () => {
+            return dispatch(i + 1);
+          });
+        } catch (err) {
+          if (err instanceof Error && context2 instanceof Context && onError) {
+            context2.error = err;
+            res = await onError(err, context2);
+            isError = true;
+          } else {
+            throw err;
+          }
+        }
+      }
+      if (res && (context2.finalized === false || isError)) {
+        context2.res = res;
+      }
+      return context2;
+    }
+    __name(dispatch, "dispatch");
+  };
+}, "compose");
 var METHOD_NAME_ALL = "ALL";
 var METHOD_NAME_ALL_LOWERCASE = "all";
 var METHODS = ["get", "post", "put", "delete", "options", "patch"];
@@ -3790,14 +3862,13 @@ var UnsupportedPathError = class extends Error {
     __name(this, "UnsupportedPathError");
   }
 };
-var COMPOSED_HANDLER = "__COMPOSED_HANDLER";
+var COMPOSED_HANDLER = Symbol("composedHandler");
 var notFoundHandler = /* @__PURE__ */ __name((c) => {
   return c.text("404 Not Found", 404);
 }, "notFoundHandler");
 var errorHandler = /* @__PURE__ */ __name((err, c) => {
   if ("getResponse" in err) {
-    const res = err.getResponse();
-    return c.newResponse(res.body, res);
+    return err.getResponse();
   }
   console.error(err);
   return c.text("Internal Server Error", 500);
@@ -3827,10 +3898,12 @@ var Hono = class {
         if (typeof args1 === "string") {
           this.#path = args1;
         } else {
-          this.#addRoute(method, this.#path, args1);
+          this.addRoute(method, this.#path, args1);
         }
         args.forEach((handler) => {
-          this.#addRoute(method, this.#path, handler);
+          if (typeof handler !== "string") {
+            this.addRoute(method, this.#path, handler);
+          }
         });
         return this;
       };
@@ -3840,7 +3913,7 @@ var Hono = class {
         this.#path = p;
         for (const m of [method].flat()) {
           handlers.map((handler) => {
-            this.#addRoute(m.toUpperCase(), this.#path, handler);
+            this.addRoute(m.toUpperCase(), this.#path, handler);
           });
         }
       }
@@ -3854,25 +3927,24 @@ var Hono = class {
         handlers.unshift(arg1);
       }
       handlers.forEach((handler) => {
-        this.#addRoute(METHOD_NAME_ALL, this.#path, handler);
+        this.addRoute(METHOD_NAME_ALL, this.#path, handler);
       });
       return this;
     };
-    const { strict, ...optionsWithoutStrict } = options;
-    Object.assign(this, optionsWithoutStrict);
-    this.getPath = strict ?? true ? options.getPath ?? getPath : getPathNoStrict;
+    const strict = options.strict ?? true;
+    delete options.strict;
+    Object.assign(this, options);
+    this.getPath = strict ? options.getPath ?? getPath : getPathNoStrict;
   }
-  #clone() {
+  clone() {
     const clone = new Hono({
       router: this.router,
       getPath: this.getPath
     });
-    clone.errorHandler = this.errorHandler;
-    clone.#notFoundHandler = this.#notFoundHandler;
     clone.routes = this.routes;
     return clone;
   }
-  #notFoundHandler = notFoundHandler;
+  notFoundHandler = notFoundHandler;
   errorHandler = errorHandler;
   route(path, app2) {
     const subApp = this.basePath(path);
@@ -3884,12 +3956,12 @@ var Hono = class {
         handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app2.errorHandler)(c, () => r.handler(c, next))).res, "handler");
         handler[COMPOSED_HANDLER] = r.handler;
       }
-      subApp.#addRoute(r.method, r.path, handler);
+      subApp.addRoute(r.method, r.path, handler);
     });
     return this;
   }
   basePath(path) {
-    const subApp = this.#clone();
+    const subApp = this.clone();
     subApp._basePath = mergePath(this._basePath, path);
     return subApp;
   }
@@ -3898,7 +3970,7 @@ var Hono = class {
     return this;
   }, "onError");
   notFound = /* @__PURE__ */ __name((handler) => {
-    this.#notFoundHandler = handler;
+    this.notFoundHandler = handler;
     return this;
   }, "notFound");
   mount(path, applicationHandler, options) {
@@ -3909,11 +3981,7 @@ var Hono = class {
         optionHandler = options;
       } else {
         optionHandler = options.optionHandler;
-        if (options.replaceRequest === false) {
-          replaceRequest = /* @__PURE__ */ __name((request) => request, "replaceRequest");
-        } else {
-          replaceRequest = options.replaceRequest;
-        }
+        replaceRequest = options.replaceRequest;
       }
     }
     const getOptions = optionHandler ? (c) => {
@@ -3943,49 +4011,52 @@ var Hono = class {
       }
       await next();
     }, "handler");
-    this.#addRoute(METHOD_NAME_ALL, mergePath(path, "*"), handler);
+    this.addRoute(METHOD_NAME_ALL, mergePath(path, "*"), handler);
     return this;
   }
-  #addRoute(method, path, handler) {
+  addRoute(method, path, handler) {
     method = method.toUpperCase();
     path = mergePath(this._basePath, path);
-    const r = { basePath: this._basePath, path, method, handler };
+    const r = { path, method, handler };
     this.router.add(method, path, [handler, r]);
     this.routes.push(r);
   }
-  #handleError(err, c) {
+  matchRoute(method, path) {
+    return this.router.match(method, path);
+  }
+  handleError(err, c) {
     if (err instanceof Error) {
       return this.errorHandler(err, c);
     }
     throw err;
   }
-  #dispatch(request, executionCtx, env, method) {
+  dispatch(request, executionCtx, env, method) {
     if (method === "HEAD") {
-      return (async () => new Response(null, await this.#dispatch(request, executionCtx, env, "GET")))();
+      return (async () => new Response(null, await this.dispatch(request, executionCtx, env, "GET")))();
     }
     const path = this.getPath(request, { env });
-    const matchResult = this.router.match(method, path);
+    const matchResult = this.matchRoute(method, path);
     const c = new Context(request, {
       path,
       matchResult,
       env,
       executionCtx,
-      notFoundHandler: this.#notFoundHandler
+      notFoundHandler: this.notFoundHandler
     });
     if (matchResult[0].length === 1) {
       let res;
       try {
         res = matchResult[0][0][0][0](c, async () => {
-          c.res = await this.#notFoundHandler(c);
+          c.res = await this.notFoundHandler(c);
         });
       } catch (err) {
-        return this.#handleError(err, c);
+        return this.handleError(err, c);
       }
       return res instanceof Promise ? res.then(
-        (resolved2) => resolved2 || (c.finalized ? c.res : this.#notFoundHandler(c))
-      ).catch((err) => this.#handleError(err, c)) : res ?? this.#notFoundHandler(c);
+        (resolved2) => resolved2 || (c.finalized ? c.res : this.notFoundHandler(c))
+      ).catch((err) => this.handleError(err, c)) : res ?? this.notFoundHandler(c);
     }
-    const composed = compose(matchResult[0], this.errorHandler, this.#notFoundHandler);
+    const composed = compose(matchResult[0], this.errorHandler, this.notFoundHandler);
     return (async () => {
       try {
         const context2 = await composed(c);
@@ -3996,30 +4067,28 @@ var Hono = class {
         }
         return context2.res;
       } catch (err) {
-        return this.#handleError(err, c);
+        return this.handleError(err, c);
       }
     })();
   }
   fetch = /* @__PURE__ */ __name((request, ...rest) => {
-    return this.#dispatch(request, rest[1], rest[0], request.method);
+    return this.dispatch(request, rest[1], rest[0], request.method);
   }, "fetch");
   request = /* @__PURE__ */ __name((input, requestInit, Env4, executionCtx) => {
     if (input instanceof Request) {
-      return this.fetch(requestInit ? new Request(input, requestInit) : input, Env4, executionCtx);
+      if (requestInit !== void 0) {
+        input = new Request(input, requestInit);
+      }
+      return this.fetch(input, Env4, executionCtx);
     }
     input = input.toString();
-    return this.fetch(
-      new Request(
-        /^https?:\/\//.test(input) ? input : `http://localhost${mergePath("/", input)}`,
-        requestInit
-      ),
-      Env4,
-      executionCtx
-    );
+    const path = /^https?:\/\//.test(input) ? input : `http://localhost${mergePath("/", input)}`;
+    const req = new Request(path, requestInit);
+    return this.fetch(req, Env4, executionCtx);
   }, "request");
   fire = /* @__PURE__ */ __name(() => {
     addEventListener("fetch", (event) => {
-      event.respondWith(this.#dispatch(event.request, event, void 0, event.request.method));
+      event.respondWith(this.dispatch(event.request, event, void 0, event.request.method));
     });
   }, "fire");
 };
@@ -4052,18 +4121,18 @@ var Node = class {
   static {
     __name(this, "Node");
   }
-  #index;
-  #varIndex;
-  #children = /* @__PURE__ */ Object.create(null);
+  index;
+  varIndex;
+  children = /* @__PURE__ */ Object.create(null);
   insert(tokens, index, paramMap, context2, pathErrorCheckOnly) {
     if (tokens.length === 0) {
-      if (this.#index !== void 0) {
+      if (this.index !== void 0) {
         throw PATH_ERROR;
       }
       if (pathErrorCheckOnly) {
         return;
       }
-      this.#index = index;
+      this.index = index;
       return;
     }
     const [token, ...restTokens] = tokens;
@@ -4073,17 +4142,14 @@ var Node = class {
       const name = pattern[1];
       let regexpStr = pattern[2] || LABEL_REG_EXP_STR;
       if (name && pattern[2]) {
-        if (regexpStr === ".*") {
-          throw PATH_ERROR;
-        }
         regexpStr = regexpStr.replace(/^\((?!\?:)(?=[^)]+\)$)/, "(?:");
         if (/\((?!\?:)/.test(regexpStr)) {
           throw PATH_ERROR;
         }
       }
-      node = this.#children[regexpStr];
+      node = this.children[regexpStr];
       if (!node) {
-        if (Object.keys(this.#children).some(
+        if (Object.keys(this.children).some(
           (k) => k !== ONLY_WILDCARD_REG_EXP_STR && k !== TAIL_WILDCARD_REG_EXP_STR
         )) {
           throw PATH_ERROR;
@@ -4091,18 +4157,18 @@ var Node = class {
         if (pathErrorCheckOnly) {
           return;
         }
-        node = this.#children[regexpStr] = new Node();
+        node = this.children[regexpStr] = new Node();
         if (name !== "") {
-          node.#varIndex = context2.varIndex++;
+          node.varIndex = context2.varIndex++;
         }
       }
       if (!pathErrorCheckOnly && name !== "") {
-        paramMap.push([name, node.#varIndex]);
+        paramMap.push([name, node.varIndex]);
       }
     } else {
-      node = this.#children[token];
+      node = this.children[token];
       if (!node) {
-        if (Object.keys(this.#children).some(
+        if (Object.keys(this.children).some(
           (k) => k.length > 1 && k !== ONLY_WILDCARD_REG_EXP_STR && k !== TAIL_WILDCARD_REG_EXP_STR
         )) {
           throw PATH_ERROR;
@@ -4110,19 +4176,19 @@ var Node = class {
         if (pathErrorCheckOnly) {
           return;
         }
-        node = this.#children[token] = new Node();
+        node = this.children[token] = new Node();
       }
     }
     node.insert(restTokens, index, paramMap, context2, pathErrorCheckOnly);
   }
   buildRegExpStr() {
-    const childKeys = Object.keys(this.#children).sort(compareKey);
+    const childKeys = Object.keys(this.children).sort(compareKey);
     const strList = childKeys.map((k) => {
-      const c = this.#children[k];
-      return (typeof c.#varIndex === "number" ? `(${k})@${c.#varIndex}` : regExpMetaChars.has(k) ? `\\${k}` : k) + c.buildRegExpStr();
+      const c = this.children[k];
+      return (typeof c.varIndex === "number" ? `(${k})@${c.varIndex}` : regExpMetaChars.has(k) ? `\\${k}` : k) + c.buildRegExpStr();
     });
-    if (typeof this.#index === "number") {
-      strList.unshift(`#${this.#index}`);
+    if (typeof this.index === "number") {
+      strList.unshift(`#${this.index}`);
     }
     if (strList.length === 0) {
       return "";
@@ -4137,8 +4203,8 @@ var Trie = class {
   static {
     __name(this, "Trie");
   }
-  #context = { varIndex: 0 };
-  #root = new Node();
+  context = { varIndex: 0 };
+  root = new Node();
   insert(path, index, pathErrorCheckOnly) {
     const paramAssoc = [];
     const groups = [];
@@ -4165,11 +4231,11 @@ var Trie = class {
         }
       }
     }
-    this.#root.insert(tokens, index, paramAssoc, this.#context, pathErrorCheckOnly);
+    this.root.insert(tokens, index, paramAssoc, this.context, pathErrorCheckOnly);
     return paramAssoc;
   }
   buildRegExp() {
-    let regexp = this.#root.buildRegExpStr();
+    let regexp = this.root.buildRegExpStr();
     if (regexp === "") {
       return [/^$/, [], []];
     }
@@ -4177,11 +4243,11 @@ var Trie = class {
     const indexReplacementMap = [];
     const paramReplacementMap = [];
     regexp = regexp.replace(/#(\d+)|@(\d+)|\.\*\$/g, (_, handlerIndex, paramIndex) => {
-      if (handlerIndex !== void 0) {
+      if (typeof handlerIndex !== "undefined") {
         indexReplacementMap[++captureIndex] = Number(handlerIndex);
         return "$()";
       }
-      if (paramIndex !== void 0) {
+      if (typeof paramIndex !== "undefined") {
         paramReplacementMap[Number(paramIndex)] = ++captureIndex;
         return "";
       }
@@ -4281,15 +4347,14 @@ var RegExpRouter = class {
     __name(this, "RegExpRouter");
   }
   name = "RegExpRouter";
-  #middleware;
-  #routes;
+  middleware;
+  routes;
   constructor() {
-    this.#middleware = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
-    this.#routes = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
+    this.middleware = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
+    this.routes = { [METHOD_NAME_ALL]: /* @__PURE__ */ Object.create(null) };
   }
   add(method, path, handler) {
-    const middleware = this.#middleware;
-    const routes = this.#routes;
+    const { middleware, routes } = this;
     if (!middleware || !routes) {
       throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
     }
@@ -4346,7 +4411,7 @@ var RegExpRouter = class {
   }
   match(method, path) {
     clearWildcardRegExpCache();
-    const matchers = this.#buildAllMatchers();
+    const matchers = this.buildAllMatchers();
     this.match = (method2, path2) => {
       const matcher = matchers[method2] || matchers[METHOD_NAME_ALL];
       const staticMatch = matcher[2][path2];
@@ -4362,18 +4427,18 @@ var RegExpRouter = class {
     };
     return this.match(method, path);
   }
-  #buildAllMatchers() {
+  buildAllMatchers() {
     const matchers = /* @__PURE__ */ Object.create(null);
-    Object.keys(this.#routes).concat(Object.keys(this.#middleware)).forEach((method) => {
-      matchers[method] ||= this.#buildMatcher(method);
+    [...Object.keys(this.routes), ...Object.keys(this.middleware)].forEach((method) => {
+      matchers[method] ||= this.buildMatcher(method);
     });
-    this.#middleware = this.#routes = void 0;
+    this.middleware = this.routes = void 0;
     return matchers;
   }
-  #buildMatcher(method) {
+  buildMatcher(method) {
     const routes = [];
     let hasOwnRoute = method === METHOD_NAME_ALL;
-    [this.#middleware, this.#routes].forEach((r) => {
+    [this.middleware, this.routes].forEach((r) => {
       const ownRoute = r[method] ? Object.keys(r[method]).map((path) => [path, r[method][path]]) : [];
       if (ownRoute.length !== 0) {
         hasOwnRoute ||= true;
@@ -4396,32 +4461,31 @@ var SmartRouter = class {
     __name(this, "SmartRouter");
   }
   name = "SmartRouter";
-  #routers = [];
-  #routes = [];
+  routers = [];
+  routes = [];
   constructor(init2) {
-    this.#routers = init2.routers;
+    Object.assign(this, init2);
   }
   add(method, path, handler) {
-    if (!this.#routes) {
+    if (!this.routes) {
       throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
     }
-    this.#routes.push([method, path, handler]);
+    this.routes.push([method, path, handler]);
   }
   match(method, path) {
-    if (!this.#routes) {
+    if (!this.routes) {
       throw new Error("Fatal error");
     }
-    const routers = this.#routers;
-    const routes = this.#routes;
+    const { routers, routes } = this;
     const len = routers.length;
     let i = 0;
     let res;
     for (; i < len; i++) {
       const router = routers[i];
       try {
-        for (let i2 = 0, len2 = routes.length; i2 < len2; i2++) {
-          router.add(...routes[i2]);
-        }
+        routes.forEach((args) => {
+          router.add(...args);
+        });
         res = router.match(method, path);
       } catch (e) {
         if (e instanceof UnsupportedPathError) {
@@ -4430,8 +4494,8 @@ var SmartRouter = class {
         throw e;
       }
       this.match = router.match.bind(router);
-      this.#routers = [router];
-      this.#routes = void 0;
+      this.routers = [router];
+      this.routes = void 0;
       break;
     }
     if (i === len) {
@@ -4441,169 +4505,159 @@ var SmartRouter = class {
     return res;
   }
   get activeRouter() {
-    if (this.#routes || this.#routers.length !== 1) {
+    if (this.routes || this.routers.length !== 1) {
       throw new Error("No active router has been determined yet.");
     }
-    return this.#routers[0];
+    return this.routers[0];
   }
 };
-var emptyParams = /* @__PURE__ */ Object.create(null);
 var Node2 = class {
   static {
     __name(this, "Node2");
   }
-  #methods;
-  #children;
-  #patterns;
-  #order = 0;
-  #params = emptyParams;
+  methods;
+  children;
+  patterns;
+  order = 0;
+  name;
+  params = /* @__PURE__ */ Object.create(null);
   constructor(method, handler, children) {
-    this.#children = children || /* @__PURE__ */ Object.create(null);
-    this.#methods = [];
+    this.children = children || /* @__PURE__ */ Object.create(null);
+    this.methods = [];
+    this.name = "";
     if (method && handler) {
       const m = /* @__PURE__ */ Object.create(null);
-      m[method] = { handler, possibleKeys: [], score: 0 };
-      this.#methods = [m];
+      m[method] = { handler, possibleKeys: [], score: 0, name: this.name };
+      this.methods = [m];
     }
-    this.#patterns = [];
+    this.patterns = [];
   }
   insert(method, path, handler) {
-    this.#order = ++this.#order;
+    this.name = `${method} ${path}`;
+    this.order = ++this.order;
     let curNode = this;
     const parts = splitRoutingPath(path);
     const possibleKeys = [];
     for (let i = 0, len = parts.length; i < len; i++) {
       const p = parts[i];
-      const nextP = parts[i + 1];
-      const pattern = getPattern(p, nextP);
-      const key = Array.isArray(pattern) ? pattern[0] : p;
-      if (key in curNode.#children) {
-        curNode = curNode.#children[key];
-        if (pattern) {
-          possibleKeys.push(pattern[1]);
+      if (Object.keys(curNode.children).includes(p)) {
+        curNode = curNode.children[p];
+        const pattern2 = getPattern(p);
+        if (pattern2) {
+          possibleKeys.push(pattern2[1]);
         }
         continue;
       }
-      curNode.#children[key] = new Node2();
+      curNode.children[p] = new Node2();
+      const pattern = getPattern(p);
       if (pattern) {
-        curNode.#patterns.push(pattern);
+        curNode.patterns.push(pattern);
         possibleKeys.push(pattern[1]);
       }
-      curNode = curNode.#children[key];
+      curNode = curNode.children[p];
     }
-    curNode.#methods.push({
-      [method]: {
-        handler,
-        possibleKeys: possibleKeys.filter((v, i, a) => a.indexOf(v) === i),
-        score: this.#order
-      }
-    });
+    if (!curNode.methods.length) {
+      curNode.methods = [];
+    }
+    const m = /* @__PURE__ */ Object.create(null);
+    const handlerSet = {
+      handler,
+      possibleKeys: possibleKeys.filter((v, i, a) => a.indexOf(v) === i),
+      name: this.name,
+      score: this.order
+    };
+    m[method] = handlerSet;
+    curNode.methods.push(m);
     return curNode;
   }
-  #getHandlerSets(node, method, nodeParams, params) {
+  gHSets(node, method, nodeParams, params) {
     const handlerSets = [];
-    for (let i = 0, len = node.#methods.length; i < len; i++) {
-      const m = node.#methods[i];
+    for (let i = 0, len = node.methods.length; i < len; i++) {
+      const m = node.methods[i];
       const handlerSet = m[method] || m[METHOD_NAME_ALL];
-      const processedSet = {};
+      const processedSet = /* @__PURE__ */ Object.create(null);
       if (handlerSet !== void 0) {
         handlerSet.params = /* @__PURE__ */ Object.create(null);
+        handlerSet.possibleKeys.forEach((key) => {
+          const processed = processedSet[handlerSet.name];
+          handlerSet.params[key] = params[key] && !processed ? params[key] : nodeParams[key] ?? params[key];
+          processedSet[handlerSet.name] = true;
+        });
         handlerSets.push(handlerSet);
-        if (nodeParams !== emptyParams || params && params !== emptyParams) {
-          for (let i2 = 0, len2 = handlerSet.possibleKeys.length; i2 < len2; i2++) {
-            const key = handlerSet.possibleKeys[i2];
-            const processed = processedSet[handlerSet.score];
-            handlerSet.params[key] = params?.[key] && !processed ? params[key] : nodeParams[key] ?? params?.[key];
-            processedSet[handlerSet.score] = true;
-          }
-        }
       }
     }
     return handlerSets;
   }
   search(method, path) {
     const handlerSets = [];
-    this.#params = emptyParams;
+    this.params = /* @__PURE__ */ Object.create(null);
     const curNode = this;
     let curNodes = [curNode];
     const parts = splitPath(path);
-    const curNodesQueue = [];
     for (let i = 0, len = parts.length; i < len; i++) {
       const part = parts[i];
       const isLast = i === len - 1;
       const tempNodes = [];
       for (let j = 0, len2 = curNodes.length; j < len2; j++) {
         const node = curNodes[j];
-        const nextNode = node.#children[part];
+        const nextNode = node.children[part];
         if (nextNode) {
-          nextNode.#params = node.#params;
-          if (isLast) {
-            if (nextNode.#children["*"]) {
+          nextNode.params = node.params;
+          if (isLast === true) {
+            if (nextNode.children["*"]) {
               handlerSets.push(
-                ...this.#getHandlerSets(nextNode.#children["*"], method, node.#params)
+                ...this.gHSets(nextNode.children["*"], method, node.params, /* @__PURE__ */ Object.create(null))
               );
             }
-            handlerSets.push(...this.#getHandlerSets(nextNode, method, node.#params));
+            handlerSets.push(...this.gHSets(nextNode, method, node.params, /* @__PURE__ */ Object.create(null)));
           } else {
             tempNodes.push(nextNode);
           }
         }
-        for (let k = 0, len3 = node.#patterns.length; k < len3; k++) {
-          const pattern = node.#patterns[k];
-          const params = node.#params === emptyParams ? {} : { ...node.#params };
+        for (let k = 0, len3 = node.patterns.length; k < len3; k++) {
+          const pattern = node.patterns[k];
+          const params = { ...node.params };
           if (pattern === "*") {
-            const astNode = node.#children["*"];
+            const astNode = node.children["*"];
             if (astNode) {
-              handlerSets.push(...this.#getHandlerSets(astNode, method, node.#params));
-              astNode.#params = params;
+              handlerSets.push(...this.gHSets(astNode, method, node.params, /* @__PURE__ */ Object.create(null)));
               tempNodes.push(astNode);
             }
             continue;
           }
-          const [key, name, matcher] = pattern;
-          if (!part && !(matcher instanceof RegExp)) {
+          if (part === "") {
             continue;
           }
-          const child = node.#children[key];
+          const [key, name, matcher] = pattern;
+          const child = node.children[key];
           const restPathString = parts.slice(i).join("/");
-          if (matcher instanceof RegExp) {
-            const m = matcher.exec(restPathString);
-            if (m) {
-              params[name] = m[0];
-              handlerSets.push(...this.#getHandlerSets(child, method, node.#params, params));
-              if (Object.keys(child.#children).length) {
-                child.#params = params;
-                const componentCount = m[0].match(/\//)?.length ?? 0;
-                const targetCurNodes = curNodesQueue[componentCount] ||= [];
-                targetCurNodes.push(child);
-              }
-              continue;
-            }
+          if (matcher instanceof RegExp && matcher.test(restPathString)) {
+            params[name] = restPathString;
+            handlerSets.push(...this.gHSets(child, method, node.params, params));
+            continue;
           }
-          if (matcher === true || matcher.test(part)) {
-            params[name] = part;
-            if (isLast) {
-              handlerSets.push(...this.#getHandlerSets(child, method, params, node.#params));
-              if (child.#children["*"]) {
-                handlerSets.push(
-                  ...this.#getHandlerSets(child.#children["*"], method, params, node.#params)
-                );
+          if (matcher === true || matcher instanceof RegExp && matcher.test(part)) {
+            if (typeof key === "string") {
+              params[name] = part;
+              if (isLast === true) {
+                handlerSets.push(...this.gHSets(child, method, params, node.params));
+                if (child.children["*"]) {
+                  handlerSets.push(...this.gHSets(child.children["*"], method, params, node.params));
+                }
+              } else {
+                child.params = params;
+                tempNodes.push(child);
               }
-            } else {
-              child.#params = params;
-              tempNodes.push(child);
             }
           }
         }
       }
-      curNodes = tempNodes.concat(curNodesQueue.shift() ?? []);
+      curNodes = tempNodes;
     }
-    if (handlerSets.length > 1) {
-      handlerSets.sort((a, b) => {
-        return a.score - b.score;
-      });
-    }
-    return [handlerSets.map(({ handler, params }) => [handler, params])];
+    const results = handlerSets.sort((a, b) => {
+      return a.score - b.score;
+    });
+    return [results.map(({ handler, params }) => [handler, params])];
   }
 };
 var TrieRouter = class {
@@ -4611,22 +4665,22 @@ var TrieRouter = class {
     __name(this, "TrieRouter");
   }
   name = "TrieRouter";
-  #node;
+  node;
   constructor() {
-    this.#node = new Node2();
+    this.node = new Node2();
   }
   add(method, path, handler) {
     const results = checkOptionalParameter(path);
     if (results) {
-      for (let i = 0, len = results.length; i < len; i++) {
-        this.#node.insert(method, results[i], handler);
+      for (const p of results) {
+        this.node.insert(method, p, handler);
       }
       return;
     }
-    this.#node.insert(method, path, handler);
+    this.node.insert(method, path, handler);
   }
   match(method, path) {
-    return this.#node.search(method, path);
+    return this.node.search(method, path);
   }
 };
 var Hono2 = class extends Hono {
@@ -71495,321 +71549,6 @@ async function buildAssetHubUsdtTransfer(recipient, amountHuman) {
   return api.tx.assets.transfer(assetId, recipient, amountUnits);
 }
 __name(buildAssetHubUsdtTransfer, "buildAssetHubUsdtTransfer");
-var voice = new Hono2();
-voice.post("/process", async (c) => {
-  const env = c.env;
-  const body = await c.req.json();
-  const parsed = VoiceProcessSchema.safeParse(body);
-  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { audio_data, user_id, format } = parsed.data;
-  const db = getDb(env);
-  await db.insert(users).values({ id: user_id, walletAddress: user_id }).onConflictDoNothing();
-  const transcription = await speechToText(env, audio_data, format);
-  let intent;
-  if (env.PERPLEXITY_API_KEY) {
-    try {
-      intent = await parseIntentWithPerplexity(env, transcription);
-    } catch (e) {
-      intent = simpleFallbackIntent(transcription);
-    }
-  } else {
-    intent = simpleFallbackIntent(transcription);
-  }
-  const txIds = [];
-  for (const item of intent.items) {
-    const txId = v4_default();
-    txIds.push(txId);
-    await db.insert(transactions).values({
-      id: txId,
-      userId: user_id,
-      voiceCommand: transcription,
-      parsedIntent: JSON.stringify(item),
-      recipientAddress: item.recipient,
-      amount: item.amount,
-      tokenSymbol: item.token,
-      status: "pending"
-    });
-  }
-  const first2 = intent.items[0];
-  const isXcm = first2.origin_chain !== first2.destination_chain;
-  const originNative = getChainNativeTokenInfo(first2.origin_chain);
-  let feeHint = "";
-  try {
-    if (isXcm) {
-      const fee = await estimateXcmFee({
-        origin: first2.origin_chain,
-        destination: first2.destination_chain,
-        asset: { symbol: originNative.symbol },
-        amount: decimalToUnits(first2.amount, originNative.decimals),
-        sender: user_id,
-        recipient: first2.recipient
-      });
-      const feeHuman = unitsToDecimal(fee, originNative.decimals);
-      feeHint = ` Estimated XCM fee about ${feeHuman} ${originNative.symbol} on ${first2.origin_chain}.`;
-    } else {
-      const fee = await estimateNativeFee(first2.origin_chain, originNative.symbol, user_id, first2.recipient, first2.amount);
-      const feeHuman = unitsToDecimal(fee, originNative.decimals);
-      feeHint = ` Estimated fee about ${feeHuman} ${originNative.symbol} on ${first2.origin_chain}.`;
-    }
-  } catch {
-  }
-  const confirmText = intent.items.length > 1 ? `You requested a batch of ${intent.items.length} transfers. First: send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.` : `You asked to send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.`;
-  const confirmAudio = await textToSpeech(env, confirmText);
-  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
-  const sessionId = v4_default();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
-  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
-});
-voice.post("/confirm", async (c) => {
-  const env = c.env;
-  const body = await c.req.json();
-  const parsed = VoiceConfirmSchema.safeParse(body);
-  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { audio_data, user_id } = parsed.data;
-  const ids = parsed.data.transaction_ids ?? (parsed.data.transaction_id ? [parsed.data.transaction_id] : []);
-  const db = getDb(env);
-  const found = ids.length ? await db.select().from(transactions).where(inArray(transactions.id, ids)) : [];
-  if (!found.length) return c.json({ error: "transaction(s) not found" }, 404);
-  if (found.some((t) => t.status !== "pending")) return c.json({ error: "one or more transactions not pending" }, 400);
-  const transcription = await speechToText(env, audio_data, "webm");
-  const lower = transcription.trim().toLowerCase();
-  let decision = "failed";
-  let message = "Cancelled";
-  if (lower.includes("confirm") || lower.includes("yes")) {
-    decision = "confirmed";
-    message = "Confirmed";
-    await db.update(transactions).set({ status: "confirmed" }).where(inArray(transactions.id, ids));
-  } else if (lower.includes("cancel") || lower.includes("no")) {
-    decision = "failed";
-    message = "Cancelled";
-    await db.update(transactions).set({ status: "failed" }).where(inArray(transactions.id, ids));
-  }
-  const responseAudio = await textToSpeech(env, `Transaction ${message}.`);
-  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, responseAudio);
-  const sessionId = v4_default();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.` });
-  return c.json({ status: decision, transaction_ids: ids, response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
-});
-function simpleFallbackIntent(text2) {
-  const words = text2.split(/\s+/);
-  const amountIdx = words.findIndex((w) => /^(send|transfer)$/i.test(w));
-  let amount = "0";
-  let token = "DOT";
-  let recipient = "";
-  if (amountIdx >= 0 && words[amountIdx + 1]) amount = words[amountIdx + 1];
-  const tokenIdx = amountIdx + 2;
-  if (words[tokenIdx]) token = words[tokenIdx].toUpperCase();
-  const toIdx = words.findIndex((w) => /^to$/i.test(w));
-  if (toIdx >= 0 && words[toIdx + 1]) recipient = words[toIdx + 1];
-  return {
-    type: "single",
-    language: "en",
-    items: [{ action: "transfer", amount, token, recipient, origin_chain: "polkadot", destination_chain: "polkadot" }],
-    schedule: null,
-    condition: null
-  };
-}
-__name(simpleFallbackIntent, "simpleFallbackIntent");
-function shortAddr(addr) {
-  if (!addr) return "";
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-}
-__name(shortAddr, "shortAddr");
-async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
-  const api = await getApiForChain(chain2);
-  const hash = await api.rpc.author.submitExtrinsic(`0x${signedExtrinsicHex}`);
-  return hash.toString();
-}
-__name(submitExtrinsic, "submitExtrinsic");
-var tx = new Hono2();
-tx.get("/", async (c) => {
-  const env = c.env;
-  const db = getDb(env);
-  const url = new URL(c.req.url);
-  const userId = url.searchParams.get("user_id") ?? "";
-  const status = url.searchParams.get("status") ?? void 0;
-  const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 100);
-  const offset = parseInt(url.searchParams.get("offset") || "0");
-  const where = status ? and(eq(transactions.userId, userId), eq(transactions.status, status)) : eq(transactions.userId, userId);
-  const rows = await db.select().from(transactions).where(where).limit(limit).offset(offset);
-  return c.json({ items: rows });
-});
-tx.get("/:id", async (c) => {
-  const env = c.env;
-  const db = getDb(env);
-  const id = c.req.param("id");
-  const [row] = await db.select().from(transactions).where(eq(transactions.id, id));
-  if (!row) return c.json({ error: "not found" }, 404);
-  return c.json(row);
-});
-tx.post("/execute", async (c) => {
-  const env = c.env;
-  const db = getDb(env);
-  const body = await c.req.json();
-  const parsed = ExecuteTxSchema.safeParse(body);
-  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { transaction_id, signed_extrinsic, chain: chain2, token, min_receive, slippage_bps } = parsed.data;
-  const [row] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
-  if (!row) return c.json({ error: "transaction not found" }, 404);
-  if (row.status !== "confirmed") return c.json({ error: "transaction not confirmed" }, 400);
-  if (token && token.toUpperCase() !== (row.tokenSymbol || "").toUpperCase()) {
-    return c.json({ error: "token does not match prepared transaction" }, 400);
-  }
-  try {
-    const parsedIntent = JSON.parse(row.parsedIntent || "{}");
-    const origin = parsedIntent.origin_chain;
-    const destination = parsedIntent.destination_chain;
-    const isXcm = origin && destination && origin !== destination;
-    if (isXcm) {
-      const info6 = getTokenInfo(token || row.tokenSymbol);
-      const priorMinReceive = parsedIntent?.constraints?.min_receive;
-      if (priorMinReceive) {
-        if (!min_receive) {
-          return c.json({ error: "min_receive required by prior constraints" }, 400);
-        }
-        if (info6) {
-          const priorUnits = decimalToUnits(priorMinReceive, info6.decimals);
-          const providedUnits = decimalToUnits(min_receive, info6.decimals);
-          if (BigInt(providedUnits) < BigInt(priorUnits)) {
-            return c.json({ error: "min_receive weaker than previously set" }, 400);
-          }
-        }
-      }
-      if (min_receive) {
-        if (info6) {
-          const minUnits = decimalToUnits(min_receive, info6.decimals);
-          const amtUnits = decimalToUnits(parsedIntent.amount, info6.decimals);
-          if (BigInt(minUnits) > BigInt(amtUnits)) {
-            return c.json({ error: "min_receive exceeds transfer amount" }, 400);
-          }
-        }
-      }
-      if (slippage_bps != null) {
-        if (slippage_bps < 0 || slippage_bps > 1e4) {
-          return c.json({ error: "invalid slippage_bps" }, 400);
-        }
-      }
-      const updatedIntent = {
-        ...parsedIntent,
-        constraints: {
-          ...parsedIntent.constraints || {},
-          min_receive: min_receive ?? parsedIntent.constraints?.min_receive,
-          slippage_bps: slippage_bps ?? parsedIntent.constraints?.slippage_bps,
-          token: token || row.tokenSymbol,
-          chain: chain2 || origin
-        }
-      };
-      await db.update(transactions).set({ parsedIntent: JSON.stringify(updatedIntent) }).where(eq(transactions.id, transaction_id));
-    }
-  } catch {
-  }
-  const hash = await submitExtrinsic(env, signed_extrinsic, chain2 || "polkadot");
-  await db.update(transactions).set({ transactionHash: hash, status: "submitted", confirmedAt: Date.now() }).where(eq(transactions.id, transaction_id));
-  return c.json({ transaction_hash: hash });
-});
-tx.post("/xcm/build", async (c) => {
-  const body = await c.req.json();
-  const { origin, destination, symbol, amount, sender, recipient } = body || {};
-  if (!origin || !destination || !symbol || !amount || !sender || !recipient) {
-    return c.json({ error: "missing fields" }, 400);
-  }
-  try {
-    const extrinsic = await buildXcmTransferExtrinsic({
-      origin,
-      destination,
-      asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 },
-      amount,
-      sender,
-      recipient
-    });
-    const hex8 = extrinsic.method.toHex();
-    return c.json({ call_hex: hex8 });
-  } catch (e) {
-    return c.json({ error: String(e) }, 500);
-  }
-});
-tx.post("/build", async (c) => {
-  const body = await c.req.json();
-  const { token, amount, recipient, origin_chain, destination_chain, min_receive, slippage_bps } = body || {};
-  if (!token || !amount || !recipient || !origin_chain || !destination_chain) {
-    return c.json({ error: "missing fields" }, 400);
-  }
-  const info6 = getTokenInfo(token);
-  if (!info6) return c.json({ error: "unsupported token" }, 400);
-  try {
-    let hex8;
-    let fee;
-    if (origin_chain === destination_chain) {
-      const extrinsic = await buildNativeTransfer(origin_chain, token, recipient, amount);
-      hex8 = extrinsic.method.toHex();
-      fee = await estimateNativeFee(origin_chain, token, recipient, recipient, amount);
-    } else {
-      if (token.toUpperCase() === "USDT") {
-        const extrinsic = await buildAssetHubUsdtTransfer(recipient, amount);
-        hex8 = extrinsic.method.toHex();
-      } else {
-        const extrinsic = await buildXcmTransferExtrinsic({
-          origin: origin_chain,
-          destination: destination_chain,
-          asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === "USDT" ? 1984 : void 0 },
-          amount,
-          sender: "0x",
-          recipient,
-          minReceive: min_receive ? decimalToUnits(min_receive, info6.decimals) : void 0
-        });
-        hex8 = extrinsic.method.toHex();
-        fee = await estimateXcmFee({
-          origin: origin_chain,
-          destination: destination_chain,
-          asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === "USDT" ? 1984 : void 0 },
-          amount,
-          sender: recipient,
-          recipient,
-          minReceive: min_receive ? decimalToUnits(min_receive, info6.decimals) : void 0
-        });
-      }
-    }
-    return c.json({ call_hex: hex8, fee });
-  } catch (e) {
-    return c.json({ error: String(e) }, 500);
-  }
-});
-tx.get("/xcm/estimate", async (c) => {
-  const url = new URL(c.req.url);
-  const origin = (url.searchParams.get("origin") || "").toString();
-  const destination = (url.searchParams.get("destination") || "").toString();
-  const symbol = (url.searchParams.get("symbol") || "").toUpperCase();
-  const amount = (url.searchParams.get("amount") || "0").toString();
-  const sender = (url.searchParams.get("sender") || "").toString();
-  const recipient = (url.searchParams.get("recipient") || "").toString();
-  const minReceive = (url.searchParams.get("min_receive") || "").toString();
-  if (!origin || !destination || !symbol || !amount || !recipient) {
-    return c.json({ error: "missing fields" }, 400);
-  }
-  try {
-    const fee = await estimateXcmFee({ origin, destination, asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 }, amount, sender, recipient, minReceive: minReceive || void 0 });
-    return c.json({ fee });
-  } catch (e) {
-    return c.json({ error: String(e) }, 500);
-  }
-});
-async function getTokenBalance(address, symbol) {
-  const info6 = getTokenInfo(symbol);
-  const api = await getApiForChain(info6.chain);
-  if (symbol === "DOT" || symbol === "GLMR") {
-    const { data } = await api.query.system.account(address);
-    return data.free.toString();
-  }
-  if (symbol === "USDT") {
-    const assetId = info6.assetId;
-    const account3 = await api.query.assets.account(assetId, address);
-    const json = account3.toJSON();
-    const balance = json?.balance ?? "0";
-    return String(balance);
-  }
-  return "0";
-}
-__name(getTokenBalance, "getTokenBalance");
 function cryptoWaitReady2() {
   return waitReady().then(() => {
     if (!isReady()) {
@@ -71826,6 +71565,13 @@ function createDecode3({ coder, ipfs }, validate) {
   };
 }
 __name(createDecode3, "createDecode3");
+function createEncode3({ coder, ipfs }) {
+  return (value, ipfsCompat) => {
+    const out = coder.encode(u8aToU8a2(value));
+    return ipfs && ipfsCompat ? `${ipfs}${out}` : out;
+  };
+}
+__name(createEncode3, "createEncode3");
 function createValidate3({ chars, ipfs, type, withPadding }) {
   return (value, ipfsCompat) => {
     if (typeof value !== "string") {
@@ -71857,6 +71603,7 @@ var config4 = {
 };
 var base58Validate3 = /* @__PURE__ */ createValidate3(config4);
 var base58Decode3 = /* @__PURE__ */ createDecode3(config4, base58Validate3);
+var base58Encode3 = /* @__PURE__ */ createEncode3(config4);
 function createDualHasher2(wa, js) {
   return (value, bitLength = 256, onlyJs) => {
     const u8a = u8aToU8a2(value);
@@ -72211,6 +71958,20 @@ function sr25519Verify2(message, signature, publicKey) {
   return sr25519Verify(signatureU8a, u8aToU8a2(message), publicKeyU8a);
 }
 __name(sr25519Verify2, "sr25519Verify2");
+function encodeAddress2(key, ss58Format = defaults3.prefix) {
+  const u8a = decodeAddress3(key);
+  if (ss58Format < 0 || ss58Format > 16383 || [46, 47].includes(ss58Format)) {
+    throw new Error("Out of range ss58Format specified");
+  } else if (!defaults3.allowedDecodedLengths.includes(u8a.length)) {
+    throw new Error(`Expected a valid key to convert, with length ${defaults3.allowedDecodedLengths.join(", ")}`);
+  }
+  const input = u8aConcat2(ss58Format < 64 ? [ss58Format] : [
+    (ss58Format & 252) >> 2 | 64,
+    ss58Format >> 8 | (ss58Format & 3) << 6
+  ], u8a);
+  return base58Encode3(u8aConcat2(input, sshash3(input).subarray(0, [32, 33].includes(u8a.length) ? 2 : 1)));
+}
+__name(encodeAddress2, "encodeAddress2");
 var keccakAsU8a2 = /* @__PURE__ */ createDualHasher2({ 256: keccak256, 512: keccak512 }, { 256: keccak_256, 512: keccak_512 });
 function hasher(hashType, data, onlyJs) {
   return hashType === "keccak" ? keccakAsU8a2(data, void 0, onlyJs) : blake2AsU8a4(data, void 0, void 0, onlyJs);
@@ -72328,6 +72089,341 @@ function signatureVerify(message, signature, addressOrPublicKey) {
   return verifyFn(result, input);
 }
 __name(signatureVerify, "signatureVerify");
+function isValidSs58Address(address) {
+  try {
+    const pub = decodeAddress3(address);
+    encodeAddress2(pub);
+    return true;
+  } catch {
+    return false;
+  }
+}
+__name(isValidSs58Address, "isValidSs58Address");
+var voice = new Hono2();
+var MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024;
+var ALLOWED_FORMATS = /* @__PURE__ */ new Set(["mp3", "wav", "webm"]);
+voice.post("/process", async (c) => {
+  const env = c.env;
+  const body = await c.req.json();
+  const parsed = VoiceProcessSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const { audio_data, user_id, format } = parsed.data;
+  if (!ALLOWED_FORMATS.has(format)) return c.json({ error: "unsupported audio format" }, 415);
+  if (audio_data.length > MAX_AUDIO_BASE64_SIZE) return c.json({ error: "audio too large" }, 413);
+  const db = getDb(env);
+  await db.insert(users).values({ id: user_id, walletAddress: user_id }).onConflictDoNothing();
+  const transcription = await speechToText(env, audio_data, format);
+  let intent;
+  if (env.PERPLEXITY_API_KEY) {
+    try {
+      intent = await parseIntentWithPerplexity(env, transcription);
+    } catch (e) {
+      intent = simpleFallbackIntent(transcription);
+    }
+  } else {
+    intent = simpleFallbackIntent(transcription);
+  }
+  for (const item of intent.items) {
+    if (!isValidSs58Address(item.recipient)) {
+      return c.json({ error: `invalid recipient address: ${item.recipient}` }, 400);
+    }
+  }
+  const txIds = [];
+  for (const item of intent.items) {
+    const txId = v4_default();
+    txIds.push(txId);
+    await db.insert(transactions).values({
+      id: txId,
+      userId: user_id,
+      voiceCommand: transcription,
+      parsedIntent: JSON.stringify(item),
+      recipientAddress: item.recipient,
+      amount: item.amount,
+      tokenSymbol: item.token,
+      status: "pending"
+    });
+  }
+  const first2 = intent.items[0];
+  const isXcm = first2.origin_chain !== first2.destination_chain;
+  const originNative = getChainNativeTokenInfo(first2.origin_chain);
+  let feeHint = "";
+  try {
+    if (isXcm) {
+      const fee = await estimateXcmFee({
+        origin: first2.origin_chain,
+        destination: first2.destination_chain,
+        asset: { symbol: originNative.symbol },
+        amount: decimalToUnits(first2.amount, originNative.decimals),
+        sender: user_id,
+        recipient: first2.recipient
+      });
+      const feeHuman = unitsToDecimal(fee, originNative.decimals);
+      feeHint = ` Estimated XCM fee about ${feeHuman} ${originNative.symbol} on ${first2.origin_chain}.`;
+    } else {
+      const fee = await estimateNativeFee(first2.origin_chain, originNative.symbol, user_id, first2.recipient, first2.amount);
+      const feeHuman = unitsToDecimal(fee, originNative.decimals);
+      feeHint = ` Estimated fee about ${feeHuman} ${originNative.symbol} on ${first2.origin_chain}.`;
+    }
+  } catch {
+  }
+  const confirmText = intent.items.length > 1 ? `You requested a batch of ${intent.items.length} transfers. First: send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.` : `You asked to send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.`;
+  const confirmAudio = await textToSpeech(env, confirmText);
+  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
+  const sessionId = v4_default();
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
+  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
+});
+voice.post("/confirm", async (c) => {
+  const env = c.env;
+  const body = await c.req.json();
+  const parsed = VoiceConfirmSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const { audio_data, user_id } = parsed.data;
+  const ids = parsed.data.transaction_ids ?? (parsed.data.transaction_id ? [parsed.data.transaction_id] : []);
+  if (audio_data && audio_data.length > MAX_AUDIO_BASE64_SIZE) return c.json({ error: "audio too large" }, 413);
+  const db = getDb(env);
+  const found = ids.length ? await db.select().from(transactions).where(inArray(transactions.id, ids)) : [];
+  if (!found.length) return c.json({ error: "transaction(s) not found" }, 404);
+  if (found.some((t) => t.status !== "pending")) return c.json({ error: "one or more transactions not pending" }, 400);
+  const transcription = await speechToText(env, audio_data, "webm");
+  const lower = transcription.trim().toLowerCase();
+  let decision = "failed";
+  let message = "Cancelled";
+  if (lower.includes("confirm") || lower.includes("yes")) {
+    decision = "confirmed";
+    message = "Confirmed";
+    await db.update(transactions).set({ status: "confirmed" }).where(inArray(transactions.id, ids));
+  } else if (lower.includes("cancel") || lower.includes("no")) {
+    decision = "failed";
+    message = "Cancelled";
+    await db.update(transactions).set({ status: "failed" }).where(inArray(transactions.id, ids));
+  }
+  const responseAudio = await textToSpeech(env, `Transaction ${message}.`);
+  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, responseAudio);
+  const sessionId = v4_default();
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.` });
+  return c.json({ status: decision, transaction_ids: ids, response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
+});
+function simpleFallbackIntent(text2) {
+  const words = text2.split(/\s+/);
+  const amountIdx = words.findIndex((w) => /^(send|transfer)$/i.test(w));
+  let amount = "0";
+  let token = "DOT";
+  let recipient = "";
+  if (amountIdx >= 0 && words[amountIdx + 1]) amount = words[amountIdx + 1];
+  const tokenIdx = amountIdx + 2;
+  if (words[tokenIdx]) token = words[tokenIdx].toUpperCase();
+  const toIdx = words.findIndex((w) => /^to$/i.test(w));
+  if (toIdx >= 0 && words[toIdx + 1]) recipient = words[toIdx + 1];
+  return {
+    type: "single",
+    language: "en",
+    items: [{ action: "transfer", amount, token, recipient, origin_chain: "polkadot", destination_chain: "polkadot" }],
+    schedule: null,
+    condition: null
+  };
+}
+__name(simpleFallbackIntent, "simpleFallbackIntent");
+function shortAddr(addr) {
+  if (!addr) return "";
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+}
+__name(shortAddr, "shortAddr");
+async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
+  const api = await getApiForChain(chain2);
+  const hash = await api.rpc.author.submitExtrinsic(`0x${signedExtrinsicHex}`);
+  return hash.toString();
+}
+__name(submitExtrinsic, "submitExtrinsic");
+var tx = new Hono2();
+tx.get("/", async (c) => {
+  const env = c.env;
+  const db = getDb(env);
+  const url = new URL(c.req.url);
+  const userId = url.searchParams.get("user_id") ?? "";
+  const status = url.searchParams.get("status") ?? void 0;
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 100);
+  const offset = parseInt(url.searchParams.get("offset") || "0");
+  const where = status ? and(eq(transactions.userId, userId), eq(transactions.status, status)) : eq(transactions.userId, userId);
+  const rows = await db.select().from(transactions).where(where).limit(limit).offset(offset);
+  return c.json({ items: rows });
+});
+tx.get("/:id", async (c) => {
+  const env = c.env;
+  const db = getDb(env);
+  const id = c.req.param("id");
+  const [row] = await db.select().from(transactions).where(eq(transactions.id, id));
+  if (!row) return c.json({ error: "not found" }, 404);
+  return c.json(row);
+});
+tx.post("/execute", async (c) => {
+  const env = c.env;
+  const db = getDb(env);
+  const body = await c.req.json();
+  const parsed = ExecuteTxSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const { transaction_id, signed_extrinsic, chain: chain2, token, min_receive, slippage_bps } = parsed.data;
+  const [row] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
+  if (!row) return c.json({ error: "transaction not found" }, 404);
+  if (row.status !== "confirmed") return c.json({ error: "transaction not confirmed" }, 400);
+  if (token && token.toUpperCase() !== (row.tokenSymbol || "").toUpperCase()) {
+    return c.json({ error: "token does not match prepared transaction" }, 400);
+  }
+  try {
+    const parsedIntent = JSON.parse(row.parsedIntent || "{}");
+    const origin = parsedIntent.origin_chain;
+    const destination = parsedIntent.destination_chain;
+    const isXcm = origin && destination && origin !== destination;
+    if (isXcm) {
+      const info6 = getTokenInfo(token || row.tokenSymbol);
+      const priorMinReceive = parsedIntent?.constraints?.min_receive;
+      if (priorMinReceive) {
+        if (!min_receive) {
+          return c.json({ error: "min_receive required by prior constraints" }, 400);
+        }
+        if (info6) {
+          const priorUnits = decimalToUnits(priorMinReceive, info6.decimals);
+          const providedUnits = decimalToUnits(min_receive, info6.decimals);
+          if (BigInt(providedUnits) < BigInt(priorUnits)) {
+            return c.json({ error: "min_receive weaker than previously set" }, 400);
+          }
+        }
+      }
+      if (min_receive) {
+        if (info6) {
+          const minUnits = decimalToUnits(min_receive, info6.decimals);
+          const amtUnits = decimalToUnits(parsedIntent.amount, info6.decimals);
+          if (BigInt(minUnits) > BigInt(amtUnits)) {
+            return c.json({ error: "min_receive exceeds transfer amount" }, 400);
+          }
+        }
+      }
+      if (slippage_bps != null) {
+        if (slippage_bps < 0 || slippage_bps > 1e4) {
+          return c.json({ error: "invalid slippage_bps" }, 400);
+        }
+      }
+      const updatedIntent = {
+        ...parsedIntent,
+        constraints: {
+          ...parsedIntent.constraints || {},
+          min_receive: min_receive ?? parsedIntent.constraints?.min_receive,
+          slippage_bps: slippage_bps ?? parsedIntent.constraints?.slippage_bps,
+          token: token || row.tokenSymbol,
+          chain: chain2 || origin
+        }
+      };
+      await db.update(transactions).set({ parsedIntent: JSON.stringify(updatedIntent) }).where(eq(transactions.id, transaction_id));
+    }
+  } catch {
+  }
+  const hash = await submitExtrinsic(env, signed_extrinsic, chain2 || "polkadot");
+  await db.update(transactions).set({ transactionHash: hash, status: "submitted", confirmedAt: Date.now() }).where(eq(transactions.id, transaction_id));
+  return c.json({ transaction_hash: hash });
+});
+tx.post("/xcm/build", async (c) => {
+  const body = await c.req.json();
+  const { origin, destination, symbol, amount, sender, recipient } = body || {};
+  if (!origin || !destination || !symbol || !amount || !sender || !recipient) {
+    return c.json({ error: "missing fields" }, 400);
+  }
+  try {
+    const extrinsic = await buildXcmTransferExtrinsic({
+      origin,
+      destination,
+      asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 },
+      amount,
+      sender,
+      recipient
+    });
+    const hex8 = extrinsic.method.toHex();
+    return c.json({ call_hex: hex8 });
+  } catch (e) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
+tx.post("/build", async (c) => {
+  const body = await c.req.json();
+  const { token, amount, recipient, origin_chain, destination_chain, min_receive, slippage_bps } = body || {};
+  if (!token || !amount || !recipient || !origin_chain || !destination_chain) {
+    return c.json({ error: "missing fields" }, 400);
+  }
+  const info6 = getTokenInfo(token);
+  if (!info6) return c.json({ error: "unsupported token" }, 400);
+  try {
+    let hex8;
+    let fee;
+    if (origin_chain === destination_chain) {
+      const extrinsic = await buildNativeTransfer(origin_chain, token, recipient, amount);
+      hex8 = extrinsic.method.toHex();
+      fee = await estimateNativeFee(origin_chain, token, recipient, recipient, amount);
+    } else {
+      if (token.toUpperCase() === "USDT") {
+        const extrinsic = await buildAssetHubUsdtTransfer(recipient, amount);
+        hex8 = extrinsic.method.toHex();
+      } else {
+        const extrinsic = await buildXcmTransferExtrinsic({
+          origin: origin_chain,
+          destination: destination_chain,
+          asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === "USDT" ? 1984 : void 0 },
+          amount,
+          sender: "0x",
+          recipient,
+          minReceive: min_receive ? decimalToUnits(min_receive, info6.decimals) : void 0
+        });
+        hex8 = extrinsic.method.toHex();
+        fee = await estimateXcmFee({
+          origin: origin_chain,
+          destination: destination_chain,
+          asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === "USDT" ? 1984 : void 0 },
+          amount,
+          sender: recipient,
+          recipient,
+          minReceive: min_receive ? decimalToUnits(min_receive, info6.decimals) : void 0
+        });
+      }
+    }
+    return c.json({ call_hex: hex8, fee });
+  } catch (e) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
+tx.get("/xcm/estimate", async (c) => {
+  const url = new URL(c.req.url);
+  const origin = (url.searchParams.get("origin") || "").toString();
+  const destination = (url.searchParams.get("destination") || "").toString();
+  const symbol = (url.searchParams.get("symbol") || "").toUpperCase();
+  const amount = (url.searchParams.get("amount") || "0").toString();
+  const sender = (url.searchParams.get("sender") || "").toString();
+  const recipient = (url.searchParams.get("recipient") || "").toString();
+  const minReceive = (url.searchParams.get("min_receive") || "").toString();
+  if (!origin || !destination || !symbol || !amount || !recipient) {
+    return c.json({ error: "missing fields" }, 400);
+  }
+  try {
+    const fee = await estimateXcmFee({ origin, destination, asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 }, amount, sender, recipient, minReceive: minReceive || void 0 });
+    return c.json({ fee });
+  } catch (e) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
+async function getTokenBalance(address, symbol) {
+  const info6 = getTokenInfo(symbol);
+  const api = await getApiForChain(info6.chain);
+  if (symbol === "DOT" || symbol === "GLMR") {
+    const { data } = await api.query.system.account(address);
+    return data.free.toString();
+  }
+  if (symbol === "USDT") {
+    const assetId = info6.assetId;
+    const account3 = await api.query.assets.account(assetId, address);
+    const json = account3.toJSON();
+    const balance = json?.balance ?? "0";
+    return String(balance);
+  }
+  return "0";
+}
+__name(getTokenBalance, "getTokenBalance");
 var wallet = new Hono2();
 wallet.post("/connect", async (c) => {
   const env = c.env;
@@ -72399,7 +72495,84 @@ prices.get("/prices/convert", async (c) => {
   const converted = convertAmount(amount, p[from2] || 0, p[to] || 0);
   return c.json({ amount, from: from2, to, converted });
 });
+var cors = /* @__PURE__ */ __name((options) => {
+  const defaults4 = {
+    origin: "*",
+    allowMethods: ["GET", "HEAD", "PUT", "POST", "DELETE", "PATCH"],
+    allowHeaders: [],
+    exposeHeaders: []
+  };
+  const opts = {
+    ...defaults4,
+    ...options
+  };
+  const findAllowOrigin = ((optsOrigin) => {
+    if (typeof optsOrigin === "string") {
+      if (optsOrigin === "*") {
+        return () => optsOrigin;
+      } else {
+        return (origin) => optsOrigin === origin ? origin : null;
+      }
+    } else if (typeof optsOrigin === "function") {
+      return optsOrigin;
+    } else {
+      return (origin) => optsOrigin.includes(origin) ? origin : null;
+    }
+  })(opts.origin);
+  return /* @__PURE__ */ __name(async function cors2(c, next) {
+    function set(key, value) {
+      c.res.headers.set(key, value);
+    }
+    __name(set, "set");
+    const allowOrigin = findAllowOrigin(c.req.header("origin") || "", c);
+    if (allowOrigin) {
+      set("Access-Control-Allow-Origin", allowOrigin);
+    }
+    if (opts.origin !== "*") {
+      const existingVary = c.req.header("Vary");
+      if (existingVary) {
+        set("Vary", existingVary);
+      } else {
+        set("Vary", "Origin");
+      }
+    }
+    if (opts.credentials) {
+      set("Access-Control-Allow-Credentials", "true");
+    }
+    if (opts.exposeHeaders?.length) {
+      set("Access-Control-Expose-Headers", opts.exposeHeaders.join(","));
+    }
+    if (c.req.method === "OPTIONS") {
+      if (opts.maxAge != null) {
+        set("Access-Control-Max-Age", opts.maxAge.toString());
+      }
+      if (opts.allowMethods?.length) {
+        set("Access-Control-Allow-Methods", opts.allowMethods.join(","));
+      }
+      let headers = opts.allowHeaders;
+      if (!headers?.length) {
+        const requestHeaders = c.req.header("Access-Control-Request-Headers");
+        if (requestHeaders) {
+          headers = requestHeaders.split(/\s*,\s*/);
+        }
+      }
+      if (headers?.length) {
+        set("Access-Control-Allow-Headers", headers.join(","));
+        c.res.headers.append("Vary", "Access-Control-Request-Headers");
+      }
+      c.res.headers.delete("Content-Length");
+      c.res.headers.delete("Content-Type");
+      return new Response(null, {
+        headers: c.res.headers,
+        status: 204,
+        statusText: c.res.statusText
+      });
+    }
+    await next();
+  }, "cors2");
+}, "cors");
 var app = new Hono2();
+app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"], allowHeaders: ["Content-Type", "Authorization"] }));
 app.route("/voice", voice);
 app.route("/transactions", tx);
 app.route("/wallet", wallet);
