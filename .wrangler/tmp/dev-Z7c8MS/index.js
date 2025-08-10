@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// .wrangler/tmp/bundle-kqlXKA/checked-fetch.js
+// .wrangler/tmp/bundle-rF75Ib/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init2) {
   const url = request instanceof URL ? request : new URL(
@@ -72172,10 +72172,48 @@ function getClientKey(req, extra) {
   return `${ip}${extra ? ":" + extra : ""}`;
 }
 __name(getClientKey, "getClientKey");
+var KvRateLimiter = class {
+  static {
+    __name(this, "KvRateLimiter");
+  }
+  constructor(kv, tokensPerInterval, intervalMs, burst) {
+    this.kv = kv;
+    this.tokensPerInterval = tokensPerInterval;
+    this.intervalMs = intervalMs;
+    this.burst = burst;
+  }
+  async allow(key) {
+    const now = Date.now();
+    const stateRaw = await this.kv.get(key);
+    let state = stateRaw ? JSON.parse(stateRaw) : { tokens: this.burst, lastRefill: now };
+    const elapsed = now - state.lastRefill;
+    if (elapsed > 0) {
+      const refill = elapsed / this.intervalMs * this.tokensPerInterval;
+      state.tokens = Math.min(this.burst, state.tokens + refill);
+      state.lastRefill = now;
+    }
+    let allowed = false;
+    if (state.tokens >= 1) {
+      state.tokens -= 1;
+      allowed = true;
+    }
+    await this.kv.put(key, JSON.stringify(state), { expirationTtl: Math.ceil(this.intervalMs / 1e3) * 10 });
+    return allowed;
+  }
+};
 var voice = new Hono2();
 var MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024;
 var ALLOWED_FORMATS = /* @__PURE__ */ new Set(["mp3", "wav", "webm"]);
-var limiter = new RateLimiter(1, 1e3, 5);
+var memLimiter = new RateLimiter(1, 1e3, 5);
+function limiterAllow(c, key) {
+  const kv = c.env.RLIMIT;
+  if (kv) {
+    const kvLimiter = new KvRateLimiter(kv, 1, 1e3, 5);
+    return kvLimiter.allow(key);
+  }
+  return memLimiter.allow(key);
+}
+__name(limiterAllow, "limiterAllow");
 async function putAudioToR2(env, key, data, contentType) {
   if (!env.AUDIO) return void 0;
   await env.AUDIO.put(key, data, { httpMetadata: { contentType } });
@@ -72184,7 +72222,8 @@ async function putAudioToR2(env, key, data, contentType) {
 __name(putAudioToR2, "putAudioToR2");
 voice.post("/process", async (c) => {
   const key = getClientKey(c.req.raw, "voice:process");
-  if (!limiter.allow(key)) return c.json({ error: "rate_limited" }, 429);
+  const allowed = await limiterAllow(c, key);
+  if (!allowed) return c.json({ error: "rate_limited" }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceProcessSchema.safeParse(body);
@@ -72262,7 +72301,8 @@ voice.post("/process", async (c) => {
 });
 voice.post("/confirm", async (c) => {
   const key = getClientKey(c.req.raw, "voice:confirm");
-  if (!limiter.allow(key)) return c.json({ error: "rate_limited" }, 429);
+  const allowed = await limiterAllow(c, key);
+  if (!allowed) return c.json({ error: "rate_limited" }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceConfirmSchema.safeParse(body);
@@ -73254,7 +73294,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-kqlXKA/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-rF75Ib/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -73286,7 +73326,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-kqlXKA/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-rF75Ib/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

@@ -19,6 +19,10 @@ migrations_dir = "drizzle"
 binding = "AUDIO"
 bucket_name = "voicedot-audio"
 
+[[kv_namespaces]]
+binding = "RLIMIT"
+id = "voicedot-rlimit"
+
 [env.staging]
 name = "voicedot-api-staging"
 
@@ -36,3 +40,7 @@ migrations_dir = "drizzle"
 [[env.staging.r2_buckets]]
 binding = "AUDIO"
 bucket_name = "voicedot-audio-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "RLIMIT"
+id = "voicedot-rlimit-staging"

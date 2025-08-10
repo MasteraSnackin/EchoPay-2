@@ -13,14 +13,23 @@ import { getChainNativeTokenInfo } from '../integrations/tokens';
 import { decimalToUnits, unitsToDecimal } from '../utils/units';
 import { estimateNativeFee } from '../integrations/transfers';
 import { isValidSs58Address } from '../utils/address';
-import { RateLimiter, getClientKey } from '../utils/rateLimit';
+import { RateLimiter, getClientKey, KvRateLimiter } from '../utils/rateLimit';
 
-export const voice = new Hono<{ Bindings: Env }>();
+export const voice = new Hono<{ Bindings: Env & { RLIMIT?: KVNamespace } }>();
 
 const MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024; // ~5MB base64
 const ALLOWED_FORMATS = new Set(['mp3', 'wav', 'webm']);
 
-const limiter = new RateLimiter(1, 1000, 5); // 1 token/sec, burst 5
+const memLimiter = new RateLimiter(1, 1000, 5); // 1 token/sec, burst 5
+
+function limiterAllow(c: any, key: string): Promise<boolean> | boolean {
+  const kv: KVNamespace | undefined = c.env.RLIMIT as any;
+  if (kv) {
+    const kvLimiter = new KvRateLimiter(kv, 1, 1000, 5);
+    return kvLimiter.allow(key);
+  }
+  return memLimiter.allow(key);
+}
 
 async function putAudioToR2(env: Env, key: string, data: ArrayBuffer, contentType: string): Promise<string | undefined> {
   if (!env.AUDIO) return undefined;
@@ -30,7 +39,8 @@ async function putAudioToR2(env: Env, key: string, data: ArrayBuffer, contentTyp
 
 voice.post('/process', async (c) => {
   const key = getClientKey(c.req.raw, 'voice:process');
-  if (!limiter.allow(key)) return c.json({ error: 'rate_limited' }, 429);
+  const allowed = await limiterAllow(c, key);
+  if (!allowed) return c.json({ error: 'rate_limited' }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceProcessSchema.safeParse(body);
@@ -121,7 +131,8 @@ voice.post('/process', async (c) => {
 
 voice.post('/confirm', async (c) => {
   const key = getClientKey(c.req.raw, 'voice:confirm');
-  if (!limiter.allow(key)) return c.json({ error: 'rate_limited' }, 429);
+  const allowed = await limiterAllow(c, key);
+  if (!allowed) return c.json({ error: 'rate_limited' }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceConfirmSchema.safeParse(body);

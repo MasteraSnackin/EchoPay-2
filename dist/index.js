@@ -71876,12 +71876,46 @@ function getClientKey(req, extra) {
   const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") || "unknown";
   return `${ip}${extra ? ":" + extra : ""}`;
 }
+var KvRateLimiter = class {
+  constructor(kv, tokensPerInterval, intervalMs, burst) {
+    this.kv = kv;
+    this.tokensPerInterval = tokensPerInterval;
+    this.intervalMs = intervalMs;
+    this.burst = burst;
+  }
+  async allow(key) {
+    const now = Date.now();
+    const stateRaw = await this.kv.get(key);
+    let state = stateRaw ? JSON.parse(stateRaw) : { tokens: this.burst, lastRefill: now };
+    const elapsed = now - state.lastRefill;
+    if (elapsed > 0) {
+      const refill = elapsed / this.intervalMs * this.tokensPerInterval;
+      state.tokens = Math.min(this.burst, state.tokens + refill);
+      state.lastRefill = now;
+    }
+    let allowed = false;
+    if (state.tokens >= 1) {
+      state.tokens -= 1;
+      allowed = true;
+    }
+    await this.kv.put(key, JSON.stringify(state), { expirationTtl: Math.ceil(this.intervalMs / 1e3) * 10 });
+    return allowed;
+  }
+};
 
 // src/routes/voice.ts
 var voice = new Hono2();
 var MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024;
 var ALLOWED_FORMATS = /* @__PURE__ */ new Set(["mp3", "wav", "webm"]);
-var limiter = new RateLimiter(1, 1e3, 5);
+var memLimiter = new RateLimiter(1, 1e3, 5);
+function limiterAllow(c, key) {
+  const kv = c.env.RLIMIT;
+  if (kv) {
+    const kvLimiter = new KvRateLimiter(kv, 1, 1e3, 5);
+    return kvLimiter.allow(key);
+  }
+  return memLimiter.allow(key);
+}
 async function putAudioToR2(env, key, data, contentType) {
   if (!env.AUDIO) return void 0;
   await env.AUDIO.put(key, data, { httpMetadata: { contentType } });
@@ -71889,7 +71923,8 @@ async function putAudioToR2(env, key, data, contentType) {
 }
 voice.post("/process", async (c) => {
   const key = getClientKey(c.req.raw, "voice:process");
-  if (!limiter.allow(key)) return c.json({ error: "rate_limited" }, 429);
+  const allowed = await limiterAllow(c, key);
+  if (!allowed) return c.json({ error: "rate_limited" }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceProcessSchema.safeParse(body);
@@ -71967,7 +72002,8 @@ voice.post("/process", async (c) => {
 });
 voice.post("/confirm", async (c) => {
   const key = getClientKey(c.req.raw, "voice:confirm");
-  if (!limiter.allow(key)) return c.json({ error: "rate_limited" }, 429);
+  const allowed = await limiterAllow(c, key);
+  if (!allowed) return c.json({ error: "rate_limited" }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceConfirmSchema.safeParse(body);
