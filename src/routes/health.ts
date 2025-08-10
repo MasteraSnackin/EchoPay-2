@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { Env } from '../db/client';
-import { getApi } from '../integrations/papi';
+import { getApiForChain } from '../integrations/chains';
 
 export const health = new Hono<{ Bindings: Env }>();
 
@@ -10,7 +10,7 @@ health.get('/health', (c) => {
 
 health.get('/status/polkadot', async (c) => {
   try {
-    const api = await getApi(c.env);
+    const api = await getApiForChain('polkadot');
     const header = await api.rpc.chain.getHeader();
     return c.json({ connected: true, block: header.number.toString() });
   } catch (e: any) {

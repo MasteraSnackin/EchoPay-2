@@ -3,7 +3,6 @@ import { Env, getDb } from '../db/client';
 import { WalletBalanceSchema, WalletConnectSchema } from '../utils/validators';
 import { users } from '../db/schema';
 import { getBalance } from '../integrations/papi';
-import { v4 as uuidv4 } from 'uuid';
 
 export const wallet = new Hono<{ Bindings: Env }>();
 
@@ -15,7 +14,7 @@ wallet.post('/connect', async (c) => {
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
   const { wallet_address } = parsed.data;
-  const id = wallet_address; // Use wallet address as user id for simplicity
+  const id = wallet_address;
 
   await db.insert(users).values({ id, walletAddress: wallet_address }).onConflictDoNothing();
   return c.json({ user_id: id });
@@ -30,7 +29,14 @@ wallet.get('/balance', async (c) => {
   });
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
-  const { wallet_address } = parsed.data;
-  const dot = await getBalance(env, wallet_address);
-  return c.json({ balances: { DOT: dot } });
+  const { wallet_address, token_symbols } = parsed.data;
+  const symbols = (token_symbols || 'DOT').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean);
+
+  const balances: Record<string, string> = {};
+  if (symbols.includes('DOT')) {
+    balances.DOT = await getBalance(env, wallet_address, 'polkadot');
+  }
+  // TODO: USDT on Asset Hub, GLMR on Moonbeam, etc.
+
+  return c.json({ balances });
 });

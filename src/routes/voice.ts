@@ -5,7 +5,9 @@ import { speechToText, textToSpeech } from '../integrations/elevenlabs';
 import { encryptAesGcm } from '../utils/crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { transactions, voiceSessions, users } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
+import { parseIntentWithPerplexity } from '../integrations/perplexity';
+import { Intent, IntentItem } from '../utils/intent';
 
 export const voice = new Hono<{ Bindings: Env }>();
 
@@ -17,42 +19,49 @@ voice.post('/process', async (c) => {
   const { audio_data, user_id, format } = parsed.data;
 
   const db = getDb(env);
-  // Ensure user exists
   await db.insert(users).values({ id: user_id, walletAddress: user_id }).onConflictDoNothing();
 
-  // Transcribe
   const transcription = await speechToText(env, audio_data, format);
 
-  // TODO: NLP intent parsing (Perplexity integration). For MVP, expect commands like: "send 1 DOT to <address>"
-  const intent = simpleParseIntent(transcription);
+  let intent: Intent;
+  if (env.PERPLEXITY_API_KEY) {
+    try {
+      intent = await parseIntentWithPerplexity(env, transcription);
+    } catch (e) {
+      intent = simpleFallbackIntent(transcription);
+    }
+  } else {
+    intent = simpleFallbackIntent(transcription);
+  }
 
-  const txId = uuidv4();
-  await db.insert(transactions).values({
-    id: txId,
-    userId: user_id,
-    voiceCommand: transcription,
-    parsedIntent: JSON.stringify(intent),
-    recipientAddress: intent.recipient,
-    amount: intent.amount,
-    tokenSymbol: intent.token,
-    status: 'pending',
-  });
+  const txIds: string[] = [];
+  for (const item of intent.items) {
+    const txId = uuidv4();
+    txIds.push(txId);
+    await db.insert(transactions).values({
+      id: txId,
+      userId: user_id,
+      voiceCommand: transcription,
+      parsedIntent: JSON.stringify(item),
+      recipientAddress: item.recipient,
+      amount: item.amount,
+      tokenSymbol: item.token,
+      status: 'pending',
+    });
+  }
 
-  // Generate confirmation speech
-  const confirmText = `You asked to send ${intent.amount} ${intent.token} to ${shortAddr(intent.recipient)}. Say confirm to proceed or cancel to abort.`;
+  const first = intent.items[0];
+  const confirmText = intent.items.length > 1
+    ? `You requested a batch of ${intent.items.length} transfers. First: send ${first.amount} ${first.token} on ${first.origin_chain} to ${shortAddr(first.recipient)}. Say confirm to proceed or cancel to abort.`
+    : `You asked to send ${first.amount} ${first.token} on ${first.origin_chain} to ${shortAddr(first.recipient)}. Say confirm to proceed or cancel to abort.`;
   const confirmAudio = await textToSpeech(env, confirmText);
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
 
   const sessionId = uuidv4();
-  await db.insert(voiceSessions).values({
-    id: sessionId,
-    userId: user_id,
-    transcription,
-    responseText: confirmText,
-  });
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
 
   return c.json({
-    transaction_id: txId,
+    transaction_ids: txIds,
     session_id: sessionId,
     intent,
     confirmation: {
@@ -68,12 +77,13 @@ voice.post('/confirm', async (c) => {
   const body = await c.req.json();
   const parsed = VoiceConfirmSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { audio_data, transaction_id, user_id } = parsed.data;
+  const { audio_data, user_id } = parsed.data as any;
+  const ids: string[] = parsed.data.transaction_ids ?? (parsed.data.transaction_id ? [parsed.data.transaction_id] : []);
 
   const db = getDb(env);
-  const [tx] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
-  if (!tx) return c.json({ error: 'transaction not found' }, 404);
-  if (tx.status !== 'pending') return c.json({ error: 'transaction not pending' }, 400);
+  const found = ids.length ? await db.select().from(transactions).where(inArray(transactions.id, ids)) : [];
+  if (!found.length) return c.json({ error: 'transaction(s) not found' }, 404);
+  if (found.some((t) => t.status !== 'pending')) return c.json({ error: 'one or more transactions not pending' }, 400);
 
   const transcription = await speechToText(env, audio_data, 'webm');
   const lower = transcription.trim().toLowerCase();
@@ -82,11 +92,11 @@ voice.post('/confirm', async (c) => {
   if (lower.includes('confirm') || lower.includes('yes')) {
     decision = 'confirmed';
     message = 'Confirmed';
-    await db.update(transactions).set({ status: 'confirmed' }).where(eq(transactions.id, transaction_id));
+    await db.update(transactions).set({ status: 'confirmed' }).where(inArray(transactions.id, ids));
   } else if (lower.includes('cancel') || lower.includes('no')) {
     decision = 'failed';
     message = 'Cancelled';
-    await db.update(transactions).set({ status: 'failed' }).where(eq(transactions.id, transaction_id));
+    await db.update(transactions).set({ status: 'failed' }).where(inArray(transactions.id, ids));
   }
 
   const responseAudio = await textToSpeech(env, `Transaction ${message}.`);
@@ -97,17 +107,12 @@ voice.post('/confirm', async (c) => {
 
   return c.json({
     status: decision,
-    response: {
-      audio_base64: encrypted.ciphertext,
-      iv: encrypted.iv,
-      format: 'mp3',
-    },
+    transaction_ids: ids,
+    response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: 'mp3' },
   });
 });
 
-function simpleParseIntent(text: string): { amount: string; token: string; recipient: string } {
-  // Very naive intent parsing
-  // Example: "send 1 DOT to 14abcd..."
+function simpleFallbackIntent(text: string): Intent {
   const words = text.split(/\s+/);
   const amountIdx = words.findIndex((w) => /^(send|transfer)$/i.test(w));
   let amount = '0';
@@ -118,7 +123,22 @@ function simpleParseIntent(text: string): { amount: string; token: string; recip
   if (words[tokenIdx]) token = words[tokenIdx].toUpperCase();
   const toIdx = words.findIndex((w) => /^to$/i.test(w));
   if (toIdx >= 0 && words[toIdx + 1]) recipient = words[toIdx + 1];
-  return { amount, token, recipient };
+  return {
+    type: 'single',
+    language: 'en',
+    items: [
+      {
+        action: 'transfer',
+        amount,
+        token,
+        recipient,
+        origin_chain: 'polkadot',
+        destination_chain: 'polkadot',
+      },
+    ],
+    schedule: null,
+    condition: null,
+  };
 }
 
 function shortAddr(addr: string) {

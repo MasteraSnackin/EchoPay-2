@@ -36,13 +36,13 @@ tx.post('/execute', async (c) => {
   const body = await c.req.json();
   const parsed = ExecuteTxSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { transaction_id, signed_extrinsic } = parsed.data;
+  const { transaction_id, signed_extrinsic, chain } = parsed.data;
 
   const [row] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
   if (!row) return c.json({ error: 'transaction not found' }, 404);
   if (row.status !== 'confirmed') return c.json({ error: 'transaction not confirmed' }, 400);
 
-  const hash = await submitExtrinsic(env, signed_extrinsic);
+  const hash = await submitExtrinsic(env, signed_extrinsic, (chain as any) || 'polkadot');
   await db
     .update(transactions)
     .set({ transactionHash: hash, status: 'submitted', confirmedAt: Date.now() })

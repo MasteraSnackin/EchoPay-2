@@ -2475,9 +2475,9 @@ var require_bn = __commonJS({
       BN8.prototype.eqn = /* @__PURE__ */ __name(function eqn(num) {
         return this.cmpn(num) === 0;
       }, "eqn");
-      BN8.prototype.eq = /* @__PURE__ */ __name(function eq2(num) {
+      BN8.prototype.eq = /* @__PURE__ */ __name(function eq3(num) {
         return this.cmp(num) === 0;
-      }, "eq2");
+      }, "eq3");
       BN8.red = /* @__PURE__ */ __name(function red(num) {
         return new Red(num);
       }, "red");
@@ -14499,12 +14499,16 @@ var VoiceProcessSchema = external_exports.object({
 });
 var VoiceConfirmSchema = external_exports.object({
   audio_data: external_exports.string().min(1),
-  transaction_id: external_exports.string().uuid(),
-  user_id: external_exports.string().min(1)
+  user_id: external_exports.string().min(1),
+  transaction_id: external_exports.string().uuid().optional(),
+  transaction_ids: external_exports.array(external_exports.string().uuid()).optional()
+}).refine((d) => !!d.transaction_id || d.transaction_ids && d.transaction_ids.length > 0, {
+  message: "transaction_id or transaction_ids required"
 });
 var ExecuteTxSchema = external_exports.object({
   transaction_id: external_exports.string().uuid(),
-  signed_extrinsic: external_exports.string().regex(/^[0-9a-fA-F]+$/)
+  signed_extrinsic: external_exports.string().regex(/^[0-9a-fA-F]+$/),
+  chain: external_exports.enum(["polkadot", "asset-hub-polkadot", "moonbeam"]).optional()
 });
 var WalletConnectSchema = external_exports.object({
   wallet_address: external_exports.string().min(1),
@@ -14514,6 +14518,7 @@ var WalletConnectSchema = external_exports.object({
 var WalletBalanceSchema = external_exports.object({
   wallet_address: external_exports.string().min(1),
   token_symbols: external_exports.string().optional()
+  // CSV of symbols
 });
 function base64ToUint8Array(base64) {
   const binary = atob(base64);
@@ -14645,6 +14650,85 @@ var voiceSessions = sqliteTable("voice_sessions", {
   responseText: text("response_text"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(sql`(unixepoch() * 1000)`)
 });
+var IntentItemSchema = external_exports.object({
+  action: external_exports.literal("transfer"),
+  amount: external_exports.string(),
+  token: external_exports.string(),
+  recipient: external_exports.string(),
+  origin_chain: external_exports.string(),
+  destination_chain: external_exports.string()
+});
+var IntentSchema = external_exports.object({
+  type: external_exports.enum(["single", "batch"]).default("single"),
+  language: external_exports.string().optional().default("en"),
+  items: external_exports.array(IntentItemSchema).min(1),
+  schedule: external_exports.string().nullable().optional().default(null),
+  condition: external_exports.string().nullable().optional().default(null)
+});
+var SYSTEM_PROMPT = `You are a transaction intent parser for a voice-controlled Polkadot payments system.
+Return ONLY JSON matching this schema:
+{
+  "type": "single" | "batch",
+  "language": string,
+  "items": [
+    {
+      "action": "transfer",
+      "amount": string,           // human units as string
+      "token": string,            // e.g., DOT, USDT, GLMR
+      "recipient": string,        // address or contact name
+      "origin_chain": string,     // e.g., polkadot, asset-hub-polkadot, moonbeam
+      "destination_chain": string // same as above; if single-chain, equal to origin_chain
+    }
+  ],
+  "schedule": string | null,      // ISO8601 or natural language time, or null
+  "condition": string | null      // Conditional clause if any
+}`;
+async function parseIntentWithPerplexity(env, transcription) {
+  if (!env.PERPLEXITY_API_KEY) {
+    throw new Error("PERPLEXITY_API_KEY not configured");
+  }
+  const model = env.PERPLEXITY_MODEL || "sonar-small-online";
+  const res = await fetch("https://api.perplexity.ai/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.PERPLEXITY_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: transcription }
+      ],
+      temperature: 0,
+      response_format: { type: "json_object" }
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Perplexity API error: ${res.status} ${t}`);
+  }
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content;
+  const parsed = typeof content === "string" ? JSON.parse(content) : content;
+  const intent = IntentSchema.parse(parsed);
+  intent.items = intent.items.map((it) => ({
+    ...it,
+    token: it.token.toUpperCase(),
+    origin_chain: normalizeChain(it.origin_chain, it.token),
+    destination_chain: normalizeChain(it.destination_chain || it.origin_chain, it.token)
+  }));
+  return intent;
+}
+__name(parseIntentWithPerplexity, "parseIntentWithPerplexity");
+function normalizeChain(chain2, token) {
+  const c = (chain2 || "").toLowerCase();
+  if (c.includes("polkadot") || token.toUpperCase() === "DOT") return "polkadot";
+  if (c.includes("asset") || c.includes("statemint") || token.toUpperCase() === "USDT") return "asset-hub-polkadot";
+  if (c.includes("moonbeam") || token.toUpperCase() === "GLMR") return "moonbeam";
+  return c || "polkadot";
+}
+__name(normalizeChain, "normalizeChain");
 var voice = new Hono2();
 voice.post("/process", async (c) => {
   const env = c.env;
@@ -14655,30 +14739,39 @@ voice.post("/process", async (c) => {
   const db = getDb(env);
   await db.insert(users).values({ id: user_id, walletAddress: user_id }).onConflictDoNothing();
   const transcription = await speechToText(env, audio_data, format);
-  const intent = simpleParseIntent(transcription);
-  const txId = v4_default();
-  await db.insert(transactions).values({
-    id: txId,
-    userId: user_id,
-    voiceCommand: transcription,
-    parsedIntent: JSON.stringify(intent),
-    recipientAddress: intent.recipient,
-    amount: intent.amount,
-    tokenSymbol: intent.token,
-    status: "pending"
-  });
-  const confirmText = `You asked to send ${intent.amount} ${intent.token} to ${shortAddr(intent.recipient)}. Say confirm to proceed or cancel to abort.`;
+  let intent;
+  if (env.PERPLEXITY_API_KEY) {
+    try {
+      intent = await parseIntentWithPerplexity(env, transcription);
+    } catch (e) {
+      intent = simpleFallbackIntent(transcription);
+    }
+  } else {
+    intent = simpleFallbackIntent(transcription);
+  }
+  const txIds = [];
+  for (const item of intent.items) {
+    const txId = v4_default();
+    txIds.push(txId);
+    await db.insert(transactions).values({
+      id: txId,
+      userId: user_id,
+      voiceCommand: transcription,
+      parsedIntent: JSON.stringify(item),
+      recipientAddress: item.recipient,
+      amount: item.amount,
+      tokenSymbol: item.token,
+      status: "pending"
+    });
+  }
+  const first2 = intent.items[0];
+  const confirmText = intent.items.length > 1 ? `You requested a batch of ${intent.items.length} transfers. First: send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}. Say confirm to proceed or cancel to abort.` : `You asked to send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}. Say confirm to proceed or cancel to abort.`;
   const confirmAudio = await textToSpeech(env, confirmText);
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
   const sessionId = v4_default();
-  await db.insert(voiceSessions).values({
-    id: sessionId,
-    userId: user_id,
-    transcription,
-    responseText: confirmText
-  });
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
   return c.json({
-    transaction_id: txId,
+    transaction_ids: txIds,
     session_id: sessionId,
     intent,
     confirmation: {
@@ -14693,11 +14786,12 @@ voice.post("/confirm", async (c) => {
   const body = await c.req.json();
   const parsed = VoiceConfirmSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { audio_data, transaction_id, user_id } = parsed.data;
+  const { audio_data, user_id } = parsed.data;
+  const ids = parsed.data.transaction_ids ?? (parsed.data.transaction_id ? [parsed.data.transaction_id] : []);
   const db = getDb(env);
-  const [tx2] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
-  if (!tx2) return c.json({ error: "transaction not found" }, 404);
-  if (tx2.status !== "pending") return c.json({ error: "transaction not pending" }, 400);
+  const found = ids.length ? await db.select().from(transactions).where(inArray(transactions.id, ids)) : [];
+  if (!found.length) return c.json({ error: "transaction(s) not found" }, 404);
+  if (found.some((t) => t.status !== "pending")) return c.json({ error: "one or more transactions not pending" }, 400);
   const transcription = await speechToText(env, audio_data, "webm");
   const lower = transcription.trim().toLowerCase();
   let decision = "failed";
@@ -14705,11 +14799,11 @@ voice.post("/confirm", async (c) => {
   if (lower.includes("confirm") || lower.includes("yes")) {
     decision = "confirmed";
     message = "Confirmed";
-    await db.update(transactions).set({ status: "confirmed" }).where(eq(transactions.id, transaction_id));
+    await db.update(transactions).set({ status: "confirmed" }).where(inArray(transactions.id, ids));
   } else if (lower.includes("cancel") || lower.includes("no")) {
     decision = "failed";
     message = "Cancelled";
-    await db.update(transactions).set({ status: "failed" }).where(eq(transactions.id, transaction_id));
+    await db.update(transactions).set({ status: "failed" }).where(inArray(transactions.id, ids));
   }
   const responseAudio = await textToSpeech(env, `Transaction ${message}.`);
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, responseAudio);
@@ -14717,14 +14811,11 @@ voice.post("/confirm", async (c) => {
   await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.` });
   return c.json({
     status: decision,
-    response: {
-      audio_base64: encrypted.ciphertext,
-      iv: encrypted.iv,
-      format: "mp3"
-    }
+    transaction_ids: ids,
+    response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" }
   });
 });
-function simpleParseIntent(text2) {
+function simpleFallbackIntent(text2) {
   const words = text2.split(/\s+/);
   const amountIdx = words.findIndex((w) => /^(send|transfer)$/i.test(w));
   let amount = "0";
@@ -14735,9 +14826,24 @@ function simpleParseIntent(text2) {
   if (words[tokenIdx]) token = words[tokenIdx].toUpperCase();
   const toIdx = words.findIndex((w) => /^to$/i.test(w));
   if (toIdx >= 0 && words[toIdx + 1]) recipient = words[toIdx + 1];
-  return { amount, token, recipient };
+  return {
+    type: "single",
+    language: "en",
+    items: [
+      {
+        action: "transfer",
+        amount,
+        token,
+        recipient,
+        origin_chain: "polkadot",
+        destination_chain: "polkadot"
+      }
+    ],
+    schedule: null,
+    condition: null
+  };
 }
-__name(simpleParseIntent, "simpleParseIntent");
+__name(simpleFallbackIntent, "simpleFallbackIntent");
 function shortAddr(addr) {
   if (!addr) return "";
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -70098,23 +70204,29 @@ var ApiPromise = class _ApiPromise extends ApiBase {
     };
   }
 };
-var apiPromise = null;
-async function getApi(env) {
-  if (!apiPromise) {
-    const provider = new WsProvider(env.POLKADOT_RPC_ENDPOINT);
-    apiPromise = ApiPromise.create({ provider });
+var DEFAULT_ENDPOINTS = {
+  polkadot: "wss://rpc.polkadot.io",
+  "asset-hub-polkadot": "wss://polkadot-asset-hub-rpc.polkadot.io",
+  moonbeam: "wss://wss.api.moonbeam.network"
+};
+var apiCache = /* @__PURE__ */ new Map();
+async function getApiForChain(chain2, overrideEndpoint) {
+  const endpoint = overrideEndpoint || DEFAULT_ENDPOINTS[chain2];
+  if (!apiCache.has(endpoint)) {
+    const provider = new WsProvider(endpoint);
+    apiCache.set(endpoint, ApiPromise.create({ provider }));
   }
-  return apiPromise;
+  return apiCache.get(endpoint);
 }
-__name(getApi, "getApi");
-async function getBalance2(env, address) {
-  const api = await getApi(env);
+__name(getApiForChain, "getApiForChain");
+async function getBalance2(env, address, chain2 = "polkadot") {
+  const api = await getApiForChain(chain2);
   const { data } = await api.query.system.account(address);
   return data.free.toString();
 }
 __name(getBalance2, "getBalance2");
-async function submitExtrinsic(env, signedExtrinsicHex) {
-  const api = await getApi(env);
+async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
+  const api = await getApiForChain(chain2);
   const hash = await api.rpc.author.submitExtrinsic(`0x${signedExtrinsicHex}`);
   return hash.toString();
 }
@@ -70146,11 +70258,11 @@ tx.post("/execute", async (c) => {
   const body = await c.req.json();
   const parsed = ExecuteTxSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { transaction_id, signed_extrinsic } = parsed.data;
+  const { transaction_id, signed_extrinsic, chain: chain2 } = parsed.data;
   const [row] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
   if (!row) return c.json({ error: "transaction not found" }, 404);
   if (row.status !== "confirmed") return c.json({ error: "transaction not confirmed" }, 400);
-  const hash = await submitExtrinsic(env, signed_extrinsic);
+  const hash = await submitExtrinsic(env, signed_extrinsic, chain2 || "polkadot");
   await db.update(transactions).set({ transactionHash: hash, status: "submitted", confirmedAt: Date.now() }).where(eq(transactions.id, transaction_id));
   return c.json({ transaction_hash: hash });
 });
@@ -70174,9 +70286,13 @@ wallet.get("/balance", async (c) => {
     token_symbols: url.searchParams.get("token_symbols") ?? void 0
   });
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { wallet_address } = parsed.data;
-  const dot = await getBalance2(env, wallet_address);
-  return c.json({ balances: { DOT: dot } });
+  const { wallet_address, token_symbols } = parsed.data;
+  const symbols = (token_symbols || "DOT").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
+  const balances = {};
+  if (symbols.includes("DOT")) {
+    balances.DOT = await getBalance2(env, wallet_address, "polkadot");
+  }
+  return c.json({ balances });
 });
 var health = new Hono2();
 health.get("/health", (c) => {
@@ -70184,7 +70300,7 @@ health.get("/health", (c) => {
 });
 health.get("/status/polkadot", async (c) => {
   try {
-    const api = await getApi(c.env);
+    const api = await getApiForChain("polkadot");
     const header = await api.rpc.chain.getHeader();
     return c.json({ connected: true, block: header.number.toString() });
   } catch (e) {
