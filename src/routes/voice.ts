@@ -13,11 +13,14 @@ import { getChainNativeTokenInfo } from '../integrations/tokens';
 import { decimalToUnits, unitsToDecimal } from '../utils/units';
 import { estimateNativeFee } from '../integrations/transfers';
 import { isValidSs58Address } from '../utils/address';
+import { RateLimiter, getClientKey } from '../utils/rateLimit';
 
 export const voice = new Hono<{ Bindings: Env }>();
 
 const MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024; // ~5MB base64
 const ALLOWED_FORMATS = new Set(['mp3', 'wav', 'webm']);
+
+const limiter = new RateLimiter(1, 1000, 5); // 1 token/sec, burst 5
 
 async function putAudioToR2(env: Env, key: string, data: ArrayBuffer, contentType: string): Promise<string | undefined> {
   if (!env.AUDIO) return undefined;
@@ -26,6 +29,8 @@ async function putAudioToR2(env: Env, key: string, data: ArrayBuffer, contentTyp
 }
 
 voice.post('/process', async (c) => {
+  const key = getClientKey(c.req.raw, 'voice:process');
+  if (!limiter.allow(key)) return c.json({ error: 'rate_limited' }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceProcessSchema.safeParse(body);
@@ -115,6 +120,8 @@ voice.post('/process', async (c) => {
 });
 
 voice.post('/confirm', async (c) => {
+  const key = getClientKey(c.req.raw, 'voice:confirm');
+  if (!limiter.allow(key)) return c.json({ error: 'rate_limited' }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceConfirmSchema.safeParse(body);

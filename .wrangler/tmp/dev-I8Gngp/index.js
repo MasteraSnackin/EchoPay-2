@@ -72137,9 +72137,45 @@ function isValidSs58Address(address) {
   }
 }
 __name(isValidSs58Address, "isValidSs58Address");
+var RateLimiter = class {
+  static {
+    __name(this, "RateLimiter");
+  }
+  constructor(tokensPerInterval, intervalMs, burst) {
+    this.tokensPerInterval = tokensPerInterval;
+    this.intervalMs = intervalMs;
+    this.burst = burst;
+  }
+  buckets = /* @__PURE__ */ new Map();
+  allow(key) {
+    const now = Date.now();
+    let state = this.buckets.get(key);
+    if (!state) {
+      state = { tokens: this.burst, lastRefill: now };
+      this.buckets.set(key, state);
+    }
+    const elapsed = now - state.lastRefill;
+    if (elapsed > 0) {
+      const refill = elapsed / this.intervalMs * this.tokensPerInterval;
+      state.tokens = Math.min(this.burst, state.tokens + refill);
+      state.lastRefill = now;
+    }
+    if (state.tokens >= 1) {
+      state.tokens -= 1;
+      return true;
+    }
+    return false;
+  }
+};
+function getClientKey(req, extra) {
+  const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") || "unknown";
+  return `${ip}${extra ? ":" + extra : ""}`;
+}
+__name(getClientKey, "getClientKey");
 var voice = new Hono2();
 var MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024;
 var ALLOWED_FORMATS = /* @__PURE__ */ new Set(["mp3", "wav", "webm"]);
+var limiter = new RateLimiter(1, 1e3, 5);
 async function putAudioToR2(env, key, data, contentType) {
   if (!env.AUDIO) return void 0;
   await env.AUDIO.put(key, data, { httpMetadata: { contentType } });
@@ -72147,6 +72183,8 @@ async function putAudioToR2(env, key, data, contentType) {
 }
 __name(putAudioToR2, "putAudioToR2");
 voice.post("/process", async (c) => {
+  const key = getClientKey(c.req.raw, "voice:process");
+  if (!limiter.allow(key)) return c.json({ error: "rate_limited" }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceProcessSchema.safeParse(body);
@@ -72223,6 +72261,8 @@ voice.post("/process", async (c) => {
   return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3", audio_url: audioUrl } });
 });
 voice.post("/confirm", async (c) => {
+  const key = getClientKey(c.req.raw, "voice:confirm");
+  if (!limiter.allow(key)) return c.json({ error: "rate_limited" }, 429);
   const env = c.env;
   const body = await c.req.json();
   const parsed = VoiceConfirmSchema.safeParse(body);
