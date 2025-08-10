@@ -3,6 +3,7 @@ import { Env, getDb } from '../db/client';
 import { WalletBalanceSchema, WalletConnectSchema } from '../utils/validators';
 import { users } from '../db/schema';
 import { getTokenBalance } from '../integrations/balances';
+import { cryptoWaitReady, signatureVerify } from '@polkadot/util-crypto';
 
 export const wallet = new Hono<{ Bindings: Env }>();
 
@@ -13,11 +14,23 @@ wallet.post('/connect', async (c) => {
   const parsed = WalletConnectSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
 
-  const { wallet_address } = parsed.data;
-  const id = wallet_address;
+  const { wallet_address, signature, message } = parsed.data as any;
 
-  await db.insert(users).values({ id, walletAddress: wallet_address }).onConflictDoNothing();
-  return c.json({ user_id: id });
+  try {
+    await cryptoWaitReady();
+    const result = signatureVerify(message, signature, wallet_address);
+    if (!result.isValid) {
+      return c.json({ error: 'invalid signature' }, 400);
+    }
+  } catch (e) {
+    return c.json({ error: 'signature verification failed' }, 400);
+  }
+
+  await db.insert(users).values({ id: wallet_address, walletAddress: wallet_address, lastActive: Date.now() }).onConflictDoUpdate({
+    target: users.id,
+    set: { lastActive: Date.now() },
+  });
+  return c.json({ user_id: wallet_address });
 });
 
 wallet.get('/balance', async (c) => {

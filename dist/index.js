@@ -50,8 +50,8 @@ var require_bn = __commonJS({
         ctor.prototype = new TempCtor();
         ctor.prototype.constructor = ctor;
       }
-      function BN8(number, base, endian) {
-        if (BN8.isBN(number)) {
+      function BN9(number, base, endian) {
+        if (BN9.isBN(number)) {
           return number;
         }
         this.negative = 0;
@@ -67,12 +67,12 @@ var require_bn = __commonJS({
         }
       }
       if (typeof module3 === "object") {
-        module3.exports = BN8;
+        module3.exports = BN9;
       } else {
-        exports2.BN = BN8;
+        exports2.BN = BN9;
       }
-      BN8.BN = BN8;
-      BN8.wordSize = 26;
+      BN9.BN = BN9;
+      BN9.wordSize = 26;
       var Buffer2;
       try {
         if (typeof window !== "undefined" && typeof window.Buffer !== "undefined") {
@@ -82,21 +82,21 @@ var require_bn = __commonJS({
         }
       } catch (e) {
       }
-      BN8.isBN = function isBN(num) {
-        if (num instanceof BN8) {
+      BN9.isBN = function isBN(num) {
+        if (num instanceof BN9) {
           return true;
         }
-        return num !== null && typeof num === "object" && num.constructor.wordSize === BN8.wordSize && Array.isArray(num.words);
+        return num !== null && typeof num === "object" && num.constructor.wordSize === BN9.wordSize && Array.isArray(num.words);
       };
-      BN8.max = function max2(left, right) {
+      BN9.max = function max2(left, right) {
         if (left.cmp(right) > 0) return left;
         return right;
       };
-      BN8.min = function min(left, right) {
+      BN9.min = function min(left, right) {
         if (left.cmp(right) < 0) return left;
         return right;
       };
-      BN8.prototype._init = function init2(number, base, endian) {
+      BN9.prototype._init = function init2(number, base, endian) {
         if (typeof number === "number") {
           return this._initNumber(number, base, endian);
         }
@@ -124,7 +124,7 @@ var require_bn = __commonJS({
           }
         }
       };
-      BN8.prototype._initNumber = function _initNumber(number, base, endian) {
+      BN9.prototype._initNumber = function _initNumber(number, base, endian) {
         if (number < 0) {
           this.negative = 1;
           number = -number;
@@ -150,7 +150,7 @@ var require_bn = __commonJS({
         if (endian !== "le") return;
         this._initArray(this.toArray(), base, endian);
       };
-      BN8.prototype._initArray = function _initArray(number, base, endian) {
+      BN9.prototype._initArray = function _initArray(number, base, endian) {
         assert4(typeof number.length === "number");
         if (number.length <= 0) {
           this.words = [0];
@@ -208,7 +208,7 @@ var require_bn = __commonJS({
         }
         return r;
       }
-      BN8.prototype._parseHex = function _parseHex(number, start, endian) {
+      BN9.prototype._parseHex = function _parseHex(number, start, endian) {
         this.length = Math.ceil((number.length - start) / 6);
         this.words = new Array(this.length);
         for (var i = 0; i < this.length; i++) {
@@ -264,7 +264,7 @@ var require_bn = __commonJS({
         }
         return r;
       }
-      BN8.prototype._parseBase = function _parseBase(number, base, start) {
+      BN9.prototype._parseBase = function _parseBase(number, base, start) {
         this.words = [0];
         this.length = 1;
         for (var limbLen = 0, limbPow = 1; limbPow <= 67108863; limbPow *= base) {
@@ -300,7 +300,7 @@ var require_bn = __commonJS({
         }
         this._strip();
       };
-      BN8.prototype.copy = function copy(dest) {
+      BN9.prototype.copy = function copy(dest) {
         dest.words = new Array(this.length);
         for (var i = 0; i < this.length; i++) {
           dest.words[i] = this.words[i];
@@ -315,27 +315,27 @@ var require_bn = __commonJS({
         dest.negative = src.negative;
         dest.red = src.red;
       }
-      BN8.prototype._move = function _move(dest) {
+      BN9.prototype._move = function _move(dest) {
         move(dest, this);
       };
-      BN8.prototype.clone = function clone() {
-        var r = new BN8(null);
+      BN9.prototype.clone = function clone() {
+        var r = new BN9(null);
         this.copy(r);
         return r;
       };
-      BN8.prototype._expand = function _expand(size) {
+      BN9.prototype._expand = function _expand(size) {
         while (this.length < size) {
           this.words[this.length++] = 0;
         }
         return this;
       };
-      BN8.prototype._strip = function strip() {
+      BN9.prototype._strip = function strip() {
         while (this.length > 1 && this.words[this.length - 1] === 0) {
           this.length--;
         }
         return this._normSign();
       };
-      BN8.prototype._normSign = function _normSign() {
+      BN9.prototype._normSign = function _normSign() {
         if (this.length === 1 && this.words[0] === 0) {
           this.negative = 0;
         }
@@ -343,12 +343,12 @@ var require_bn = __commonJS({
       };
       if (typeof Symbol !== "undefined" && typeof Symbol.for === "function") {
         try {
-          BN8.prototype[Symbol.for("nodejs.util.inspect.custom")] = inspect;
+          BN9.prototype[Symbol.for("nodejs.util.inspect.custom")] = inspect;
         } catch (e) {
-          BN8.prototype.inspect = inspect;
+          BN9.prototype.inspect = inspect;
         }
       } else {
-        BN8.prototype.inspect = inspect;
+        BN9.prototype.inspect = inspect;
       }
       function inspect() {
         return (this.red ? "<BN-R: " : "<BN: ") + this.toString(16) + ">";
@@ -459,7 +459,7 @@ var require_bn = __commonJS({
         52521875,
         60466176
       ];
-      BN8.prototype.toString = function toString(base, padding) {
+      BN9.prototype.toString = function toString(base, padding) {
         base = base || 10;
         padding = padding | 0 || 1;
         var out;
@@ -521,7 +521,7 @@ var require_bn = __commonJS({
         }
         assert4(false, "Base should be between 2 and 36");
       };
-      BN8.prototype.toNumber = function toNumber() {
+      BN9.prototype.toNumber = function toNumber() {
         var ret = this.words[0];
         if (this.length === 2) {
           ret += this.words[1] * 67108864;
@@ -532,15 +532,15 @@ var require_bn = __commonJS({
         }
         return this.negative !== 0 ? -ret : ret;
       };
-      BN8.prototype.toJSON = function toJSON() {
+      BN9.prototype.toJSON = function toJSON() {
         return this.toString(16, 2);
       };
       if (Buffer2) {
-        BN8.prototype.toBuffer = function toBuffer(endian, length) {
+        BN9.prototype.toBuffer = function toBuffer(endian, length) {
           return this.toArrayLike(Buffer2, endian, length);
         };
       }
-      BN8.prototype.toArray = function toArray2(endian, length) {
+      BN9.prototype.toArray = function toArray2(endian, length) {
         return this.toArrayLike(Array, endian, length);
       };
       var allocate = function allocate2(ArrayType, size) {
@@ -549,7 +549,7 @@ var require_bn = __commonJS({
         }
         return new ArrayType(size);
       };
-      BN8.prototype.toArrayLike = function toArrayLike(ArrayType, endian, length) {
+      BN9.prototype.toArrayLike = function toArrayLike(ArrayType, endian, length) {
         this._strip();
         var byteLength = this.byteLength();
         var reqLength = length || Math.max(1, byteLength);
@@ -560,7 +560,7 @@ var require_bn = __commonJS({
         this["_toArrayLike" + postfix](res, byteLength);
         return res;
       };
-      BN8.prototype._toArrayLikeLE = function _toArrayLikeLE(res, byteLength) {
+      BN9.prototype._toArrayLikeLE = function _toArrayLikeLE(res, byteLength) {
         var position = 0;
         var carry = 0;
         for (var i = 0, shift = 0; i < this.length; i++) {
@@ -590,7 +590,7 @@ var require_bn = __commonJS({
           }
         }
       };
-      BN8.prototype._toArrayLikeBE = function _toArrayLikeBE(res, byteLength) {
+      BN9.prototype._toArrayLikeBE = function _toArrayLikeBE(res, byteLength) {
         var position = res.length - 1;
         var carry = 0;
         for (var i = 0, shift = 0; i < this.length; i++) {
@@ -621,11 +621,11 @@ var require_bn = __commonJS({
         }
       };
       if (Math.clz32) {
-        BN8.prototype._countBits = function _countBits(w) {
+        BN9.prototype._countBits = function _countBits(w) {
           return 32 - Math.clz32(w);
         };
       } else {
-        BN8.prototype._countBits = function _countBits(w) {
+        BN9.prototype._countBits = function _countBits(w) {
           var t = w;
           var r = 0;
           if (t >= 4096) {
@@ -647,7 +647,7 @@ var require_bn = __commonJS({
           return r + t;
         };
       }
-      BN8.prototype._zeroBits = function _zeroBits(w) {
+      BN9.prototype._zeroBits = function _zeroBits(w) {
         if (w === 0) return 26;
         var t = w;
         var r = 0;
@@ -672,7 +672,7 @@ var require_bn = __commonJS({
         }
         return r;
       };
-      BN8.prototype.bitLength = function bitLength() {
+      BN9.prototype.bitLength = function bitLength() {
         var w = this.words[this.length - 1];
         var hi = this._countBits(w);
         return (this.length - 1) * 26 + hi;
@@ -686,7 +686,7 @@ var require_bn = __commonJS({
         }
         return w;
       }
-      BN8.prototype.zeroBits = function zeroBits() {
+      BN9.prototype.zeroBits = function zeroBits() {
         if (this.isZero()) return 0;
         var r = 0;
         for (var i = 0; i < this.length; i++) {
@@ -696,34 +696,34 @@ var require_bn = __commonJS({
         }
         return r;
       };
-      BN8.prototype.byteLength = function byteLength() {
+      BN9.prototype.byteLength = function byteLength() {
         return Math.ceil(this.bitLength() / 8);
       };
-      BN8.prototype.toTwos = function toTwos(width) {
+      BN9.prototype.toTwos = function toTwos(width) {
         if (this.negative !== 0) {
           return this.abs().inotn(width).iaddn(1);
         }
         return this.clone();
       };
-      BN8.prototype.fromTwos = function fromTwos(width) {
+      BN9.prototype.fromTwos = function fromTwos(width) {
         if (this.testn(width - 1)) {
           return this.notn(width).iaddn(1).ineg();
         }
         return this.clone();
       };
-      BN8.prototype.isNeg = function isNeg() {
+      BN9.prototype.isNeg = function isNeg() {
         return this.negative !== 0;
       };
-      BN8.prototype.neg = function neg() {
+      BN9.prototype.neg = function neg() {
         return this.clone().ineg();
       };
-      BN8.prototype.ineg = function ineg() {
+      BN9.prototype.ineg = function ineg() {
         if (!this.isZero()) {
           this.negative ^= 1;
         }
         return this;
       };
-      BN8.prototype.iuor = function iuor(num) {
+      BN9.prototype.iuor = function iuor(num) {
         while (this.length < num.length) {
           this.words[this.length++] = 0;
         }
@@ -732,19 +732,19 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.ior = function ior(num) {
+      BN9.prototype.ior = function ior(num) {
         assert4((this.negative | num.negative) === 0);
         return this.iuor(num);
       };
-      BN8.prototype.or = function or2(num) {
+      BN9.prototype.or = function or2(num) {
         if (this.length > num.length) return this.clone().ior(num);
         return num.clone().ior(this);
       };
-      BN8.prototype.uor = function uor(num) {
+      BN9.prototype.uor = function uor(num) {
         if (this.length > num.length) return this.clone().iuor(num);
         return num.clone().iuor(this);
       };
-      BN8.prototype.iuand = function iuand(num) {
+      BN9.prototype.iuand = function iuand(num) {
         var b;
         if (this.length > num.length) {
           b = num;
@@ -757,19 +757,19 @@ var require_bn = __commonJS({
         this.length = b.length;
         return this._strip();
       };
-      BN8.prototype.iand = function iand(num) {
+      BN9.prototype.iand = function iand(num) {
         assert4((this.negative | num.negative) === 0);
         return this.iuand(num);
       };
-      BN8.prototype.and = function and2(num) {
+      BN9.prototype.and = function and2(num) {
         if (this.length > num.length) return this.clone().iand(num);
         return num.clone().iand(this);
       };
-      BN8.prototype.uand = function uand(num) {
+      BN9.prototype.uand = function uand(num) {
         if (this.length > num.length) return this.clone().iuand(num);
         return num.clone().iuand(this);
       };
-      BN8.prototype.iuxor = function iuxor(num) {
+      BN9.prototype.iuxor = function iuxor(num) {
         var a;
         var b;
         if (this.length > num.length) {
@@ -790,19 +790,19 @@ var require_bn = __commonJS({
         this.length = a.length;
         return this._strip();
       };
-      BN8.prototype.ixor = function ixor(num) {
+      BN9.prototype.ixor = function ixor(num) {
         assert4((this.negative | num.negative) === 0);
         return this.iuxor(num);
       };
-      BN8.prototype.xor = function xor(num) {
+      BN9.prototype.xor = function xor(num) {
         if (this.length > num.length) return this.clone().ixor(num);
         return num.clone().ixor(this);
       };
-      BN8.prototype.uxor = function uxor(num) {
+      BN9.prototype.uxor = function uxor(num) {
         if (this.length > num.length) return this.clone().iuxor(num);
         return num.clone().iuxor(this);
       };
-      BN8.prototype.inotn = function inotn(width) {
+      BN9.prototype.inotn = function inotn(width) {
         assert4(typeof width === "number" && width >= 0);
         var bytesNeeded = Math.ceil(width / 26) | 0;
         var bitsLeft = width % 26;
@@ -818,10 +818,10 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.notn = function notn(width) {
+      BN9.prototype.notn = function notn(width) {
         return this.clone().inotn(width);
       };
-      BN8.prototype.setn = function setn(bit, val) {
+      BN9.prototype.setn = function setn(bit, val) {
         assert4(typeof bit === "number" && bit >= 0);
         var off = bit / 26 | 0;
         var wbit = bit % 26;
@@ -833,7 +833,7 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.iadd = function iadd(num) {
+      BN9.prototype.iadd = function iadd(num) {
         var r;
         if (this.negative !== 0 && num.negative === 0) {
           this.negative = 0;
@@ -876,7 +876,7 @@ var require_bn = __commonJS({
         }
         return this;
       };
-      BN8.prototype.add = function add2(num) {
+      BN9.prototype.add = function add2(num) {
         var res;
         if (num.negative !== 0 && this.negative === 0) {
           num.negative = 0;
@@ -892,7 +892,7 @@ var require_bn = __commonJS({
         if (this.length > num.length) return this.clone().iadd(num);
         return num.clone().iadd(this);
       };
-      BN8.prototype.isub = function isub(num) {
+      BN9.prototype.isub = function isub(num) {
         if (num.negative !== 0) {
           num.negative = 0;
           var r = this.iadd(num);
@@ -941,7 +941,7 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.sub = function sub(num) {
+      BN9.prototype.sub = function sub(num) {
         return this.clone().isub(num);
       };
       function smallMulTo(self2, num, out) {
@@ -1569,7 +1569,7 @@ var require_bn = __commonJS({
       function jumboMulTo(self2, num, out) {
         return bigMulTo(self2, num, out);
       }
-      BN8.prototype.mulTo = function mulTo(num, out) {
+      BN9.prototype.mulTo = function mulTo(num, out) {
         var res;
         var len = this.length + num.length;
         if (this.length === 10 && num.length === 10) {
@@ -1589,7 +1589,7 @@ var require_bn = __commonJS({
       }
       FFTM.prototype.makeRBT = function makeRBT(N) {
         var t = new Array(N);
-        var l13 = BN8.prototype._countBits(N) - 1;
+        var l13 = BN9.prototype._countBits(N) - 1;
         for (var i = 0; i < N; i++) {
           t[i] = this.revBin(i, l13, N);
         }
@@ -1724,20 +1724,20 @@ var require_bn = __commonJS({
         out.length = x.length + y.length;
         return out._strip();
       };
-      BN8.prototype.mul = function mul(num) {
-        var out = new BN8(null);
+      BN9.prototype.mul = function mul(num) {
+        var out = new BN9(null);
         out.words = new Array(this.length + num.length);
         return this.mulTo(num, out);
       };
-      BN8.prototype.mulf = function mulf(num) {
-        var out = new BN8(null);
+      BN9.prototype.mulf = function mulf(num) {
+        var out = new BN9(null);
         out.words = new Array(this.length + num.length);
         return jumboMulTo(this, num, out);
       };
-      BN8.prototype.imul = function imul(num) {
+      BN9.prototype.imul = function imul(num) {
         return this.clone().mulTo(num, this);
       };
-      BN8.prototype.imuln = function imuln(num) {
+      BN9.prototype.imuln = function imuln(num) {
         var isNegNum = num < 0;
         if (isNegNum) num = -num;
         assert4(typeof num === "number");
@@ -1758,18 +1758,18 @@ var require_bn = __commonJS({
         this.length = num === 0 ? 1 : this.length;
         return isNegNum ? this.ineg() : this;
       };
-      BN8.prototype.muln = function muln(num) {
+      BN9.prototype.muln = function muln(num) {
         return this.clone().imuln(num);
       };
-      BN8.prototype.sqr = function sqr() {
+      BN9.prototype.sqr = function sqr() {
         return this.mul(this);
       };
-      BN8.prototype.isqr = function isqr() {
+      BN9.prototype.isqr = function isqr() {
         return this.imul(this.clone());
       };
-      BN8.prototype.pow = function pow(num) {
+      BN9.prototype.pow = function pow(num) {
         var w = toBitArray(num);
-        if (w.length === 0) return new BN8(1);
+        if (w.length === 0) return new BN9(1);
         var res = this;
         for (var i = 0; i < w.length; i++, res = res.sqr()) {
           if (w[i] !== 0) break;
@@ -1782,7 +1782,7 @@ var require_bn = __commonJS({
         }
         return res;
       };
-      BN8.prototype.iushln = function iushln(bits2) {
+      BN9.prototype.iushln = function iushln(bits2) {
         assert4(typeof bits2 === "number" && bits2 >= 0);
         var r = bits2 % 26;
         var s = (bits2 - r) / 26;
@@ -1812,11 +1812,11 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.ishln = function ishln(bits2) {
+      BN9.prototype.ishln = function ishln(bits2) {
         assert4(this.negative === 0);
         return this.iushln(bits2);
       };
-      BN8.prototype.iushrn = function iushrn(bits2, hint, extended) {
+      BN9.prototype.iushrn = function iushrn(bits2, hint, extended) {
         assert4(typeof bits2 === "number" && bits2 >= 0);
         var h;
         if (hint) {
@@ -1861,23 +1861,23 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.ishrn = function ishrn(bits2, hint, extended) {
+      BN9.prototype.ishrn = function ishrn(bits2, hint, extended) {
         assert4(this.negative === 0);
         return this.iushrn(bits2, hint, extended);
       };
-      BN8.prototype.shln = function shln(bits2) {
+      BN9.prototype.shln = function shln(bits2) {
         return this.clone().ishln(bits2);
       };
-      BN8.prototype.ushln = function ushln(bits2) {
+      BN9.prototype.ushln = function ushln(bits2) {
         return this.clone().iushln(bits2);
       };
-      BN8.prototype.shrn = function shrn(bits2) {
+      BN9.prototype.shrn = function shrn(bits2) {
         return this.clone().ishrn(bits2);
       };
-      BN8.prototype.ushrn = function ushrn(bits2) {
+      BN9.prototype.ushrn = function ushrn(bits2) {
         return this.clone().iushrn(bits2);
       };
-      BN8.prototype.testn = function testn(bit) {
+      BN9.prototype.testn = function testn(bit) {
         assert4(typeof bit === "number" && bit >= 0);
         var r = bit % 26;
         var s = (bit - r) / 26;
@@ -1886,7 +1886,7 @@ var require_bn = __commonJS({
         var w = this.words[s];
         return !!(w & q);
       };
-      BN8.prototype.imaskn = function imaskn(bits2) {
+      BN9.prototype.imaskn = function imaskn(bits2) {
         assert4(typeof bits2 === "number" && bits2 >= 0);
         var r = bits2 % 26;
         var s = (bits2 - r) / 26;
@@ -1904,10 +1904,10 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.maskn = function maskn(bits2) {
+      BN9.prototype.maskn = function maskn(bits2) {
         return this.clone().imaskn(bits2);
       };
-      BN8.prototype.iaddn = function iaddn(num) {
+      BN9.prototype.iaddn = function iaddn(num) {
         assert4(typeof num === "number");
         assert4(num < 67108864);
         if (num < 0) return this.isubn(-num);
@@ -1924,7 +1924,7 @@ var require_bn = __commonJS({
         }
         return this._iaddn(num);
       };
-      BN8.prototype._iaddn = function _iaddn(num) {
+      BN9.prototype._iaddn = function _iaddn(num) {
         this.words[0] += num;
         for (var i = 0; i < this.length && this.words[i] >= 67108864; i++) {
           this.words[i] -= 67108864;
@@ -1937,7 +1937,7 @@ var require_bn = __commonJS({
         this.length = Math.max(this.length, i + 1);
         return this;
       };
-      BN8.prototype.isubn = function isubn(num) {
+      BN9.prototype.isubn = function isubn(num) {
         assert4(typeof num === "number");
         assert4(num < 67108864);
         if (num < 0) return this.iaddn(-num);
@@ -1959,20 +1959,20 @@ var require_bn = __commonJS({
         }
         return this._strip();
       };
-      BN8.prototype.addn = function addn(num) {
+      BN9.prototype.addn = function addn(num) {
         return this.clone().iaddn(num);
       };
-      BN8.prototype.subn = function subn(num) {
+      BN9.prototype.subn = function subn(num) {
         return this.clone().isubn(num);
       };
-      BN8.prototype.iabs = function iabs() {
+      BN9.prototype.iabs = function iabs() {
         this.negative = 0;
         return this;
       };
-      BN8.prototype.abs = function abs() {
+      BN9.prototype.abs = function abs() {
         return this.clone().iabs();
       };
-      BN8.prototype._ishlnsubmul = function _ishlnsubmul(num, mul, shift) {
+      BN9.prototype._ishlnsubmul = function _ishlnsubmul(num, mul, shift) {
         var len = num.length + shift;
         var i;
         this._expand(len);
@@ -2001,7 +2001,7 @@ var require_bn = __commonJS({
         this.negative = 1;
         return this._strip();
       };
-      BN8.prototype._wordDiv = function _wordDiv(num, mode) {
+      BN9.prototype._wordDiv = function _wordDiv(num, mode) {
         var shift = this.length - num.length;
         var a = this.clone();
         var b = num;
@@ -2016,7 +2016,7 @@ var require_bn = __commonJS({
         var m = a.length - b.length;
         var q;
         if (mode !== "mod") {
-          q = new BN8(null);
+          q = new BN9(null);
           q.length = m + 1;
           q.words = new Array(q.length);
           for (var i = 0; i < q.length; i++) {
@@ -2058,12 +2058,12 @@ var require_bn = __commonJS({
           mod: a
         };
       };
-      BN8.prototype.divmod = function divmod(num, mode, positive) {
+      BN9.prototype.divmod = function divmod(num, mode, positive) {
         assert4(!num.isZero());
         if (this.isZero()) {
           return {
-            div: new BN8(0),
-            mod: new BN8(0)
+            div: new BN9(0),
+            mod: new BN9(0)
           };
         }
         var div, mod2, res;
@@ -2108,7 +2108,7 @@ var require_bn = __commonJS({
         }
         if (num.length > this.length || this.cmp(num) < 0) {
           return {
-            div: new BN8(0),
+            div: new BN9(0),
             mod: this
           };
         }
@@ -2122,26 +2122,26 @@ var require_bn = __commonJS({
           if (mode === "mod") {
             return {
               div: null,
-              mod: new BN8(this.modrn(num.words[0]))
+              mod: new BN9(this.modrn(num.words[0]))
             };
           }
           return {
             div: this.divn(num.words[0]),
-            mod: new BN8(this.modrn(num.words[0]))
+            mod: new BN9(this.modrn(num.words[0]))
           };
         }
         return this._wordDiv(num, mode);
       };
-      BN8.prototype.div = function div(num) {
+      BN9.prototype.div = function div(num) {
         return this.divmod(num, "div", false).div;
       };
-      BN8.prototype.mod = function mod2(num) {
+      BN9.prototype.mod = function mod2(num) {
         return this.divmod(num, "mod", false).mod;
       };
-      BN8.prototype.umod = function umod(num) {
+      BN9.prototype.umod = function umod(num) {
         return this.divmod(num, "mod", true).mod;
       };
-      BN8.prototype.divRound = function divRound(num) {
+      BN9.prototype.divRound = function divRound(num) {
         var dm = this.divmod(num);
         if (dm.mod.isZero()) return dm.div;
         var mod2 = dm.div.negative !== 0 ? dm.mod.isub(num) : dm.mod;
@@ -2151,7 +2151,7 @@ var require_bn = __commonJS({
         if (cmp < 0 || r2 === 1 && cmp === 0) return dm.div;
         return dm.div.negative !== 0 ? dm.div.isubn(1) : dm.div.iaddn(1);
       };
-      BN8.prototype.modrn = function modrn(num) {
+      BN9.prototype.modrn = function modrn(num) {
         var isNegNum = num < 0;
         if (isNegNum) num = -num;
         assert4(num <= 67108863);
@@ -2162,10 +2162,10 @@ var require_bn = __commonJS({
         }
         return isNegNum ? -acc : acc;
       };
-      BN8.prototype.modn = function modn(num) {
+      BN9.prototype.modn = function modn(num) {
         return this.modrn(num);
       };
-      BN8.prototype.idivn = function idivn(num) {
+      BN9.prototype.idivn = function idivn(num) {
         var isNegNum = num < 0;
         if (isNegNum) num = -num;
         assert4(num <= 67108863);
@@ -2178,10 +2178,10 @@ var require_bn = __commonJS({
         this._strip();
         return isNegNum ? this.ineg() : this;
       };
-      BN8.prototype.divn = function divn(num) {
+      BN9.prototype.divn = function divn(num) {
         return this.clone().idivn(num);
       };
-      BN8.prototype.egcd = function egcd(p) {
+      BN9.prototype.egcd = function egcd(p) {
         assert4(p.negative === 0);
         assert4(!p.isZero());
         var x = this;
@@ -2191,10 +2191,10 @@ var require_bn = __commonJS({
         } else {
           x = x.clone();
         }
-        var A = new BN8(1);
-        var B = new BN8(0);
-        var C = new BN8(0);
-        var D = new BN8(1);
+        var A = new BN9(1);
+        var B = new BN9(0);
+        var C = new BN9(0);
+        var D = new BN9(1);
         var g = 0;
         while (x.isEven() && y.isEven()) {
           x.iushrn(1);
@@ -2244,7 +2244,7 @@ var require_bn = __commonJS({
           gcd: y.iushln(g)
         };
       };
-      BN8.prototype._invmp = function _invmp(p) {
+      BN9.prototype._invmp = function _invmp(p) {
         assert4(p.negative === 0);
         assert4(!p.isZero());
         var a = this;
@@ -2254,8 +2254,8 @@ var require_bn = __commonJS({
         } else {
           a = a.clone();
         }
-        var x1 = new BN8(1);
-        var x2 = new BN8(0);
+        var x1 = new BN9(1);
+        var x2 = new BN9(0);
         var delta = b.clone();
         while (a.cmpn(1) > 0 && b.cmpn(1) > 0) {
           for (var i = 0, im = 1; (a.words[0] & im) === 0 && i < 26; ++i, im <<= 1) ;
@@ -2297,7 +2297,7 @@ var require_bn = __commonJS({
         }
         return res;
       };
-      BN8.prototype.gcd = function gcd(num) {
+      BN9.prototype.gcd = function gcd(num) {
         if (this.isZero()) return num.abs();
         if (num.isZero()) return this.abs();
         var a = this.clone();
@@ -2327,19 +2327,19 @@ var require_bn = __commonJS({
         } while (true);
         return b.iushln(shift);
       };
-      BN8.prototype.invm = function invm(num) {
+      BN9.prototype.invm = function invm(num) {
         return this.egcd(num).a.umod(num);
       };
-      BN8.prototype.isEven = function isEven() {
+      BN9.prototype.isEven = function isEven() {
         return (this.words[0] & 1) === 0;
       };
-      BN8.prototype.isOdd = function isOdd() {
+      BN9.prototype.isOdd = function isOdd() {
         return (this.words[0] & 1) === 1;
       };
-      BN8.prototype.andln = function andln(num) {
+      BN9.prototype.andln = function andln(num) {
         return this.words[0] & num;
       };
-      BN8.prototype.bincn = function bincn(bit) {
+      BN9.prototype.bincn = function bincn(bit) {
         assert4(typeof bit === "number");
         var r = bit % 26;
         var s = (bit - r) / 26;
@@ -2363,10 +2363,10 @@ var require_bn = __commonJS({
         }
         return this;
       };
-      BN8.prototype.isZero = function isZero() {
+      BN9.prototype.isZero = function isZero() {
         return this.length === 1 && this.words[0] === 0;
       };
-      BN8.prototype.cmpn = function cmpn(num) {
+      BN9.prototype.cmpn = function cmpn(num) {
         var negative = num < 0;
         if (this.negative !== 0 && !negative) return -1;
         if (this.negative === 0 && negative) return 1;
@@ -2385,14 +2385,14 @@ var require_bn = __commonJS({
         if (this.negative !== 0) return -res | 0;
         return res;
       };
-      BN8.prototype.cmp = function cmp(num) {
+      BN9.prototype.cmp = function cmp(num) {
         if (this.negative !== 0 && num.negative === 0) return -1;
         if (this.negative === 0 && num.negative !== 0) return 1;
         var res = this.ucmp(num);
         if (this.negative !== 0) return -res | 0;
         return res;
       };
-      BN8.prototype.ucmp = function ucmp(num) {
+      BN9.prototype.ucmp = function ucmp(num) {
         if (this.length > num.length) return 1;
         if (this.length < num.length) return -1;
         var res = 0;
@@ -2409,112 +2409,112 @@ var require_bn = __commonJS({
         }
         return res;
       };
-      BN8.prototype.gtn = function gtn(num) {
+      BN9.prototype.gtn = function gtn(num) {
         return this.cmpn(num) === 1;
       };
-      BN8.prototype.gt = function gt2(num) {
+      BN9.prototype.gt = function gt2(num) {
         return this.cmp(num) === 1;
       };
-      BN8.prototype.gten = function gten(num) {
+      BN9.prototype.gten = function gten(num) {
         return this.cmpn(num) >= 0;
       };
-      BN8.prototype.gte = function gte2(num) {
+      BN9.prototype.gte = function gte2(num) {
         return this.cmp(num) >= 0;
       };
-      BN8.prototype.ltn = function ltn(num) {
+      BN9.prototype.ltn = function ltn(num) {
         return this.cmpn(num) === -1;
       };
-      BN8.prototype.lt = function lt2(num) {
+      BN9.prototype.lt = function lt2(num) {
         return this.cmp(num) === -1;
       };
-      BN8.prototype.lten = function lten(num) {
+      BN9.prototype.lten = function lten(num) {
         return this.cmpn(num) <= 0;
       };
-      BN8.prototype.lte = function lte2(num) {
+      BN9.prototype.lte = function lte2(num) {
         return this.cmp(num) <= 0;
       };
-      BN8.prototype.eqn = function eqn(num) {
+      BN9.prototype.eqn = function eqn(num) {
         return this.cmpn(num) === 0;
       };
-      BN8.prototype.eq = function eq3(num) {
+      BN9.prototype.eq = function eq3(num) {
         return this.cmp(num) === 0;
       };
-      BN8.red = function red(num) {
+      BN9.red = function red(num) {
         return new Red(num);
       };
-      BN8.prototype.toRed = function toRed(ctx) {
+      BN9.prototype.toRed = function toRed(ctx) {
         assert4(!this.red, "Already a number in reduction context");
         assert4(this.negative === 0, "red works only with positives");
         return ctx.convertTo(this)._forceRed(ctx);
       };
-      BN8.prototype.fromRed = function fromRed() {
+      BN9.prototype.fromRed = function fromRed() {
         assert4(this.red, "fromRed works only with numbers in reduction context");
         return this.red.convertFrom(this);
       };
-      BN8.prototype._forceRed = function _forceRed(ctx) {
+      BN9.prototype._forceRed = function _forceRed(ctx) {
         this.red = ctx;
         return this;
       };
-      BN8.prototype.forceRed = function forceRed(ctx) {
+      BN9.prototype.forceRed = function forceRed(ctx) {
         assert4(!this.red, "Already a number in reduction context");
         return this._forceRed(ctx);
       };
-      BN8.prototype.redAdd = function redAdd(num) {
+      BN9.prototype.redAdd = function redAdd(num) {
         assert4(this.red, "redAdd works only with red numbers");
         return this.red.add(this, num);
       };
-      BN8.prototype.redIAdd = function redIAdd(num) {
+      BN9.prototype.redIAdd = function redIAdd(num) {
         assert4(this.red, "redIAdd works only with red numbers");
         return this.red.iadd(this, num);
       };
-      BN8.prototype.redSub = function redSub(num) {
+      BN9.prototype.redSub = function redSub(num) {
         assert4(this.red, "redSub works only with red numbers");
         return this.red.sub(this, num);
       };
-      BN8.prototype.redISub = function redISub(num) {
+      BN9.prototype.redISub = function redISub(num) {
         assert4(this.red, "redISub works only with red numbers");
         return this.red.isub(this, num);
       };
-      BN8.prototype.redShl = function redShl(num) {
+      BN9.prototype.redShl = function redShl(num) {
         assert4(this.red, "redShl works only with red numbers");
         return this.red.shl(this, num);
       };
-      BN8.prototype.redMul = function redMul(num) {
+      BN9.prototype.redMul = function redMul(num) {
         assert4(this.red, "redMul works only with red numbers");
         this.red._verify2(this, num);
         return this.red.mul(this, num);
       };
-      BN8.prototype.redIMul = function redIMul(num) {
+      BN9.prototype.redIMul = function redIMul(num) {
         assert4(this.red, "redMul works only with red numbers");
         this.red._verify2(this, num);
         return this.red.imul(this, num);
       };
-      BN8.prototype.redSqr = function redSqr() {
+      BN9.prototype.redSqr = function redSqr() {
         assert4(this.red, "redSqr works only with red numbers");
         this.red._verify1(this);
         return this.red.sqr(this);
       };
-      BN8.prototype.redISqr = function redISqr() {
+      BN9.prototype.redISqr = function redISqr() {
         assert4(this.red, "redISqr works only with red numbers");
         this.red._verify1(this);
         return this.red.isqr(this);
       };
-      BN8.prototype.redSqrt = function redSqrt() {
+      BN9.prototype.redSqrt = function redSqrt() {
         assert4(this.red, "redSqrt works only with red numbers");
         this.red._verify1(this);
         return this.red.sqrt(this);
       };
-      BN8.prototype.redInvm = function redInvm() {
+      BN9.prototype.redInvm = function redInvm() {
         assert4(this.red, "redInvm works only with red numbers");
         this.red._verify1(this);
         return this.red.invm(this);
       };
-      BN8.prototype.redNeg = function redNeg() {
+      BN9.prototype.redNeg = function redNeg() {
         assert4(this.red, "redNeg works only with red numbers");
         this.red._verify1(this);
         return this.red.neg(this);
       };
-      BN8.prototype.redPow = function redPow(num) {
+      BN9.prototype.redPow = function redPow(num) {
         assert4(this.red && !num.red, "redPow(normalNum)");
         this.red._verify1(this);
         return this.red.pow(this, num);
@@ -2527,13 +2527,13 @@ var require_bn = __commonJS({
       };
       function MPrime(name, p) {
         this.name = name;
-        this.p = new BN8(p, 16);
+        this.p = new BN9(p, 16);
         this.n = this.p.bitLength();
-        this.k = new BN8(1).iushln(this.n).isub(this.p);
+        this.k = new BN9(1).iushln(this.n).isub(this.p);
         this.tmp = this._tmp();
       }
       MPrime.prototype._tmp = function _tmp() {
-        var tmp = new BN8(null);
+        var tmp = new BN9(null);
         tmp.words = new Array(Math.ceil(this.n / 13));
         return tmp;
       };
@@ -2659,7 +2659,7 @@ var require_bn = __commonJS({
         }
         return num;
       };
-      BN8._prime = function prime6(name) {
+      BN9._prime = function prime6(name) {
         if (primes[name]) return primes[name];
         var prime7;
         if (name === "k256") {
@@ -2678,7 +2678,7 @@ var require_bn = __commonJS({
       };
       function Red(m) {
         if (typeof m === "string") {
-          var prime6 = BN8._prime(m);
+          var prime6 = BN9._prime(m);
           this.m = prime6.p;
           this.prime = prime6;
         } else {
@@ -2764,7 +2764,7 @@ var require_bn = __commonJS({
         var mod3 = this.m.andln(3);
         assert4(mod3 % 2 === 1);
         if (mod3 === 3) {
-          var pow = this.m.add(new BN8(1)).iushrn(2);
+          var pow = this.m.add(new BN9(1)).iushrn(2);
           return this.pow(a, pow);
         }
         var q = this.m.subn(1);
@@ -2774,11 +2774,11 @@ var require_bn = __commonJS({
           q.iushrn(1);
         }
         assert4(!q.isZero());
-        var one = new BN8(1).toRed(this);
+        var one = new BN9(1).toRed(this);
         var nOne = one.redNeg();
         var lpow = this.m.subn(1).iushrn(1);
         var z = this.m.bitLength();
-        z = new BN8(2 * z * z).toRed(this);
+        z = new BN9(2 * z * z).toRed(this);
         while (this.pow(z, lpow).cmp(nOne) !== 0) {
           z.redIAdd(nOne);
         }
@@ -2792,7 +2792,7 @@ var require_bn = __commonJS({
             tmp = tmp.redSqr();
           }
           assert4(i < m);
-          var b = this.pow(c, new BN8(1).iushln(m - i - 1));
+          var b = this.pow(c, new BN9(1).iushln(m - i - 1));
           r = r.redMul(b);
           c = b.redSqr();
           t = t.redMul(c);
@@ -2810,11 +2810,11 @@ var require_bn = __commonJS({
         }
       };
       Red.prototype.pow = function pow(a, num) {
-        if (num.isZero()) return new BN8(1).toRed(this);
+        if (num.isZero()) return new BN9(1).toRed(this);
         if (num.cmpn(1) === 0) return a.clone();
         var windowSize = 4;
         var wnd = new Array(1 << windowSize);
-        wnd[0] = new BN8(1).toRed(this);
+        wnd[0] = new BN9(1).toRed(this);
         wnd[1] = a;
         for (var i = 2; i < wnd.length; i++) {
           wnd[i] = this.mul(wnd[i - 1], a);
@@ -2858,7 +2858,7 @@ var require_bn = __commonJS({
         res.red = null;
         return res;
       };
-      BN8.mont = function mont(num) {
+      BN9.mont = function mont(num) {
         return new Mont(num);
       };
       function Mont(m) {
@@ -2867,7 +2867,7 @@ var require_bn = __commonJS({
         if (this.shift % 26 !== 0) {
           this.shift += 26 - this.shift % 26;
         }
-        this.r = new BN8(1).iushln(this.shift);
+        this.r = new BN9(1).iushln(this.shift);
         this.r2 = this.imod(this.r.sqr());
         this.rinv = this.r._invmp(this.m);
         this.minv = this.rinv.mul(this.r).isubn(1).div(this.m);
@@ -2901,7 +2901,7 @@ var require_bn = __commonJS({
         return res._forceRed(this);
       };
       Mont.prototype.mul = function mul(a, b) {
-        if (a.isZero() || b.isZero()) return new BN8(0)._forceRed(this);
+        if (a.isZero() || b.isZero()) return new BN9(0)._forceRed(this);
         var t = a.mul(b);
         var c = t.maskn(this.shift).mul(this.minv).imaskn(this.shift).mul(this.m);
         var u = t.isub(c).iushrn(this.shift);
@@ -4624,8 +4624,8 @@ var ConsoleLogWriter = class {
 var DefaultLogger = class {
   static [entityKind] = "DefaultLogger";
   writer;
-  constructor(config4) {
-    this.writer = config4?.writer ?? new ConsoleLogWriter();
+  constructor(config5) {
+    this.writer = config5?.writer ?? new ConsoleLogWriter();
   }
   logQuery(query2, params) {
     const stringifiedParams = params.map((p) => {
@@ -4712,24 +4712,24 @@ function getTableUniqueName(table) {
 
 // node_modules/drizzle-orm/column.js
 var Column = class {
-  constructor(table, config4) {
+  constructor(table, config5) {
     this.table = table;
-    this.config = config4;
-    this.name = config4.name;
-    this.keyAsName = config4.keyAsName;
-    this.notNull = config4.notNull;
-    this.default = config4.default;
-    this.defaultFn = config4.defaultFn;
-    this.onUpdateFn = config4.onUpdateFn;
-    this.hasDefault = config4.hasDefault;
-    this.primary = config4.primaryKey;
-    this.isUnique = config4.isUnique;
-    this.uniqueName = config4.uniqueName;
-    this.uniqueType = config4.uniqueType;
-    this.dataType = config4.dataType;
-    this.columnType = config4.columnType;
-    this.generated = config4.generated;
-    this.generatedIdentity = config4.generatedIdentity;
+    this.config = config5;
+    this.name = config5.name;
+    this.keyAsName = config5.keyAsName;
+    this.notNull = config5.notNull;
+    this.default = config5.default;
+    this.defaultFn = config5.defaultFn;
+    this.onUpdateFn = config5.onUpdateFn;
+    this.hasDefault = config5.hasDefault;
+    this.primary = config5.primaryKey;
+    this.isUnique = config5.isUnique;
+    this.uniqueName = config5.uniqueName;
+    this.uniqueType = config5.uniqueType;
+    this.dataType = config5.dataType;
+    this.columnType = config5.columnType;
+    this.generated = config5.generated;
+    this.generatedIdentity = config5.generatedIdentity;
   }
   static [entityKind] = "Column";
   name;
@@ -4873,9 +4873,9 @@ var ForeignKeyBuilder = class {
   _onUpdate = "no action";
   /** @internal */
   _onDelete = "no action";
-  constructor(config4, actions) {
+  constructor(config5, actions) {
     this.reference = () => {
-      const { name, columns, foreignColumns } = config4();
+      const { name, columns, foreignColumns } = config5();
       return { name, columns, foreignTable: foreignColumns[0].table, foreignColumns };
     };
     if (actions) {
@@ -5063,10 +5063,10 @@ var PgColumnBuilder = class extends ColumnBuilder {
     this.foreignKeyConfigs.push({ ref, actions });
     return this;
   }
-  unique(name, config4) {
+  unique(name, config5) {
     this.config.isUnique = true;
     this.config.uniqueName = name;
-    this.config.uniqueType = config4?.nulls;
+    this.config.uniqueType = config5?.nulls;
     return this;
   }
   generatedAlwaysAs(as) {
@@ -5105,11 +5105,11 @@ var PgColumnBuilder = class extends ColumnBuilder {
   }
 };
 var PgColumn = class extends Column {
-  constructor(table, config4) {
-    if (!config4.uniqueName) {
-      config4.uniqueName = uniqueKeyName(table, [config4.name]);
+  constructor(table, config5) {
+    if (!config5.uniqueName) {
+      config5.uniqueName = uniqueKeyName(table, [config5.name]);
     }
-    super(table, config4);
+    super(table, config5);
     this.table = table;
   }
   static [entityKind] = "PgColumn";
@@ -5210,11 +5210,11 @@ var PgArrayBuilder = class extends PgColumnBuilder {
   }
 };
 var PgArray = class _PgArray extends PgColumn {
-  constructor(table, config4, baseColumn, range) {
-    super(table, config4);
+  constructor(table, config5, baseColumn, range) {
+    super(table, config5);
     this.baseColumn = baseColumn;
     this.range = range;
-    this.size = config4.size;
+    this.size = config5.size;
   }
   size;
   static [entityKind] = "PgArray";
@@ -5255,9 +5255,9 @@ var PgEnumObjectColumn = class extends PgColumn {
   static [entityKind] = "PgEnumObjectColumn";
   enum;
   enumValues = this.config.enum.enumValues;
-  constructor(table, config4) {
-    super(table, config4);
-    this.enum = config4.enum;
+  constructor(table, config5) {
+    super(table, config5);
+    this.enum = config5.enum;
   }
   getSQLType() {
     return this.enum.enumName;
@@ -5285,9 +5285,9 @@ var PgEnumColumn = class extends PgColumn {
   static [entityKind] = "PgEnumColumn";
   enum = this.config.enum;
   enumValues = this.config.enum.enumValues;
-  constructor(table, config4) {
-    super(table, config4);
-    this.enum = config4.enum;
+  constructor(table, config5) {
+    super(table, config5);
+    this.enum = config5.enum;
   }
   getSQLType() {
     return this.enum.enumName;
@@ -5409,9 +5409,9 @@ var SQL = class _SQL {
     this.queryChunks.push(...query2.queryChunks);
     return this;
   }
-  toQuery(config4) {
+  toQuery(config5) {
     return tracer.startActiveSpan("drizzle.buildSQL", (span) => {
-      const query2 = this.buildQueryFromSourceParams(this.queryChunks, config4);
+      const query2 = this.buildQueryFromSourceParams(this.queryChunks, config5);
       span?.setAttributes({
         "drizzle.query.text": query2.sql,
         "drizzle.query.params": JSON.stringify(query2.params)
@@ -5420,7 +5420,7 @@ var SQL = class _SQL {
     });
   }
   buildQueryFromSourceParams(chunks, _config) {
-    const config4 = Object.assign({}, _config, {
+    const config5 = Object.assign({}, _config, {
       inlineParams: _config.inlineParams || this.shouldInlineParams,
       paramStartIndex: _config.paramStartIndex || { value: 0 }
     });
@@ -5431,7 +5431,7 @@ var SQL = class _SQL {
       prepareTyping,
       inlineParams,
       paramStartIndex
-    } = config4;
+    } = config5;
     return mergeQueries(chunks.map((chunk) => {
       if (is(chunk, StringChunk)) {
         return { sql: chunk.value.join(""), params: [] };
@@ -5451,11 +5451,11 @@ var SQL = class _SQL {
           }
         }
         result.push(new StringChunk(")"));
-        return this.buildQueryFromSourceParams(result, config4);
+        return this.buildQueryFromSourceParams(result, config5);
       }
       if (is(chunk, _SQL)) {
         return this.buildQueryFromSourceParams(chunk.queryChunks, {
-          ...config4,
+          ...config5,
           inlineParams: inlineParams || chunk.shouldInlineParams
         });
       }
@@ -5492,10 +5492,10 @@ var SQL = class _SQL {
         }
         const mappedValue = chunk.value === null ? null : chunk.encoder.mapToDriverValue(chunk.value);
         if (is(mappedValue, _SQL)) {
-          return this.buildQueryFromSourceParams([mappedValue], config4);
+          return this.buildQueryFromSourceParams([mappedValue], config5);
         }
         if (inlineParams) {
-          return { sql: this.mapInlineParam(mappedValue, config4), params: [] };
+          return { sql: this.mapInlineParam(mappedValue, config5), params: [] };
         }
         let typings = ["none"];
         if (prepareTyping) {
@@ -5518,7 +5518,7 @@ var SQL = class _SQL {
           chunk._.sql,
           new StringChunk(") "),
           new Name(chunk._.alias)
-        ], config4);
+        ], config5);
       }
       if (isPgEnum(chunk)) {
         if (chunk.schema) {
@@ -5528,16 +5528,16 @@ var SQL = class _SQL {
       }
       if (isSQLWrapper(chunk)) {
         if (chunk.shouldOmitSQLParens?.()) {
-          return this.buildQueryFromSourceParams([chunk.getSQL()], config4);
+          return this.buildQueryFromSourceParams([chunk.getSQL()], config5);
         }
         return this.buildQueryFromSourceParams([
           new StringChunk("("),
           chunk.getSQL(),
           new StringChunk(")")
-        ], config4);
+        ], config5);
       }
       if (inlineParams) {
-        return { sql: this.mapInlineParam(chunk, config4), params: [] };
+        return { sql: this.mapInlineParam(chunk, config5), params: [] };
       }
       return { sql: escapeParam(paramStartIndex.value++, chunk), params: [chunk], typings: ["none"] };
     }));
@@ -6049,16 +6049,16 @@ var Relation = class {
   fieldName;
 };
 var Relations = class {
-  constructor(table, config4) {
+  constructor(table, config5) {
     this.table = table;
-    this.config = config4;
+    this.config = config5;
   }
   static [entityKind] = "Relations";
 };
 var One = class _One extends Relation {
-  constructor(sourceTable, referencedTable, config4, isNullable) {
-    super(sourceTable, referencedTable, config4?.relationName);
-    this.config = config4;
+  constructor(sourceTable, referencedTable, config5, isNullable) {
+    super(sourceTable, referencedTable, config5?.relationName);
+    this.config = config5;
     this.isNullable = isNullable;
   }
   static [entityKind] = "One";
@@ -6074,9 +6074,9 @@ var One = class _One extends Relation {
   }
 };
 var Many = class _Many extends Relation {
-  constructor(sourceTable, referencedTable, config4) {
-    super(sourceTable, referencedTable, config4?.relationName);
-    this.config = config4;
+  constructor(sourceTable, referencedTable, config5) {
+    super(sourceTable, referencedTable, config5?.relationName);
+    this.config = config5;
   }
   static [entityKind] = "Many";
   withFieldName(fieldName) {
@@ -6186,18 +6186,18 @@ function extractTablesRelationalConfig(schema, configHelpers) {
   return { tables: tablesConfig, tableNamesMap };
 }
 function createOne(sourceTable) {
-  return function one(table, config4) {
+  return function one(table, config5) {
     return new One(
       sourceTable,
       table,
-      config4,
-      config4?.fields.reduce((res, f) => res && f.notNull, true) ?? false
+      config5,
+      config5?.fields.reduce((res, f) => res && f.notNull, true) ?? false
     );
   };
 }
 function createMany(sourceTable) {
-  return function many(referencedTable, config4) {
-    return new Many(sourceTable, referencedTable, config4);
+  return function many(referencedTable, config5) {
+    return new Many(sourceTable, referencedTable, config5);
   };
 }
 function normalizeRelation(schema, tableNamesMap, relation) {
@@ -6397,8 +6397,8 @@ function mapColumnsInSQLToAlias(query2, alias2) {
 var SelectionProxyHandler = class _SelectionProxyHandler {
   static [entityKind] = "SelectionProxyHandler";
   config;
-  constructor(config4) {
-    this.config = { ...config4 };
+  constructor(config5) {
+    this.config = { ...config5 };
   }
   get(subquery, prop) {
     if (prop === "_") {
@@ -6494,9 +6494,9 @@ var ForeignKeyBuilder2 = class {
   _onUpdate;
   /** @internal */
   _onDelete;
-  constructor(config4, actions) {
+  constructor(config5, actions) {
     this.reference = () => {
-      const { name, columns, foreignColumns } = config4();
+      const { name, columns, foreignColumns } = config5();
       return { name, columns, foreignTable: foreignColumns[0].table, foreignColumns };
     };
     if (actions) {
@@ -6597,11 +6597,11 @@ var SQLiteColumnBuilder = class extends ColumnBuilder {
     this.config.uniqueName = name;
     return this;
   }
-  generatedAlwaysAs(as, config4) {
+  generatedAlwaysAs(as, config5) {
     this.config.generated = {
       as,
       type: "always",
-      mode: config4?.mode ?? "virtual"
+      mode: config5?.mode ?? "virtual"
     };
     return this;
   }
@@ -6625,11 +6625,11 @@ var SQLiteColumnBuilder = class extends ColumnBuilder {
   }
 };
 var SQLiteColumn = class extends Column {
-  constructor(table, config4) {
-    if (!config4.uniqueName) {
-      config4.uniqueName = uniqueKeyName2(table, [config4.name]);
+  constructor(table, config5) {
+    if (!config5.uniqueName) {
+      config5.uniqueName = uniqueKeyName2(table, [config5.name]);
     }
-    super(table, config4);
+    super(table, config5);
     this.table = table;
   }
   static [entityKind] = "SQLiteColumn";
@@ -6720,11 +6720,11 @@ var SQLiteBlobBuffer = class extends SQLiteColumn {
   }
 };
 function blob(a, b) {
-  const { name, config: config4 } = getColumnNameAndConfig(a, b);
-  if (config4?.mode === "json") {
+  const { name, config: config5 } = getColumnNameAndConfig(a, b);
+  if (config5?.mode === "json") {
     return new SQLiteBlobJsonBuilder(name);
   }
-  if (config4?.mode === "bigint") {
+  if (config5?.mode === "bigint") {
     return new SQLiteBigIntBuilder(name);
   }
   return new SQLiteBlobBufferBuilder(name);
@@ -6751,11 +6751,11 @@ var SQLiteCustomColumn = class extends SQLiteColumn {
   sqlName;
   mapTo;
   mapFrom;
-  constructor(table, config4) {
-    super(table, config4);
-    this.sqlName = config4.customTypeParams.dataType(config4.fieldConfig);
-    this.mapTo = config4.customTypeParams.toDriver;
-    this.mapFrom = config4.customTypeParams.fromDriver;
+  constructor(table, config5) {
+    super(table, config5);
+    this.sqlName = config5.customTypeParams.dataType(config5.fieldConfig);
+    this.mapTo = config5.customTypeParams.toDriver;
+    this.mapFrom = config5.customTypeParams.fromDriver;
   }
   getSQLType() {
     return this.sqlName;
@@ -6769,10 +6769,10 @@ var SQLiteCustomColumn = class extends SQLiteColumn {
 };
 function customType(customTypeParams) {
   return (a, b) => {
-    const { name, config: config4 } = getColumnNameAndConfig(a, b);
+    const { name, config: config5 } = getColumnNameAndConfig(a, b);
     return new SQLiteCustomColumnBuilder(
       name,
-      config4,
+      config5,
       customTypeParams
     );
   };
@@ -6785,8 +6785,8 @@ var SQLiteBaseIntegerBuilder = class extends SQLiteColumnBuilder {
     super(name, dataType, columnType);
     this.config.autoIncrement = false;
   }
-  primaryKey(config4) {
-    if (config4?.autoIncrement) {
+  primaryKey(config5) {
+    if (config5?.autoIncrement) {
       this.config.autoIncrement = true;
     }
     this.config.hasDefault = true;
@@ -6877,12 +6877,12 @@ var SQLiteBoolean = class extends SQLiteBaseInteger {
   }
 };
 function integer(a, b) {
-  const { name, config: config4 } = getColumnNameAndConfig(a, b);
-  if (config4?.mode === "timestamp" || config4?.mode === "timestamp_ms") {
-    return new SQLiteTimestampBuilder(name, config4.mode);
+  const { name, config: config5 } = getColumnNameAndConfig(a, b);
+  if (config5?.mode === "timestamp" || config5?.mode === "timestamp_ms") {
+    return new SQLiteTimestampBuilder(name, config5.mode);
   }
-  if (config4?.mode === "boolean") {
-    return new SQLiteBooleanBuilder(name, config4.mode);
+  if (config5?.mode === "boolean") {
+    return new SQLiteBooleanBuilder(name, config5.mode);
   }
   return new SQLiteIntegerBuilder(name);
 }
@@ -6957,8 +6957,8 @@ var SQLiteNumericBigInt = class extends SQLiteColumn {
   }
 };
 function numeric(a, b) {
-  const { name, config: config4 } = getColumnNameAndConfig(a, b);
-  const mode = config4?.mode;
+  const { name, config: config5 } = getColumnNameAndConfig(a, b);
+  const mode = config5?.mode;
   return mode === "number" ? new SQLiteNumericNumberBuilder(name) : mode === "bigint" ? new SQLiteNumericBigIntBuilder(name) : new SQLiteNumericBuilder(name);
 }
 
@@ -6986,10 +6986,10 @@ function real(name) {
 // node_modules/drizzle-orm/sqlite-core/columns/text.js
 var SQLiteTextBuilder = class extends SQLiteColumnBuilder {
   static [entityKind] = "SQLiteTextBuilder";
-  constructor(name, config4) {
+  constructor(name, config5) {
     super(name, "string", "SQLiteText");
-    this.config.enumValues = config4.enum;
-    this.config.length = config4.length;
+    this.config.enumValues = config5.enum;
+    this.config.length = config5.length;
   }
   /** @internal */
   build(table) {
@@ -7003,8 +7003,8 @@ var SQLiteText = class extends SQLiteColumn {
   static [entityKind] = "SQLiteText";
   enumValues = this.config.enumValues;
   length = this.config.length;
-  constructor(table, config4) {
-    super(table, config4);
+  constructor(table, config5) {
+    super(table, config5);
   }
   getSQLType() {
     return `text${this.config.length ? `(${this.config.length})` : ""}`;
@@ -7036,11 +7036,11 @@ var SQLiteTextJson = class extends SQLiteColumn {
   }
 };
 function text(a, b = {}) {
-  const { name, config: config4 } = getColumnNameAndConfig(a, b);
-  if (config4.mode === "json") {
+  const { name, config: config5 } = getColumnNameAndConfig(a, b);
+  if (config5.mode === "json") {
     return new SQLiteTextJsonBuilder(name);
   }
-  return new SQLiteTextBuilder(name, config4);
+  return new SQLiteTextBuilder(name, config5);
 }
 
 // node_modules/drizzle-orm/sqlite-core/columns/all.js
@@ -7311,8 +7311,8 @@ var SQLiteDialect = class {
   static [entityKind] = "SQLiteDialect";
   /** @internal */
   casing;
-  constructor(config4) {
-    this.casing = new CasingCache(config4?.casing);
+  constructor(config5) {
+    this.casing = new CasingCache(config5?.casing);
   }
   escapeName(name) {
     return `"${name}"`;
@@ -7647,7 +7647,7 @@ var SQLiteDialect = class {
     tableNamesMap,
     table,
     tableConfig,
-    queryConfig: config4,
+    queryConfig: config5,
     tableAlias,
     nestedQueryRelation,
     joinOn
@@ -7655,7 +7655,7 @@ var SQLiteDialect = class {
     let selection = [];
     let limit, offset, orderBy = [], where;
     const joins = [];
-    if (config4 === true) {
+    if (config5 === true) {
       const selectionEntries = Object.entries(tableConfig.columns);
       selection = selectionEntries.map(([key, value]) => ({
         dbKey: value.name,
@@ -7669,15 +7669,15 @@ var SQLiteDialect = class {
       const aliasedColumns = Object.fromEntries(
         Object.entries(tableConfig.columns).map(([key, value]) => [key, aliasedTableColumn(value, tableAlias)])
       );
-      if (config4.where) {
-        const whereSql = typeof config4.where === "function" ? config4.where(aliasedColumns, getOperators()) : config4.where;
+      if (config5.where) {
+        const whereSql = typeof config5.where === "function" ? config5.where(aliasedColumns, getOperators()) : config5.where;
         where = whereSql && mapColumnsInSQLToAlias(whereSql, tableAlias);
       }
       const fieldsSelection = [];
       let selectedColumns = [];
-      if (config4.columns) {
+      if (config5.columns) {
         let isIncludeMode = false;
-        for (const [field, value] of Object.entries(config4.columns)) {
+        for (const [field, value] of Object.entries(config5.columns)) {
           if (value === void 0) {
             continue;
           }
@@ -7689,7 +7689,7 @@ var SQLiteDialect = class {
           }
         }
         if (selectedColumns.length > 0) {
-          selectedColumns = isIncludeMode ? selectedColumns.filter((c) => config4.columns?.[c] === true) : Object.keys(tableConfig.columns).filter((key) => !selectedColumns.includes(key));
+          selectedColumns = isIncludeMode ? selectedColumns.filter((c) => config5.columns?.[c] === true) : Object.keys(tableConfig.columns).filter((key) => !selectedColumns.includes(key));
         }
       } else {
         selectedColumns = Object.keys(tableConfig.columns);
@@ -7699,12 +7699,12 @@ var SQLiteDialect = class {
         fieldsSelection.push({ tsKey: field, value: column });
       }
       let selectedRelations = [];
-      if (config4.with) {
-        selectedRelations = Object.entries(config4.with).filter((entry) => !!entry[1]).map(([tsKey, queryConfig]) => ({ tsKey, queryConfig, relation: tableConfig.relations[tsKey] }));
+      if (config5.with) {
+        selectedRelations = Object.entries(config5.with).filter((entry) => !!entry[1]).map(([tsKey, queryConfig]) => ({ tsKey, queryConfig, relation: tableConfig.relations[tsKey] }));
       }
       let extras;
-      if (config4.extras) {
-        extras = typeof config4.extras === "function" ? config4.extras(aliasedColumns, { sql }) : config4.extras;
+      if (config5.extras) {
+        extras = typeof config5.extras === "function" ? config5.extras(aliasedColumns, { sql }) : config5.extras;
         for (const [tsKey, value] of Object.entries(extras)) {
           fieldsSelection.push({
             tsKey,
@@ -7722,7 +7722,7 @@ var SQLiteDialect = class {
           selection: []
         });
       }
-      let orderByOrig = typeof config4.orderBy === "function" ? config4.orderBy(aliasedColumns, getOrderByOperators()) : config4.orderBy ?? [];
+      let orderByOrig = typeof config5.orderBy === "function" ? config5.orderBy(aliasedColumns, getOrderByOperators()) : config5.orderBy ?? [];
       if (!Array.isArray(orderByOrig)) {
         orderByOrig = [orderByOrig];
       }
@@ -7732,8 +7732,8 @@ var SQLiteDialect = class {
         }
         return mapColumnsInSQLToAlias(orderByValue, tableAlias);
       });
-      limit = config4.limit;
-      offset = config4.offset;
+      limit = config5.limit;
+      offset = config5.offset;
       for (const {
         tsKey: selectedRelationTsKey,
         queryConfig: selectedRelationConfigValue,
@@ -7861,8 +7861,8 @@ var SQLiteDialect = class {
 };
 var SQLiteSyncDialect = class extends SQLiteDialect {
   static [entityKind] = "SQLiteSyncDialect";
-  migrate(migrations, session, config4) {
-    const migrationsTable = config4 === void 0 ? "__drizzle_migrations" : typeof config4 === "string" ? "__drizzle_migrations" : config4.migrationsTable ?? "__drizzle_migrations";
+  migrate(migrations, session, config5) {
+    const migrationsTable = config5 === void 0 ? "__drizzle_migrations" : typeof config5 === "string" ? "__drizzle_migrations" : config5.migrationsTable ?? "__drizzle_migrations";
     const migrationTableCreate = sql`
 			CREATE TABLE IF NOT EXISTS ${sql.identifier(migrationsTable)} (
 				id SERIAL PRIMARY KEY,
@@ -7896,8 +7896,8 @@ var SQLiteSyncDialect = class extends SQLiteDialect {
 };
 var SQLiteAsyncDialect = class extends SQLiteDialect {
   static [entityKind] = "SQLiteAsyncDialect";
-  async migrate(migrations, session, config4) {
-    const migrationsTable = config4 === void 0 ? "__drizzle_migrations" : typeof config4 === "string" ? "__drizzle_migrations" : config4.migrationsTable ?? "__drizzle_migrations";
+  async migrate(migrations, session, config5) {
+    const migrationsTable = config5 === void 0 ? "__drizzle_migrations" : typeof config5 === "string" ? "__drizzle_migrations" : config5.migrationsTable ?? "__drizzle_migrations";
     const migrationTableCreate = sql`
 			CREATE TABLE IF NOT EXISTS ${sql.identifier(migrationsTable)} (
 				id SERIAL PRIMARY KEY,
@@ -7942,12 +7942,12 @@ var SQLiteSelectBuilder = class {
   dialect;
   withList;
   distinct;
-  constructor(config4) {
-    this.fields = config4.fields;
-    this.session = config4.session;
-    this.dialect = config4.dialect;
-    this.withList = config4.withList;
-    this.distinct = config4.distinct;
+  constructor(config5) {
+    this.fields = config5.fields;
+    this.session = config5.session;
+    this.dialect = config5.dialect;
+    this.withList = config5.withList;
+    this.distinct = config5.distinct;
   }
   from(source) {
     const isPartialSelect = !!this.fields;
@@ -8547,8 +8547,8 @@ var SQLiteSelectBase = class extends SQLiteSelectQueryBuilderBase {
     query2.joinsNotNullableMap = this.joinsNotNullableMap;
     return query2;
   }
-  $withCache(config4) {
-    this.cacheConfig = config4 === void 0 ? { config: {}, enable: true, autoInvalidate: true } : config4 === false ? { enable: false } : { enable: true, autoInvalidate: true, ...config4 };
+  $withCache(config5) {
+    this.cacheConfig = config5 === void 0 ? { config: {}, enable: true, autoInvalidate: true } : config5 === false ? { enable: false } : { enable: true, autoInvalidate: true, ...config5 };
     return this;
   }
   prepare() {
@@ -8738,13 +8738,13 @@ var SQLiteInsertBase = class extends QueryPromise {
    *   .onConflictDoNothing({ target: cars.id });
    * ```
    */
-  onConflictDoNothing(config4 = {}) {
+  onConflictDoNothing(config5 = {}) {
     if (!this.config.onConflict) this.config.onConflict = [];
-    if (config4.target === void 0) {
+    if (config5.target === void 0) {
       this.config.onConflict.push(sql` on conflict do nothing`);
     } else {
-      const targetSql = Array.isArray(config4.target) ? sql`${config4.target}` : sql`${[config4.target]}`;
-      const whereSql = config4.where ? sql` where ${config4.where}` : sql``;
+      const targetSql = Array.isArray(config5.target) ? sql`${config5.target}` : sql`${[config5.target]}`;
+      const whereSql = config5.where ? sql` where ${config5.where}` : sql``;
       this.config.onConflict.push(sql` on conflict ${targetSql} do nothing${whereSql}`);
     }
     return this;
@@ -8778,18 +8778,18 @@ var SQLiteInsertBase = class extends QueryPromise {
    *   });
    * ```
    */
-  onConflictDoUpdate(config4) {
-    if (config4.where && (config4.targetWhere || config4.setWhere)) {
+  onConflictDoUpdate(config5) {
+    if (config5.where && (config5.targetWhere || config5.setWhere)) {
       throw new Error(
         'You cannot use both "where" and "targetWhere"/"setWhere" at the same time - "where" is deprecated, use "targetWhere" or "setWhere" instead.'
       );
     }
     if (!this.config.onConflict) this.config.onConflict = [];
-    const whereSql = config4.where ? sql` where ${config4.where}` : void 0;
-    const targetWhereSql = config4.targetWhere ? sql` where ${config4.targetWhere}` : void 0;
-    const setWhereSql = config4.setWhere ? sql` where ${config4.setWhere}` : void 0;
-    const targetSql = Array.isArray(config4.target) ? sql`${config4.target}` : sql`${[config4.target]}`;
-    const setSql = this.dialect.buildUpdateSet(this.config.table, mapUpdateSet(this.config.table, config4.set));
+    const whereSql = config5.where ? sql` where ${config5.where}` : void 0;
+    const targetWhereSql = config5.targetWhere ? sql` where ${config5.targetWhere}` : void 0;
+    const setWhereSql = config5.setWhere ? sql` where ${config5.setWhere}` : void 0;
+    const targetSql = Array.isArray(config5.target) ? sql`${config5.target}` : sql`${[config5.target]}`;
+    const setSql = this.dialect.buildUpdateSet(this.config.table, mapUpdateSet(this.config.table, config5.set));
     this.config.onConflict.push(
       sql` on conflict ${targetSql}${targetWhereSql} do update set ${setSql}${whereSql}${setWhereSql}`
     );
@@ -9063,7 +9063,7 @@ var RelationalQueryBuilder = class {
     this.session = session;
   }
   static [entityKind] = "SQLiteAsyncRelationalQueryBuilder";
-  findMany(config4) {
+  findMany(config5) {
     return this.mode === "sync" ? new SQLiteSyncRelationalQuery(
       this.fullSchema,
       this.schema,
@@ -9072,7 +9072,7 @@ var RelationalQueryBuilder = class {
       this.tableConfig,
       this.dialect,
       this.session,
-      config4 ? config4 : {},
+      config5 ? config5 : {},
       "many"
     ) : new SQLiteRelationalQuery(
       this.fullSchema,
@@ -9082,11 +9082,11 @@ var RelationalQueryBuilder = class {
       this.tableConfig,
       this.dialect,
       this.session,
-      config4 ? config4 : {},
+      config5 ? config5 : {},
       "many"
     );
   }
-  findFirst(config4) {
+  findFirst(config5) {
     return this.mode === "sync" ? new SQLiteSyncRelationalQuery(
       this.fullSchema,
       this.schema,
@@ -9095,7 +9095,7 @@ var RelationalQueryBuilder = class {
       this.tableConfig,
       this.dialect,
       this.session,
-      config4 ? { ...config4, limit: 1 } : { limit: 1 },
+      config5 ? { ...config5, limit: 1 } : { limit: 1 },
       "first"
     ) : new SQLiteRelationalQuery(
       this.fullSchema,
@@ -9105,13 +9105,13 @@ var RelationalQueryBuilder = class {
       this.tableConfig,
       this.dialect,
       this.session,
-      config4 ? { ...config4, limit: 1 } : { limit: 1 },
+      config5 ? { ...config5, limit: 1 } : { limit: 1 },
       "first"
     );
   }
 };
 var SQLiteRelationalQuery = class extends QueryPromise {
-  constructor(fullSchema, schema, tableNamesMap, table, tableConfig, dialect, session, config4, mode) {
+  constructor(fullSchema, schema, tableNamesMap, table, tableConfig, dialect, session, config5, mode) {
     super();
     this.fullSchema = fullSchema;
     this.schema = schema;
@@ -9120,7 +9120,7 @@ var SQLiteRelationalQuery = class extends QueryPromise {
     this.tableConfig = tableConfig;
     this.dialect = dialect;
     this.session = session;
-    this.config = config4;
+    this.config = config5;
     this.mode = mode;
   }
   static [entityKind] = "SQLiteAsyncRelationalQuery";
@@ -9508,8 +9508,8 @@ var BaseSQLiteDatabase = class {
     }
     return this.session.values(sequel);
   }
-  transaction(transaction, config4) {
-    return this.session.transaction(transaction, config4);
+  transaction(transaction, config5) {
+    return this.session.transaction(transaction, config5);
   }
 };
 
@@ -9792,9 +9792,9 @@ var SQLiteD1Session = class extends SQLiteSession {
   extractRawValuesValueFromBatchResult(result) {
     return d1ToRawMapping(result.results);
   }
-  async transaction(transaction, config4) {
+  async transaction(transaction, config5) {
     const tx2 = new D1Transaction("async", this.dialect, this, this.schema);
-    await this.run(sql.raw(`begin${config4?.behavior ? " " + config4.behavior : ""}`));
+    await this.run(sql.raw(`begin${config5?.behavior ? " " + config5.behavior : ""}`));
     try {
       const result = await transaction(tx2);
       await this.run(sql`commit`);
@@ -9926,32 +9926,32 @@ var DrizzleD1Database = class extends BaseSQLiteDatabase {
     return this.session.batch(batch);
   }
 };
-function drizzle(client, config4 = {}) {
-  const dialect = new SQLiteAsyncDialect({ casing: config4.casing });
+function drizzle(client, config5 = {}) {
+  const dialect = new SQLiteAsyncDialect({ casing: config5.casing });
   let logger6;
-  if (config4.logger === true) {
+  if (config5.logger === true) {
     logger6 = new DefaultLogger();
-  } else if (config4.logger !== false) {
-    logger6 = config4.logger;
+  } else if (config5.logger !== false) {
+    logger6 = config5.logger;
   }
   let schema;
-  if (config4.schema) {
+  if (config5.schema) {
     const tablesConfig = extractTablesRelationalConfig(
-      config4.schema,
+      config5.schema,
       createTableRelationsHelpers
     );
     schema = {
-      fullSchema: config4.schema,
+      fullSchema: config5.schema,
       schema: tablesConfig.tables,
       tableNamesMap: tablesConfig.tableNamesMap
     };
   }
-  const session = new SQLiteD1Session(client, dialect, schema, { logger: logger6, cache: config4.cache });
+  const session = new SQLiteD1Session(client, dialect, schema, { logger: logger6, cache: config5.cache });
   const db = new DrizzleD1Database("async", dialect, session, schema);
   db.$client = client;
-  db.$cache = config4.cache;
+  db.$cache = config5.cache;
   if (db.$cache) {
-    db.$cache["invalidate"] = config4.cache?.onMutate;
+    db.$cache["invalidate"] = config5.cache?.onMutate;
   }
   return db;
 }
@@ -14053,16 +14053,30 @@ function arrayBufferToBase64(buf) {
 }
 
 // src/integrations/elevenlabs.ts
+async function withTimeout(promise, ms) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort("timeout"), ms);
+  try {
+    const res = await promise;
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
 async function speechToText(env, audioBase64, format) {
   const audioBytes = base64ToUint8Array(audioBase64);
-  const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+  const filename = `audio.${format || "webm"}`;
+  const form = new FormData();
+  form.append("file", new Blob([audioBytes], { type: "application/octet-stream" }), filename);
+  form.append("model_id", "eleven_multilingual_v2");
+  const req = fetch("https://api.elevenlabs.io/v1/speech-to-text", {
     method: "POST",
     headers: {
-      "xi-api-key": env.ELEVENLABS_API_KEY,
-      "Content-Type": "application/octet-stream"
+      "xi-api-key": env.ELEVENLABS_API_KEY
     },
-    body: audioBytes
+    body: form
   });
+  const res = await withTimeout(req, 3e4);
   if (!res.ok) throw new Error(`STT failed: ${res.status}`);
   const data = await res.json();
   return data.text ?? "";
@@ -14926,10 +14940,158 @@ var TextEncoder4 = class {
 // node_modules/@polkadot/x-textencoder/browser.js
 var TextEncoder5 = /* @__PURE__ */ extractGlobal3("TextEncoder", TextEncoder4);
 
+// node_modules/@polkadot/util/node_modules/@polkadot/x-global/index.js
+function evaluateThis4(fn) {
+  return fn("return this");
+}
+var xglobal4 = typeof globalThis !== "undefined" ? globalThis : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : evaluateThis4(Function);
+function extractGlobal4(name, fallback) {
+  return typeof xglobal4[name] === "undefined" ? fallback : xglobal4[name];
+}
+
+// node_modules/@polkadot/util/is/function.js
+function isFunction2(value) {
+  return typeof value === "function";
+}
+
+// node_modules/@polkadot/util/node_modules/@polkadot/x-bigint/index.js
+function invalidFallback2() {
+  return Number.NaN;
+}
+var BigInt3 = /* @__PURE__ */ extractGlobal4("BigInt", invalidFallback2);
+
+// node_modules/@polkadot/util/hex/toU8a.js
+var CHR2 = "0123456789abcdef";
+var U83 = new Uint8Array(256);
+var U163 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR2.length; i < count; i++) {
+  U83[CHR2[i].charCodeAt(0) | 0] = i | 0;
+  if (i > 9) {
+    U83[CHR2[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+  }
+}
+for (let i = 0; i < 256; i++) {
+  const s = i << 8;
+  for (let j = 0; j < 256; j++) {
+    U163[s | j] = U83[i] << 4 | U83[j];
+  }
+}
+function hexToU8a2(value, bitLength = -1) {
+  if (!value) {
+    return new Uint8Array();
+  }
+  let s = value.startsWith("0x") ? 2 : 0;
+  const decLength = Math.ceil((value.length - s) / 2);
+  const endLength = Math.ceil(bitLength === -1 ? decLength : bitLength / 8);
+  const result = new Uint8Array(endLength);
+  const offset = endLength > decLength ? endLength - decLength : 0;
+  for (let i = offset; i < endLength; i++, s += 2) {
+    result[i] = U163[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+  }
+  return result;
+}
+
+// node_modules/@polkadot/util/bn/bn.js
+var import_bn9 = __toESM(require_bn(), 1);
+
+// node_modules/@polkadot/util/is/hex.js
+var REGEX_HEX_PREFIXED2 = /^0x[\da-fA-F]+$/;
+var REGEX_HEX_NOPREFIX = /^[\da-fA-F]+$/;
+function isHex2(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED2.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+}
+
+// node_modules/@polkadot/util/is/object.js
+function isObject2(value) {
+  return !!value && typeof value === "object";
+}
+
+// node_modules/@polkadot/util/is/helpers.js
+function isOn(...fns) {
+  return (value) => (isObject2(value) || isFunction2(value)) && fns.every((f) => isFunction2(value[f]));
+}
+
+// node_modules/@polkadot/util/is/toBigInt.js
+var isToBigInt = /* @__PURE__ */ isOn("toBigInt");
+
+// node_modules/@polkadot/util/is/toBn.js
+var isToBn = /* @__PURE__ */ isOn("toBn");
+
+// node_modules/@polkadot/util/has.js
+var hasBigInt2 = typeof BigInt3 === "function" && typeof BigInt3.asIntN === "function";
+var hasBuffer2 = typeof xglobal4.Buffer === "function" && typeof xglobal4.Buffer.isBuffer === "function";
+var hasProcess2 = typeof xglobal4.process === "object";
+
+// node_modules/@polkadot/util/is/buffer.js
+function isBuffer2(value) {
+  return hasBuffer2 && !!value && isFunction2(value.readDoubleLE) && xglobal4.Buffer.isBuffer(value);
+}
+
+// node_modules/@polkadot/util/is/u8a.js
+function isU8a2(value) {
+  return (value && value.constructor) === Uint8Array || value instanceof Uint8Array;
+}
+
 // node_modules/@polkadot/util/string/toU8a.js
 var encoder2 = new TextEncoder5();
 function stringToU8a2(value) {
   return value ? encoder2.encode(value.toString()) : new Uint8Array();
+}
+
+// node_modules/@polkadot/util/u8a/toU8a.js
+function u8aToU8a2(value) {
+  return isU8a2(value) ? isBuffer2(value) ? new Uint8Array(value) : value : isHex2(value) ? hexToU8a2(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a2(value);
+}
+
+// node_modules/@polkadot/util/u8a/concat.js
+function u8aConcat2(...list) {
+  const count = list.length;
+  const u8as = new Array(count);
+  let length = 0;
+  for (let i = 0; i < count; i++) {
+    u8as[i] = u8aToU8a2(list[i]);
+    length += u8as[i].length;
+  }
+  return u8aConcatStrict2(u8as, length);
+}
+function u8aConcatStrict2(u8as, length = 0) {
+  const count = u8as.length;
+  let offset = 0;
+  if (!length) {
+    for (let i = 0; i < count; i++) {
+      length += u8as[i].length;
+    }
+  }
+  const result = new Uint8Array(length);
+  for (let i = 0; i < count; i++) {
+    result.set(u8as[i], offset);
+    offset += u8as[i].length;
+  }
+  return result;
+}
+
+// node_modules/@polkadot/util/u8a/eq.js
+function u8aEq2(a, b) {
+  const u8aa = u8aToU8a2(a);
+  const u8ab = u8aToU8a2(b);
+  if (u8aa.length === u8ab.length) {
+    const dvA = new DataView(u8aa.buffer, u8aa.byteOffset);
+    const dvB = new DataView(u8ab.buffer, u8ab.byteOffset);
+    const mod2 = u8aa.length % 4 | 0;
+    const length = u8aa.length - mod2 | 0;
+    for (let i = 0; i < length; i += 4) {
+      if (dvA.getUint32(i) !== dvB.getUint32(i)) {
+        return false;
+      }
+    }
+    for (let i = length, count = u8aa.length; i < count; i++) {
+      if (u8aa[i] !== u8ab[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 // node_modules/@polkadot/util/u8a/toString.js
@@ -14938,14 +15100,77 @@ function u8aToString(value) {
   return value ? decoder.decode(value) : "";
 }
 
+// node_modules/@polkadot/util/u8a/wrap.js
+var U8A_WRAP_ETHEREUM = /* @__PURE__ */ u8aToU8a2("Ethereum Signed Message:\n");
+var U8A_WRAP_PREFIX = /* @__PURE__ */ u8aToU8a2("<Bytes>");
+var U8A_WRAP_POSTFIX = /* @__PURE__ */ u8aToU8a2("</Bytes>");
+var WRAP_LEN = U8A_WRAP_PREFIX.length + U8A_WRAP_POSTFIX.length;
+function u8aIsWrapped(u8a, withEthereum) {
+  return u8a.length >= WRAP_LEN && u8aEq2(u8a.subarray(0, U8A_WRAP_PREFIX.length), U8A_WRAP_PREFIX) && u8aEq2(u8a.slice(-U8A_WRAP_POSTFIX.length), U8A_WRAP_POSTFIX) || withEthereum && u8a.length >= U8A_WRAP_ETHEREUM.length && u8aEq2(u8a.subarray(0, U8A_WRAP_ETHEREUM.length), U8A_WRAP_ETHEREUM);
+}
+function u8aUnwrapBytes(bytes2) {
+  const u8a = u8aToU8a2(bytes2);
+  return u8aIsWrapped(u8a, false) ? u8a.subarray(U8A_WRAP_PREFIX.length, u8a.length - U8A_WRAP_POSTFIX.length) : u8a;
+}
+function u8aWrapBytes(bytes2) {
+  const u8a = u8aToU8a2(bytes2);
+  return u8aIsWrapped(u8a, true) ? u8a : u8aConcatStrict2([U8A_WRAP_PREFIX, u8a, U8A_WRAP_POSTFIX]);
+}
+
+// node_modules/@polkadot/util/hex/stripPrefix.js
+function hexStripPrefix(value) {
+  if (!value || value === "0x") {
+    return "";
+  } else if (REGEX_HEX_PREFIXED2.test(value)) {
+    return value.substring(2);
+  } else if (REGEX_HEX_NOPREFIX.test(value)) {
+    return value;
+  }
+  throw new Error(`Expected hex value to convert, found '${value}'`);
+}
+
+// node_modules/@polkadot/util/hex/toBn.js
+function hexToBn(value, { isLe = false, isNegative = false } = {}) {
+  if (!value || value === "0x") {
+    return new import_bn9.default(0);
+  }
+  const stripped = hexStripPrefix(value);
+  const bn = new import_bn9.default(stripped, 16, isLe ? "le" : "be");
+  return isNegative ? bn.fromTwos(stripped.length * 4) : bn;
+}
+
+// node_modules/@polkadot/util/is/bigInt.js
+function isBigInt(value) {
+  return typeof value === "bigint";
+}
+
+// node_modules/@polkadot/util/bn/toBn.js
+function bnToBn(value) {
+  return value ? import_bn9.default.isBN(value) ? value : isHex2(value) ? hexToBn(value.toString()) : isBigInt(value) ? new import_bn9.default(value.toString()) : isToBn(value) ? value.toBn() : isToBigInt(value) ? new import_bn9.default(value.toBigInt().toString()) : new import_bn9.default(value) : new import_bn9.default(0);
+}
+
+// node_modules/@polkadot/util/bn/toU8a.js
+var DEFAULT_OPTS = { bitLength: -1, isLe: true, isNegative: false };
+function bnToU8a(value, { bitLength = -1, isLe = true, isNegative = false } = DEFAULT_OPTS) {
+  const valueBn = bnToBn(value);
+  const byteLength = bitLength === -1 ? Math.ceil(valueBn.bitLength() / 8) : Math.ceil((bitLength || 0) / 8);
+  if (!value) {
+    return bitLength === -1 ? new Uint8Array(1) : new Uint8Array(byteLength);
+  }
+  const output = new Uint8Array(byteLength);
+  const bn = isNegative ? valueBn.toTwos(byteLength * 8) : valueBn;
+  output.set(bn.toArray(isLe ? "le" : "be", byteLength), 0);
+  return output;
+}
+
 // node_modules/@polkadot/x-randomvalues/node_modules/@polkadot/x-global/index.js
-function evaluateThis4(fn) {
+function evaluateThis5(fn) {
   return fn("return this");
 }
-var xglobal4 = typeof globalThis !== "undefined" ? globalThis : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : evaluateThis4(Function);
+var xglobal5 = typeof globalThis !== "undefined" ? globalThis : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : evaluateThis5(Function);
 
 // node_modules/@polkadot/x-randomvalues/browser.js
-var crypto2 = xglobal4.crypto;
+var crypto2 = xglobal5.crypto;
 function getRandomValues2(arr) {
   return crypto2.getRandomValues(arr);
 }
@@ -15188,10 +15413,10 @@ function createWasmFn(root, wasmBytes2, asmFn) {
 }
 
 // node_modules/@polkadot/wasm-util/base64.js
-var CHR2 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+var CHR3 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 var map = new Array(256);
-for (let i = 0, count = CHR2.length; i < count; i++) {
-  map[CHR2.charCodeAt(i)] = i;
+for (let i = 0, count = CHR3.length; i < count; i++) {
+  map[CHR3.charCodeAt(i)] = i;
 }
 function base64Decode(data, out) {
   let byte = 0;
@@ -15546,9 +15771,25 @@ function withWasm(fn) {
     return fn(bridge.wasm, ...params);
   };
 }
+var ed25519Verify = /* @__PURE__ */ withWasm((wasm, signature, message, pubkey) => {
+  const ret = wasm.ext_ed_verify(...bridge.allocU8a(signature), ...bridge.allocU8a(message), ...bridge.allocU8a(pubkey));
+  return ret !== 0;
+});
+var secp256k1Compress = /* @__PURE__ */ withWasm((wasm, pubkey) => {
+  wasm.ext_secp_pub_compress(8, ...bridge.allocU8a(pubkey));
+  return bridge.resultU8a();
+});
 var secp256k1Expand = /* @__PURE__ */ withWasm((wasm, pubkey) => {
   wasm.ext_secp_pub_expand(8, ...bridge.allocU8a(pubkey));
   return bridge.resultU8a();
+});
+var secp256k1Recover = /* @__PURE__ */ withWasm((wasm, msgHash, sig2, recovery) => {
+  wasm.ext_secp_recover(8, ...bridge.allocU8a(msgHash), ...bridge.allocU8a(sig2), recovery);
+  return bridge.resultU8a();
+});
+var sr25519Verify = /* @__PURE__ */ withWasm((wasm, signature, message, pubkey) => {
+  const ret = wasm.ext_sr_verify(...bridge.allocU8a(signature), ...bridge.allocU8a(message), ...bridge.allocU8a(pubkey));
+  return ret !== 0;
 });
 var blake2b = /* @__PURE__ */ withWasm((wasm, data, key, size) => {
   wasm.ext_blake2b(8, ...bridge.allocU8a(data), ...bridge.allocU8a(key), size);
@@ -16272,6 +16513,24 @@ var SHA256_IV = /* @__PURE__ */ Uint32Array.from([
   528734635,
   1541459225
 ]);
+var SHA512_IV = /* @__PURE__ */ Uint32Array.from([
+  1779033703,
+  4089235720,
+  3144134277,
+  2227873595,
+  1013904242,
+  4271175723,
+  2773480762,
+  1595750129,
+  1359893119,
+  2917565137,
+  2600822924,
+  725511199,
+  528734635,
+  4215389547,
+  1541459225,
+  327033209
+]);
 
 // node_modules/@noble/hashes/esm/_u64.js
 var U32_MASK64 = /* @__PURE__ */ BigInt(2 ** 32 - 1);
@@ -16291,6 +16550,8 @@ function split(lst, le = false) {
   }
   return [Ah, Al];
 }
+var shrSH = (h, _l, s) => h >>> s;
+var shrSL = (h, l13, s) => h << 32 - s | l13 >>> s;
 var rotrSH = (h, l13, s) => h >>> s | l13 << 32 - s;
 var rotrSL = (h, l13, s) => h << 32 - s | l13 >>> s;
 var rotrBH = (h, l13, s) => h << 64 - s | l13 >>> s - 32;
@@ -16307,6 +16568,10 @@ function add(Ah, Al, Bh, Bl) {
 }
 var add3L = (Al, Bl, Cl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0);
 var add3H = (low, Ah, Bh, Ch) => Ah + Bh + Ch + (low / 2 ** 32 | 0) | 0;
+var add4L = (Al, Bl, Cl, Dl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0);
+var add4H = (low, Ah, Bh, Ch, Dh) => Ah + Bh + Ch + Dh + (low / 2 ** 32 | 0) | 0;
+var add5L = (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0) + (El >>> 0);
+var add5H = (low, Ah, Bh, Ch, Dh, Eh) => Ah + Bh + Ch + Dh + Eh + (low / 2 ** 32 | 0) | 0;
 
 // node_modules/@noble/hashes/esm/blake2.js
 var B2B_IV = /* @__PURE__ */ Uint32Array.from([
@@ -18953,7 +19218,205 @@ var SHA256 = class extends HashMD {
     clean(this.buffer);
   }
 };
+var K512 = /* @__PURE__ */ (() => split([
+  "0x428a2f98d728ae22",
+  "0x7137449123ef65cd",
+  "0xb5c0fbcfec4d3b2f",
+  "0xe9b5dba58189dbbc",
+  "0x3956c25bf348b538",
+  "0x59f111f1b605d019",
+  "0x923f82a4af194f9b",
+  "0xab1c5ed5da6d8118",
+  "0xd807aa98a3030242",
+  "0x12835b0145706fbe",
+  "0x243185be4ee4b28c",
+  "0x550c7dc3d5ffb4e2",
+  "0x72be5d74f27b896f",
+  "0x80deb1fe3b1696b1",
+  "0x9bdc06a725c71235",
+  "0xc19bf174cf692694",
+  "0xe49b69c19ef14ad2",
+  "0xefbe4786384f25e3",
+  "0x0fc19dc68b8cd5b5",
+  "0x240ca1cc77ac9c65",
+  "0x2de92c6f592b0275",
+  "0x4a7484aa6ea6e483",
+  "0x5cb0a9dcbd41fbd4",
+  "0x76f988da831153b5",
+  "0x983e5152ee66dfab",
+  "0xa831c66d2db43210",
+  "0xb00327c898fb213f",
+  "0xbf597fc7beef0ee4",
+  "0xc6e00bf33da88fc2",
+  "0xd5a79147930aa725",
+  "0x06ca6351e003826f",
+  "0x142929670a0e6e70",
+  "0x27b70a8546d22ffc",
+  "0x2e1b21385c26c926",
+  "0x4d2c6dfc5ac42aed",
+  "0x53380d139d95b3df",
+  "0x650a73548baf63de",
+  "0x766a0abb3c77b2a8",
+  "0x81c2c92e47edaee6",
+  "0x92722c851482353b",
+  "0xa2bfe8a14cf10364",
+  "0xa81a664bbc423001",
+  "0xc24b8b70d0f89791",
+  "0xc76c51a30654be30",
+  "0xd192e819d6ef5218",
+  "0xd69906245565a910",
+  "0xf40e35855771202a",
+  "0x106aa07032bbd1b8",
+  "0x19a4c116b8d2d0c8",
+  "0x1e376c085141ab53",
+  "0x2748774cdf8eeb99",
+  "0x34b0bcb5e19b48a8",
+  "0x391c0cb3c5c95a63",
+  "0x4ed8aa4ae3418acb",
+  "0x5b9cca4f7763e373",
+  "0x682e6ff3d6b2b8a3",
+  "0x748f82ee5defb2fc",
+  "0x78a5636f43172f60",
+  "0x84c87814a1f0ab72",
+  "0x8cc702081a6439ec",
+  "0x90befffa23631e28",
+  "0xa4506cebde82bde9",
+  "0xbef9a3f7b2c67915",
+  "0xc67178f2e372532b",
+  "0xca273eceea26619c",
+  "0xd186b8c721c0c207",
+  "0xeada7dd6cde0eb1e",
+  "0xf57d4f7fee6ed178",
+  "0x06f067aa72176fba",
+  "0x0a637dc5a2c898a6",
+  "0x113f9804bef90dae",
+  "0x1b710b35131c471b",
+  "0x28db77f523047d84",
+  "0x32caab7b40c72493",
+  "0x3c9ebe0a15c9bebc",
+  "0x431d67c49c100d4c",
+  "0x4cc5d4becb3e42b6",
+  "0x597f299cfc657e2a",
+  "0x5fcb6fab3ad6faec",
+  "0x6c44198c4a475817"
+].map((n) => BigInt(n))))();
+var SHA512_Kh = /* @__PURE__ */ (() => K512[0])();
+var SHA512_Kl = /* @__PURE__ */ (() => K512[1])();
+var SHA512_W_H = /* @__PURE__ */ new Uint32Array(80);
+var SHA512_W_L = /* @__PURE__ */ new Uint32Array(80);
+var SHA512 = class extends HashMD {
+  constructor(outputLen = 64) {
+    super(128, outputLen, 16, false);
+    this.Ah = SHA512_IV[0] | 0;
+    this.Al = SHA512_IV[1] | 0;
+    this.Bh = SHA512_IV[2] | 0;
+    this.Bl = SHA512_IV[3] | 0;
+    this.Ch = SHA512_IV[4] | 0;
+    this.Cl = SHA512_IV[5] | 0;
+    this.Dh = SHA512_IV[6] | 0;
+    this.Dl = SHA512_IV[7] | 0;
+    this.Eh = SHA512_IV[8] | 0;
+    this.El = SHA512_IV[9] | 0;
+    this.Fh = SHA512_IV[10] | 0;
+    this.Fl = SHA512_IV[11] | 0;
+    this.Gh = SHA512_IV[12] | 0;
+    this.Gl = SHA512_IV[13] | 0;
+    this.Hh = SHA512_IV[14] | 0;
+    this.Hl = SHA512_IV[15] | 0;
+  }
+  // prettier-ignore
+  get() {
+    const { Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl } = this;
+    return [Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl];
+  }
+  // prettier-ignore
+  set(Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl) {
+    this.Ah = Ah | 0;
+    this.Al = Al | 0;
+    this.Bh = Bh | 0;
+    this.Bl = Bl | 0;
+    this.Ch = Ch | 0;
+    this.Cl = Cl | 0;
+    this.Dh = Dh | 0;
+    this.Dl = Dl | 0;
+    this.Eh = Eh | 0;
+    this.El = El | 0;
+    this.Fh = Fh | 0;
+    this.Fl = Fl | 0;
+    this.Gh = Gh | 0;
+    this.Gl = Gl | 0;
+    this.Hh = Hh | 0;
+    this.Hl = Hl | 0;
+  }
+  process(view, offset) {
+    for (let i = 0; i < 16; i++, offset += 4) {
+      SHA512_W_H[i] = view.getUint32(offset);
+      SHA512_W_L[i] = view.getUint32(offset += 4);
+    }
+    for (let i = 16; i < 80; i++) {
+      const W15h = SHA512_W_H[i - 15] | 0;
+      const W15l = SHA512_W_L[i - 15] | 0;
+      const s0h = rotrSH(W15h, W15l, 1) ^ rotrSH(W15h, W15l, 8) ^ shrSH(W15h, W15l, 7);
+      const s0l = rotrSL(W15h, W15l, 1) ^ rotrSL(W15h, W15l, 8) ^ shrSL(W15h, W15l, 7);
+      const W2h = SHA512_W_H[i - 2] | 0;
+      const W2l = SHA512_W_L[i - 2] | 0;
+      const s1h = rotrSH(W2h, W2l, 19) ^ rotrBH(W2h, W2l, 61) ^ shrSH(W2h, W2l, 6);
+      const s1l = rotrSL(W2h, W2l, 19) ^ rotrBL(W2h, W2l, 61) ^ shrSL(W2h, W2l, 6);
+      const SUMl = add4L(s0l, s1l, SHA512_W_L[i - 7], SHA512_W_L[i - 16]);
+      const SUMh = add4H(SUMl, s0h, s1h, SHA512_W_H[i - 7], SHA512_W_H[i - 16]);
+      SHA512_W_H[i] = SUMh | 0;
+      SHA512_W_L[i] = SUMl | 0;
+    }
+    let { Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl } = this;
+    for (let i = 0; i < 80; i++) {
+      const sigma1h = rotrSH(Eh, El, 14) ^ rotrSH(Eh, El, 18) ^ rotrBH(Eh, El, 41);
+      const sigma1l = rotrSL(Eh, El, 14) ^ rotrSL(Eh, El, 18) ^ rotrBL(Eh, El, 41);
+      const CHIh = Eh & Fh ^ ~Eh & Gh;
+      const CHIl = El & Fl ^ ~El & Gl;
+      const T1ll = add5L(Hl, sigma1l, CHIl, SHA512_Kl[i], SHA512_W_L[i]);
+      const T1h = add5H(T1ll, Hh, sigma1h, CHIh, SHA512_Kh[i], SHA512_W_H[i]);
+      const T1l = T1ll | 0;
+      const sigma0h = rotrSH(Ah, Al, 28) ^ rotrBH(Ah, Al, 34) ^ rotrBH(Ah, Al, 39);
+      const sigma0l = rotrSL(Ah, Al, 28) ^ rotrBL(Ah, Al, 34) ^ rotrBL(Ah, Al, 39);
+      const MAJh = Ah & Bh ^ Ah & Ch ^ Bh & Ch;
+      const MAJl = Al & Bl ^ Al & Cl ^ Bl & Cl;
+      Hh = Gh | 0;
+      Hl = Gl | 0;
+      Gh = Fh | 0;
+      Gl = Fl | 0;
+      Fh = Eh | 0;
+      Fl = El | 0;
+      ({ h: Eh, l: El } = add(Dh | 0, Dl | 0, T1h | 0, T1l | 0));
+      Dh = Ch | 0;
+      Dl = Cl | 0;
+      Ch = Bh | 0;
+      Cl = Bl | 0;
+      Bh = Ah | 0;
+      Bl = Al | 0;
+      const All = add3L(T1l, sigma0l, MAJl);
+      Ah = add3H(All, T1h, sigma0h, MAJh);
+      Al = All | 0;
+    }
+    ({ h: Ah, l: Al } = add(this.Ah | 0, this.Al | 0, Ah | 0, Al | 0));
+    ({ h: Bh, l: Bl } = add(this.Bh | 0, this.Bl | 0, Bh | 0, Bl | 0));
+    ({ h: Ch, l: Cl } = add(this.Ch | 0, this.Cl | 0, Ch | 0, Cl | 0));
+    ({ h: Dh, l: Dl } = add(this.Dh | 0, this.Dl | 0, Dh | 0, Dl | 0));
+    ({ h: Eh, l: El } = add(this.Eh | 0, this.El | 0, Eh | 0, El | 0));
+    ({ h: Fh, l: Fl } = add(this.Fh | 0, this.Fl | 0, Fh | 0, Fl | 0));
+    ({ h: Gh, l: Gl } = add(this.Gh | 0, this.Gl | 0, Gh | 0, Gl | 0));
+    ({ h: Hh, l: Hl } = add(this.Hh | 0, this.Hl | 0, Hh | 0, Hl | 0));
+    this.set(Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl);
+  }
+  roundClean() {
+    clean(SHA512_W_H, SHA512_W_L);
+  }
+  destroy() {
+    clean(this.buffer);
+    this.set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  }
+};
 var sha256 = /* @__PURE__ */ createHasher(() => new SHA256());
+var sha512 = /* @__PURE__ */ createHasher(() => new SHA512());
 
 // node_modules/@noble/hashes/esm/hmac.js
 var HMAC = class extends Hash {
@@ -19085,6 +19548,17 @@ function ensureBytes(title, hex8, expectedLength) {
     throw new Error(title + " of length " + expectedLength + " expected, got " + len);
   return res;
 }
+function equalBytes(a, b) {
+  if (a.length !== b.length)
+    return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++)
+    diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+function copyBytes(bytes2) {
+  return Uint8Array.from(bytes2);
+}
 var isPosBig = (n) => typeof n === "bigint" && _0n <= n;
 function inRange(n, min, max2) {
   return isPosBig(n) && isPosBig(min) && isPosBig(max2) && min <= n && n < max2;
@@ -19164,6 +19638,9 @@ function _validateObject(object, fields, optFields = {}) {
   Object.entries(fields).forEach(([k, v]) => checkField(k, v, false));
   Object.entries(optFields).forEach(([k, v]) => checkField(k, v, true));
 }
+var notImplemented = () => {
+  throw new Error("not implemented");
+};
 function memoized(fn) {
   const map3 = /* @__PURE__ */ new WeakMap();
   return (arg, ...args) => {
@@ -19219,24 +19696,24 @@ function invert(number, modulo) {
     throw new Error("invert: does not exist");
   return mod(x, modulo);
 }
-function assertIsSquare(Fp, root, n) {
-  if (!Fp.eql(Fp.sqr(root), n))
+function assertIsSquare(Fp2, root, n) {
+  if (!Fp2.eql(Fp2.sqr(root), n))
     throw new Error("Cannot find square root");
 }
-function sqrt3mod4(Fp, n) {
-  const p1div4 = (Fp.ORDER + _1n2) / _4n;
-  const root = Fp.pow(n, p1div4);
-  assertIsSquare(Fp, root, n);
+function sqrt3mod4(Fp2, n) {
+  const p1div4 = (Fp2.ORDER + _1n2) / _4n;
+  const root = Fp2.pow(n, p1div4);
+  assertIsSquare(Fp2, root, n);
   return root;
 }
-function sqrt5mod8(Fp, n) {
-  const p5div8 = (Fp.ORDER - _5n) / _8n;
-  const n2 = Fp.mul(n, _2n);
-  const v = Fp.pow(n2, p5div8);
-  const nv = Fp.mul(n, v);
-  const i = Fp.mul(Fp.mul(nv, _2n), v);
-  const root = Fp.mul(nv, Fp.sub(i, Fp.ONE));
-  assertIsSquare(Fp, root, n);
+function sqrt5mod8(Fp2, n) {
+  const p5div8 = (Fp2.ORDER - _5n) / _8n;
+  const n2 = Fp2.mul(n, _2n);
+  const v = Fp2.pow(n2, p5div8);
+  const nv = Fp2.mul(n, v);
+  const i = Fp2.mul(Fp2.mul(nv, _2n), v);
+  const root = Fp2.mul(nv, Fp2.sub(i, Fp2.ONE));
+  assertIsSquare(Fp2, root, n);
   return root;
 }
 function sqrt9mod16(P) {
@@ -19246,18 +19723,18 @@ function sqrt9mod16(P) {
   const c2 = tn(Fp_, c1);
   const c3 = tn(Fp_, Fp_.neg(c1));
   const c4 = (P + _7n) / _16n;
-  return (Fp, n) => {
-    let tv1 = Fp.pow(n, c4);
-    let tv2 = Fp.mul(tv1, c1);
-    const tv3 = Fp.mul(tv1, c2);
-    const tv4 = Fp.mul(tv1, c3);
-    const e1 = Fp.eql(Fp.sqr(tv2), n);
-    const e2 = Fp.eql(Fp.sqr(tv3), n);
-    tv1 = Fp.cmov(tv1, tv2, e1);
-    tv2 = Fp.cmov(tv4, tv3, e2);
-    const e3 = Fp.eql(Fp.sqr(tv2), n);
-    const root = Fp.cmov(tv1, tv2, e3);
-    assertIsSquare(Fp, root, n);
+  return (Fp2, n) => {
+    let tv1 = Fp2.pow(n, c4);
+    let tv2 = Fp2.mul(tv1, c1);
+    const tv3 = Fp2.mul(tv1, c2);
+    const tv4 = Fp2.mul(tv1, c3);
+    const e1 = Fp2.eql(Fp2.sqr(tv2), n);
+    const e2 = Fp2.eql(Fp2.sqr(tv3), n);
+    tv1 = Fp2.cmov(tv1, tv2, e1);
+    tv2 = Fp2.cmov(tv4, tv3, e2);
+    const e3 = Fp2.eql(Fp2.sqr(tv2), n);
+    const root = Fp2.cmov(tv1, tv2, e3);
+    assertIsSquare(Fp2, root, n);
     return root;
   };
 }
@@ -19280,32 +19757,32 @@ function tonelliShanks(P) {
     return sqrt3mod4;
   let cc = _Fp.pow(Z, Q);
   const Q1div2 = (Q + _1n2) / _2n;
-  return function tonelliSlow(Fp, n) {
-    if (Fp.is0(n))
+  return function tonelliSlow(Fp2, n) {
+    if (Fp2.is0(n))
       return n;
-    if (FpLegendre(Fp, n) !== 1)
+    if (FpLegendre(Fp2, n) !== 1)
       throw new Error("Cannot find square root");
     let M = S;
-    let c = Fp.mul(Fp.ONE, cc);
-    let t = Fp.pow(n, Q);
-    let R = Fp.pow(n, Q1div2);
-    while (!Fp.eql(t, Fp.ONE)) {
-      if (Fp.is0(t))
-        return Fp.ZERO;
+    let c = Fp2.mul(Fp2.ONE, cc);
+    let t = Fp2.pow(n, Q);
+    let R = Fp2.pow(n, Q1div2);
+    while (!Fp2.eql(t, Fp2.ONE)) {
+      if (Fp2.is0(t))
+        return Fp2.ZERO;
       let i = 1;
-      let t_tmp = Fp.sqr(t);
-      while (!Fp.eql(t_tmp, Fp.ONE)) {
+      let t_tmp = Fp2.sqr(t);
+      while (!Fp2.eql(t_tmp, Fp2.ONE)) {
         i++;
-        t_tmp = Fp.sqr(t_tmp);
+        t_tmp = Fp2.sqr(t_tmp);
         if (i === M)
           throw new Error("Cannot find square root");
       }
       const exponent = _1n2 << BigInt(M - i - 1);
-      const b = Fp.pow(c, exponent);
+      const b = Fp2.pow(c, exponent);
       M = i;
-      c = Fp.sqr(b);
-      t = Fp.mul(t, c);
-      R = Fp.mul(R, b);
+      c = Fp2.sqr(b);
+      t = Fp2.mul(t, c);
+      R = Fp2.mul(R, b);
     }
     return R;
   };
@@ -19319,6 +19796,7 @@ function FpSqrt(P) {
     return sqrt9mod16(P);
   return tonelliShanks(P);
 }
+var isNegativeLE = (num, modulo) => (mod(num, modulo) & _1n2) === _1n2;
 var FIELD_FIELDS = [
   "create",
   "isValid",
@@ -19352,46 +19830,46 @@ function validateField(field) {
   _validateObject(field, opts);
   return field;
 }
-function FpPow(Fp, num, power) {
+function FpPow(Fp2, num, power) {
   if (power < _0n2)
     throw new Error("invalid exponent, negatives unsupported");
   if (power === _0n2)
-    return Fp.ONE;
+    return Fp2.ONE;
   if (power === _1n2)
     return num;
-  let p = Fp.ONE;
+  let p = Fp2.ONE;
   let d = num;
   while (power > _0n2) {
     if (power & _1n2)
-      p = Fp.mul(p, d);
-    d = Fp.sqr(d);
+      p = Fp2.mul(p, d);
+    d = Fp2.sqr(d);
     power >>= _1n2;
   }
   return p;
 }
-function FpInvertBatch(Fp, nums, passZero = false) {
-  const inverted = new Array(nums.length).fill(passZero ? Fp.ZERO : void 0);
+function FpInvertBatch(Fp2, nums, passZero = false) {
+  const inverted = new Array(nums.length).fill(passZero ? Fp2.ZERO : void 0);
   const multipliedAcc = nums.reduce((acc, num, i) => {
-    if (Fp.is0(num))
+    if (Fp2.is0(num))
       return acc;
     inverted[i] = acc;
-    return Fp.mul(acc, num);
-  }, Fp.ONE);
-  const invertedAcc = Fp.inv(multipliedAcc);
+    return Fp2.mul(acc, num);
+  }, Fp2.ONE);
+  const invertedAcc = Fp2.inv(multipliedAcc);
   nums.reduceRight((acc, num, i) => {
-    if (Fp.is0(num))
+    if (Fp2.is0(num))
       return acc;
-    inverted[i] = Fp.mul(acc, inverted[i]);
-    return Fp.mul(acc, num);
+    inverted[i] = Fp2.mul(acc, inverted[i]);
+    return Fp2.mul(acc, num);
   }, invertedAcc);
   return inverted;
 }
-function FpLegendre(Fp, n) {
-  const p1mod2 = (Fp.ORDER - _1n2) / _2n;
-  const powered = Fp.pow(n, p1mod2);
-  const yes = Fp.eql(powered, Fp.ONE);
-  const zero = Fp.eql(powered, Fp.ZERO);
-  const no = Fp.eql(powered, Fp.neg(Fp.ONE));
+function FpLegendre(Fp2, n) {
+  const p1mod2 = (Fp2.ORDER - _1n2) / _2n;
+  const powered = Fp2.pow(n, p1mod2);
+  const yes = Fp2.eql(powered, Fp2.ONE);
+  const zero = Fp2.eql(powered, Fp2.ZERO);
+  const no = Fp2.eql(powered, Fp2.neg(Fp2.ONE));
   if (!yes && !zero && !no)
     throw new Error("invalid Legendre symbol result");
   return yes ? 1 : zero ? 0 : -1;
@@ -19787,16 +20265,16 @@ function _createCurveFields(type, CURVE, curveOpts = {}, FpFnLE) {
     if (!(typeof val === "bigint" && val > _0n3))
       throw new Error(`CURVE.${p} must be positive bigint`);
   }
-  const Fp = createField(CURVE.p, curveOpts.Fp, FpFnLE);
-  const Fn = createField(CURVE.n, curveOpts.Fn, FpFnLE);
+  const Fp2 = createField(CURVE.p, curveOpts.Fp, FpFnLE);
+  const Fn2 = createField(CURVE.n, curveOpts.Fn, FpFnLE);
   const _b = type === "weierstrass" ? "b" : "d";
   const params = ["Gx", "Gy", "a", _b];
   for (const p of params) {
-    if (!Fp.isValid(CURVE[p]))
+    if (!Fp2.isValid(CURVE[p]))
       throw new Error(`CURVE.${p} must be valid field element of CURVE.Fp`);
   }
   CURVE = Object.freeze(Object.assign({}, CURVE));
-  return { CURVE, Fp, Fn };
+  return { CURVE, Fp: Fp2, Fn: Fn2 };
 }
 
 // node_modules/@noble/curves/esm/abstract/weierstrass.js
@@ -19945,26 +20423,26 @@ var _1n4 = BigInt(1);
 var _2n2 = BigInt(2);
 var _3n2 = BigInt(3);
 var _4n2 = BigInt(4);
-function _normFnElement(Fn, key) {
-  const { BYTES: expected } = Fn;
+function _normFnElement(Fn2, key) {
+  const { BYTES: expected } = Fn2;
   let num;
   if (typeof key === "bigint") {
     num = key;
   } else {
     let bytes2 = ensureBytes("private key", key);
     try {
-      num = Fn.fromBytes(bytes2);
+      num = Fn2.fromBytes(bytes2);
     } catch (error) {
       throw new Error(`invalid private key: expected ui8a of size ${expected}, got ${typeof key}`);
     }
   }
-  if (!Fn.isValidNot0(num))
+  if (!Fn2.isValidNot0(num))
     throw new Error("invalid private key: out of range [1..N-1]");
   return num;
 }
 function weierstrassN(params, extraOpts = {}) {
   const validated = _createCurveFields("weierstrass", params, extraOpts);
-  const { Fp, Fn } = validated;
+  const { Fp: Fp2, Fn: Fn2 } = validated;
   let CURVE = validated.CURVE;
   const { h: cofactor, n: CURVE_ORDER } = CURVE;
   _validateObject(extraOpts, {}, {
@@ -19978,25 +20456,25 @@ function weierstrassN(params, extraOpts = {}) {
   });
   const { endo } = extraOpts;
   if (endo) {
-    if (!Fp.is0(CURVE.a) || typeof endo.beta !== "bigint" || !Array.isArray(endo.basises)) {
+    if (!Fp2.is0(CURVE.a) || typeof endo.beta !== "bigint" || !Array.isArray(endo.basises)) {
       throw new Error('invalid endo: expected "beta": bigint and "basises": array');
     }
   }
-  const lengths = getWLengths(Fp, Fn);
+  const lengths = getWLengths(Fp2, Fn2);
   function assertCompressionIsSupported() {
-    if (!Fp.isOdd)
+    if (!Fp2.isOdd)
       throw new Error("compression is not supported: Field does not have .isOdd()");
   }
   function pointToBytes(_c, point, isCompressed) {
     const { x, y } = point.toAffine();
-    const bx = Fp.toBytes(x);
+    const bx = Fp2.toBytes(x);
     _abool2(isCompressed, "isCompressed");
     if (isCompressed) {
       assertCompressionIsSupported();
-      const hasEvenY = !Fp.isOdd(y);
+      const hasEvenY = !Fp2.isOdd(y);
       return concatBytes(pprefix(hasEvenY), bx);
     } else {
-      return concatBytes(Uint8Array.of(4), bx, Fp.toBytes(y));
+      return concatBytes(Uint8Array.of(4), bx, Fp2.toBytes(y));
     }
   }
   function pointFromBytes(bytes2) {
@@ -20006,27 +20484,27 @@ function weierstrassN(params, extraOpts = {}) {
     const head = bytes2[0];
     const tail = bytes2.subarray(1);
     if (length === comp && (head === 2 || head === 3)) {
-      const x = Fp.fromBytes(tail);
-      if (!Fp.isValid(x))
+      const x = Fp2.fromBytes(tail);
+      if (!Fp2.isValid(x))
         throw new Error("bad point: is not on curve, wrong x");
       const y2 = weierstrassEquation(x);
       let y;
       try {
-        y = Fp.sqrt(y2);
+        y = Fp2.sqrt(y2);
       } catch (sqrtError) {
         const err = sqrtError instanceof Error ? ": " + sqrtError.message : "";
         throw new Error("bad point: is not on curve, sqrt error" + err);
       }
       assertCompressionIsSupported();
-      const isYOdd = Fp.isOdd(y);
+      const isYOdd = Fp2.isOdd(y);
       const isHeadOdd = (head & 1) === 1;
       if (isHeadOdd !== isYOdd)
-        y = Fp.neg(y);
+        y = Fp2.neg(y);
       return { x, y };
     } else if (length === uncomp && head === 4) {
-      const L = Fp.BYTES;
-      const x = Fp.fromBytes(tail.subarray(0, L));
-      const y = Fp.fromBytes(tail.subarray(L, L * 2));
+      const L = Fp2.BYTES;
+      const x = Fp2.fromBytes(tail.subarray(0, L));
+      const y = Fp2.fromBytes(tail.subarray(L, L * 2));
       if (!isValidXY(x, y))
         throw new Error("bad point: is not on curve");
       return { x, y };
@@ -20037,23 +20515,23 @@ function weierstrassN(params, extraOpts = {}) {
   const encodePoint = extraOpts.toBytes || pointToBytes;
   const decodePoint = extraOpts.fromBytes || pointFromBytes;
   function weierstrassEquation(x) {
-    const x2 = Fp.sqr(x);
-    const x3 = Fp.mul(x2, x);
-    return Fp.add(Fp.add(x3, Fp.mul(x, CURVE.a)), CURVE.b);
+    const x2 = Fp2.sqr(x);
+    const x3 = Fp2.mul(x2, x);
+    return Fp2.add(Fp2.add(x3, Fp2.mul(x, CURVE.a)), CURVE.b);
   }
   function isValidXY(x, y) {
-    const left = Fp.sqr(y);
+    const left = Fp2.sqr(y);
     const right = weierstrassEquation(x);
-    return Fp.eql(left, right);
+    return Fp2.eql(left, right);
   }
   if (!isValidXY(CURVE.Gx, CURVE.Gy))
     throw new Error("bad curve params: generator point");
-  const _4a3 = Fp.mul(Fp.pow(CURVE.a, _3n2), _4n2);
-  const _27b2 = Fp.mul(Fp.sqr(CURVE.b), BigInt(27));
-  if (Fp.is0(Fp.add(_4a3, _27b2)))
+  const _4a3 = Fp2.mul(Fp2.pow(CURVE.a, _3n2), _4n2);
+  const _27b2 = Fp2.mul(Fp2.sqr(CURVE.b), BigInt(27));
+  if (Fp2.is0(Fp2.add(_4a3, _27b2)))
     throw new Error("bad curve params: a or b");
   function acoord(title, n, banZero = false) {
-    if (!Fp.isValid(n) || banZero && Fp.is0(n))
+    if (!Fp2.isValid(n) || banZero && Fp2.is0(n))
       throw new Error(`bad point coordinate ${title}`);
     return n;
   }
@@ -20064,32 +20542,32 @@ function weierstrassN(params, extraOpts = {}) {
   function splitEndoScalarN(k) {
     if (!endo || !endo.basises)
       throw new Error("no endo");
-    return _splitEndoScalar(k, endo.basises, Fn.ORDER);
+    return _splitEndoScalar(k, endo.basises, Fn2.ORDER);
   }
   const toAffineMemo = memoized((p, iz) => {
     const { X, Y, Z } = p;
-    if (Fp.eql(Z, Fp.ONE))
+    if (Fp2.eql(Z, Fp2.ONE))
       return { x: X, y: Y };
     const is0 = p.is0();
     if (iz == null)
-      iz = is0 ? Fp.ONE : Fp.inv(Z);
-    const x = Fp.mul(X, iz);
-    const y = Fp.mul(Y, iz);
-    const zz = Fp.mul(Z, iz);
+      iz = is0 ? Fp2.ONE : Fp2.inv(Z);
+    const x = Fp2.mul(X, iz);
+    const y = Fp2.mul(Y, iz);
+    const zz = Fp2.mul(Z, iz);
     if (is0)
-      return { x: Fp.ZERO, y: Fp.ZERO };
-    if (!Fp.eql(zz, Fp.ONE))
+      return { x: Fp2.ZERO, y: Fp2.ZERO };
+    if (!Fp2.eql(zz, Fp2.ONE))
       throw new Error("invZ was invalid");
     return { x, y };
   });
   const assertValidMemo = memoized((p) => {
     if (p.is0()) {
-      if (extraOpts.allowInfinityPoint && !Fp.is0(p.Y))
+      if (extraOpts.allowInfinityPoint && !Fp2.is0(p.Y))
         return;
       throw new Error("bad point: ZERO");
     }
     const { x, y } = p.toAffine();
-    if (!Fp.isValid(x) || !Fp.isValid(y))
+    if (!Fp2.isValid(x) || !Fp2.isValid(y))
       throw new Error("bad point: x or y not field elements");
     if (!isValidXY(x, y))
       throw new Error("bad point: equation left != right");
@@ -20098,7 +20576,7 @@ function weierstrassN(params, extraOpts = {}) {
     return true;
   });
   function finishEndo(endoBeta, k1p, k2p, k1neg, k2neg) {
-    k2p = new Point(Fp.mul(k2p.X, endoBeta), k2p.Y, k2p.Z);
+    k2p = new Point(Fp2.mul(k2p.X, endoBeta), k2p.Y, k2p.Z);
     k1p = negateCt(k1neg, k1p);
     k2p = negateCt(k2neg, k2p);
     return k1p.add(k2p);
@@ -20117,13 +20595,13 @@ function weierstrassN(params, extraOpts = {}) {
     /** Does NOT validate if the point is valid. Use `.assertValidity()`. */
     static fromAffine(p) {
       const { x, y } = p || {};
-      if (!p || !Fp.isValid(x) || !Fp.isValid(y))
+      if (!p || !Fp2.isValid(x) || !Fp2.isValid(y))
         throw new Error("invalid affine point");
       if (p instanceof Point)
         throw new Error("projective point not allowed");
-      if (Fp.is0(x) && Fp.is0(y))
+      if (Fp2.is0(x) && Fp2.is0(y))
         return Point.ZERO;
-      return new Point(x, y, Fp.ONE);
+      return new Point(x, y, Fp2.ONE);
     }
     static fromBytes(bytes2) {
       const P = Point.fromAffine(decodePoint(_abytes2(bytes2, void 0, "point")));
@@ -20158,22 +20636,22 @@ function weierstrassN(params, extraOpts = {}) {
     }
     hasEvenY() {
       const { y } = this.toAffine();
-      if (!Fp.isOdd)
+      if (!Fp2.isOdd)
         throw new Error("Field doesn't support isOdd");
-      return !Fp.isOdd(y);
+      return !Fp2.isOdd(y);
     }
     /** Compare one point to another. */
     equals(other) {
       aprjpoint(other);
       const { X: X1, Y: Y1, Z: Z1 } = this;
       const { X: X2, Y: Y2, Z: Z2 } = other;
-      const U1 = Fp.eql(Fp.mul(X1, Z2), Fp.mul(X2, Z1));
-      const U2 = Fp.eql(Fp.mul(Y1, Z2), Fp.mul(Y2, Z1));
+      const U1 = Fp2.eql(Fp2.mul(X1, Z2), Fp2.mul(X2, Z1));
+      const U2 = Fp2.eql(Fp2.mul(Y1, Z2), Fp2.mul(Y2, Z1));
       return U1 && U2;
     }
     /** Flips point to one corresponding to (x, -y) in Affine coordinates. */
     negate() {
-      return new Point(this.X, Fp.neg(this.Y), this.Z);
+      return new Point(this.X, Fp2.neg(this.Y), this.Z);
     }
     // Renes-Costello-Batina exception-free doubling formula.
     // There is 30% faster Jacobian formula, but it is not complete.
@@ -20181,40 +20659,40 @@ function weierstrassN(params, extraOpts = {}) {
     // Cost: 8M + 3S + 3*a + 2*b3 + 15add.
     double() {
       const { a, b } = CURVE;
-      const b3 = Fp.mul(b, _3n2);
+      const b3 = Fp2.mul(b, _3n2);
       const { X: X1, Y: Y1, Z: Z1 } = this;
-      let X3 = Fp.ZERO, Y3 = Fp.ZERO, Z3 = Fp.ZERO;
-      let t0 = Fp.mul(X1, X1);
-      let t1 = Fp.mul(Y1, Y1);
-      let t2 = Fp.mul(Z1, Z1);
-      let t3 = Fp.mul(X1, Y1);
-      t3 = Fp.add(t3, t3);
-      Z3 = Fp.mul(X1, Z1);
-      Z3 = Fp.add(Z3, Z3);
-      X3 = Fp.mul(a, Z3);
-      Y3 = Fp.mul(b3, t2);
-      Y3 = Fp.add(X3, Y3);
-      X3 = Fp.sub(t1, Y3);
-      Y3 = Fp.add(t1, Y3);
-      Y3 = Fp.mul(X3, Y3);
-      X3 = Fp.mul(t3, X3);
-      Z3 = Fp.mul(b3, Z3);
-      t2 = Fp.mul(a, t2);
-      t3 = Fp.sub(t0, t2);
-      t3 = Fp.mul(a, t3);
-      t3 = Fp.add(t3, Z3);
-      Z3 = Fp.add(t0, t0);
-      t0 = Fp.add(Z3, t0);
-      t0 = Fp.add(t0, t2);
-      t0 = Fp.mul(t0, t3);
-      Y3 = Fp.add(Y3, t0);
-      t2 = Fp.mul(Y1, Z1);
-      t2 = Fp.add(t2, t2);
-      t0 = Fp.mul(t2, t3);
-      X3 = Fp.sub(X3, t0);
-      Z3 = Fp.mul(t2, t1);
-      Z3 = Fp.add(Z3, Z3);
-      Z3 = Fp.add(Z3, Z3);
+      let X3 = Fp2.ZERO, Y3 = Fp2.ZERO, Z3 = Fp2.ZERO;
+      let t0 = Fp2.mul(X1, X1);
+      let t1 = Fp2.mul(Y1, Y1);
+      let t2 = Fp2.mul(Z1, Z1);
+      let t3 = Fp2.mul(X1, Y1);
+      t3 = Fp2.add(t3, t3);
+      Z3 = Fp2.mul(X1, Z1);
+      Z3 = Fp2.add(Z3, Z3);
+      X3 = Fp2.mul(a, Z3);
+      Y3 = Fp2.mul(b3, t2);
+      Y3 = Fp2.add(X3, Y3);
+      X3 = Fp2.sub(t1, Y3);
+      Y3 = Fp2.add(t1, Y3);
+      Y3 = Fp2.mul(X3, Y3);
+      X3 = Fp2.mul(t3, X3);
+      Z3 = Fp2.mul(b3, Z3);
+      t2 = Fp2.mul(a, t2);
+      t3 = Fp2.sub(t0, t2);
+      t3 = Fp2.mul(a, t3);
+      t3 = Fp2.add(t3, Z3);
+      Z3 = Fp2.add(t0, t0);
+      t0 = Fp2.add(Z3, t0);
+      t0 = Fp2.add(t0, t2);
+      t0 = Fp2.mul(t0, t3);
+      Y3 = Fp2.add(Y3, t0);
+      t2 = Fp2.mul(Y1, Z1);
+      t2 = Fp2.add(t2, t2);
+      t0 = Fp2.mul(t2, t3);
+      X3 = Fp2.sub(X3, t0);
+      Z3 = Fp2.mul(t2, t1);
+      Z3 = Fp2.add(Z3, Z3);
+      Z3 = Fp2.add(Z3, Z3);
       return new Point(X3, Y3, Z3);
     }
     // Renes-Costello-Batina exception-free addition formula.
@@ -20225,49 +20703,49 @@ function weierstrassN(params, extraOpts = {}) {
       aprjpoint(other);
       const { X: X1, Y: Y1, Z: Z1 } = this;
       const { X: X2, Y: Y2, Z: Z2 } = other;
-      let X3 = Fp.ZERO, Y3 = Fp.ZERO, Z3 = Fp.ZERO;
+      let X3 = Fp2.ZERO, Y3 = Fp2.ZERO, Z3 = Fp2.ZERO;
       const a = CURVE.a;
-      const b3 = Fp.mul(CURVE.b, _3n2);
-      let t0 = Fp.mul(X1, X2);
-      let t1 = Fp.mul(Y1, Y2);
-      let t2 = Fp.mul(Z1, Z2);
-      let t3 = Fp.add(X1, Y1);
-      let t4 = Fp.add(X2, Y2);
-      t3 = Fp.mul(t3, t4);
-      t4 = Fp.add(t0, t1);
-      t3 = Fp.sub(t3, t4);
-      t4 = Fp.add(X1, Z1);
-      let t5 = Fp.add(X2, Z2);
-      t4 = Fp.mul(t4, t5);
-      t5 = Fp.add(t0, t2);
-      t4 = Fp.sub(t4, t5);
-      t5 = Fp.add(Y1, Z1);
-      X3 = Fp.add(Y2, Z2);
-      t5 = Fp.mul(t5, X3);
-      X3 = Fp.add(t1, t2);
-      t5 = Fp.sub(t5, X3);
-      Z3 = Fp.mul(a, t4);
-      X3 = Fp.mul(b3, t2);
-      Z3 = Fp.add(X3, Z3);
-      X3 = Fp.sub(t1, Z3);
-      Z3 = Fp.add(t1, Z3);
-      Y3 = Fp.mul(X3, Z3);
-      t1 = Fp.add(t0, t0);
-      t1 = Fp.add(t1, t0);
-      t2 = Fp.mul(a, t2);
-      t4 = Fp.mul(b3, t4);
-      t1 = Fp.add(t1, t2);
-      t2 = Fp.sub(t0, t2);
-      t2 = Fp.mul(a, t2);
-      t4 = Fp.add(t4, t2);
-      t0 = Fp.mul(t1, t4);
-      Y3 = Fp.add(Y3, t0);
-      t0 = Fp.mul(t5, t4);
-      X3 = Fp.mul(t3, X3);
-      X3 = Fp.sub(X3, t0);
-      t0 = Fp.mul(t3, t1);
-      Z3 = Fp.mul(t5, Z3);
-      Z3 = Fp.add(Z3, t0);
+      const b3 = Fp2.mul(CURVE.b, _3n2);
+      let t0 = Fp2.mul(X1, X2);
+      let t1 = Fp2.mul(Y1, Y2);
+      let t2 = Fp2.mul(Z1, Z2);
+      let t3 = Fp2.add(X1, Y1);
+      let t4 = Fp2.add(X2, Y2);
+      t3 = Fp2.mul(t3, t4);
+      t4 = Fp2.add(t0, t1);
+      t3 = Fp2.sub(t3, t4);
+      t4 = Fp2.add(X1, Z1);
+      let t5 = Fp2.add(X2, Z2);
+      t4 = Fp2.mul(t4, t5);
+      t5 = Fp2.add(t0, t2);
+      t4 = Fp2.sub(t4, t5);
+      t5 = Fp2.add(Y1, Z1);
+      X3 = Fp2.add(Y2, Z2);
+      t5 = Fp2.mul(t5, X3);
+      X3 = Fp2.add(t1, t2);
+      t5 = Fp2.sub(t5, X3);
+      Z3 = Fp2.mul(a, t4);
+      X3 = Fp2.mul(b3, t2);
+      Z3 = Fp2.add(X3, Z3);
+      X3 = Fp2.sub(t1, Z3);
+      Z3 = Fp2.add(t1, Z3);
+      Y3 = Fp2.mul(X3, Z3);
+      t1 = Fp2.add(t0, t0);
+      t1 = Fp2.add(t1, t0);
+      t2 = Fp2.mul(a, t2);
+      t4 = Fp2.mul(b3, t4);
+      t1 = Fp2.add(t1, t2);
+      t2 = Fp2.sub(t0, t2);
+      t2 = Fp2.mul(a, t2);
+      t4 = Fp2.add(t4, t2);
+      t0 = Fp2.mul(t1, t4);
+      Y3 = Fp2.add(Y3, t0);
+      t0 = Fp2.mul(t5, t4);
+      X3 = Fp2.mul(t3, X3);
+      X3 = Fp2.sub(X3, t0);
+      t0 = Fp2.mul(t3, t1);
+      Z3 = Fp2.mul(t5, Z3);
+      Z3 = Fp2.add(Z3, t0);
       return new Point(X3, Y3, Z3);
     }
     subtract(other) {
@@ -20287,7 +20765,7 @@ function weierstrassN(params, extraOpts = {}) {
      */
     multiply(scalar) {
       const { endo: endo2 } = extraOpts;
-      if (!Fn.isValidNot0(scalar))
+      if (!Fn2.isValidNot0(scalar))
         throw new Error("invalid scalar: out of range");
       let point, fake;
       const mul = (n) => wnaf.cached(this, n, (p) => normalizeZ(Point, p));
@@ -20312,7 +20790,7 @@ function weierstrassN(params, extraOpts = {}) {
     multiplyUnsafe(sc) {
       const { endo: endo2 } = extraOpts;
       const p = this;
-      if (!Fn.isValid(sc))
+      if (!Fn2.isValid(sc))
         throw new Error("invalid scalar: out of range");
       if (sc === _0n4 || p.is0())
         return Point.ZERO;
@@ -20393,17 +20871,17 @@ function weierstrassN(params, extraOpts = {}) {
       return normalizeZ(Point, points);
     }
     static msm(points, scalars) {
-      return pippenger(Point, Fn, points, scalars);
+      return pippenger(Point, Fn2, points, scalars);
     }
     static fromPrivateKey(privateKey) {
-      return Point.BASE.multiply(_normFnElement(Fn, privateKey));
+      return Point.BASE.multiply(_normFnElement(Fn2, privateKey));
     }
   }
-  Point.BASE = new Point(CURVE.Gx, CURVE.Gy, Fp.ONE);
-  Point.ZERO = new Point(Fp.ZERO, Fp.ONE, Fp.ZERO);
-  Point.Fp = Fp;
-  Point.Fn = Fn;
-  const bits2 = Fn.BITS;
+  Point.BASE = new Point(CURVE.Gx, CURVE.Gy, Fp2.ONE);
+  Point.ZERO = new Point(Fp2.ZERO, Fp2.ONE, Fp2.ZERO);
+  Point.Fp = Fp2;
+  Point.Fn = Fn2;
+  const bits2 = Fn2.BITS;
   const wnaf = new wNAF(Point, extraOpts.endo ? Math.ceil(bits2 / 2) : bits2);
   Point.BASE.precompute(8);
   return Point;
@@ -20411,22 +20889,22 @@ function weierstrassN(params, extraOpts = {}) {
 function pprefix(hasEvenY) {
   return Uint8Array.of(hasEvenY ? 2 : 3);
 }
-function getWLengths(Fp, Fn) {
+function getWLengths(Fp2, Fn2) {
   return {
-    secretKey: Fn.BYTES,
-    publicKey: 1 + Fp.BYTES,
-    publicKeyUncompressed: 1 + 2 * Fp.BYTES,
+    secretKey: Fn2.BYTES,
+    publicKey: 1 + Fp2.BYTES,
+    publicKeyUncompressed: 1 + 2 * Fp2.BYTES,
     publicKeyHasPrefix: true,
-    signature: 2 * Fn.BYTES
+    signature: 2 * Fn2.BYTES
   };
 }
 function ecdh(Point, ecdhOpts = {}) {
-  const { Fn } = Point;
+  const { Fn: Fn2 } = Point;
   const randomBytes_ = ecdhOpts.randomBytes || randomBytes;
-  const lengths = Object.assign(getWLengths(Point.Fp, Fn), { seed: getMinHashLength(Fn.ORDER) });
+  const lengths = Object.assign(getWLengths(Point.Fp, Fn2), { seed: getMinHashLength(Fn2.ORDER) });
   function isValidSecretKey(secretKey) {
     try {
-      return !!_normFnElement(Fn, secretKey);
+      return !!_normFnElement(Fn2, secretKey);
     } catch (error) {
       return false;
     }
@@ -20445,10 +20923,10 @@ function ecdh(Point, ecdhOpts = {}) {
     }
   }
   function randomSecretKey(seed = randomBytes_(lengths.seed)) {
-    return mapHashToField(_abytes2(seed, lengths.seed, "seed"), Fn.ORDER);
+    return mapHashToField(_abytes2(seed, lengths.seed, "seed"), Fn2.ORDER);
   }
   function getPublicKey(secretKey, isCompressed = true) {
-    return Point.BASE.multiply(_normFnElement(Fn, secretKey)).toBytes(isCompressed);
+    return Point.BASE.multiply(_normFnElement(Fn2, secretKey)).toBytes(isCompressed);
   }
   function keygen(seed) {
     const secretKey = randomSecretKey(seed);
@@ -20460,7 +20938,7 @@ function ecdh(Point, ecdhOpts = {}) {
     if (item instanceof Point)
       return true;
     const { secretKey, publicKey, publicKeyUncompressed } = lengths;
-    if (Fn.allowedLengths || secretKey === publicKey)
+    if (Fn2.allowedLengths || secretKey === publicKey)
       return void 0;
     const l13 = ensureBytes("key", item).length;
     return l13 === publicKey || l13 === publicKeyUncompressed;
@@ -20470,7 +20948,7 @@ function ecdh(Point, ecdhOpts = {}) {
       throw new Error("first arg must be private key");
     if (isProbPub(publicKeyB) === false)
       throw new Error("second arg must be public key");
-    const s = _normFnElement(Fn, secretKeyA);
+    const s = _normFnElement(Fn2, secretKeyA);
     const b = Point.fromHex(publicKeyB);
     return b.multiply(s).toBytes(isCompressed);
   }
@@ -20481,7 +20959,7 @@ function ecdh(Point, ecdhOpts = {}) {
     // TODO: remove
     isValidPrivateKey: isValidSecretKey,
     randomPrivateKey: randomSecretKey,
-    normPrivateKeyToScalar: (key) => _normFnElement(Fn, key),
+    normPrivateKeyToScalar: (key) => _normFnElement(Fn2, key),
     precompute(windowSize = 8, point = Point.BASE) {
       return point.precompute(windowSize, false);
     }
@@ -20499,8 +20977,8 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
   });
   const randomBytes2 = ecdsaOpts.randomBytes || randomBytes;
   const hmac2 = ecdsaOpts.hmac || ((key, ...msgs) => hmac(hash, key, concatBytes(...msgs)));
-  const { Fp, Fn } = Point;
-  const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn;
+  const { Fp: Fp2, Fn: Fn2 } = Point;
+  const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn2;
   const { keygen, getPublicKey, getSharedSecret, utils, lengths } = ecdh(Point, ecdsaOpts);
   const defaultSigOpts = {
     prehash: false,
@@ -20515,7 +20993,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     return number > HALF;
   }
   function validateRS(title, num) {
-    if (!Fn.isValidNot0(num))
+    if (!Fn2.isValidNot0(num))
       throw new Error(`invalid signature ${title}: out of range 1..Point.Fn.ORDER`);
     return num;
   }
@@ -20545,10 +21023,10 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
         format = "compact";
         bytes2 = bytes2.subarray(1);
       }
-      const L = Fn.BYTES;
+      const L = Fn2.BYTES;
       const r = bytes2.subarray(0, L);
       const s = bytes2.subarray(L, L * 2);
-      return new Signature(Fn.fromBytes(r), Fn.fromBytes(s), recid);
+      return new Signature(Fn2.fromBytes(r), Fn2.fromBytes(s), recid);
     }
     static fromHex(hex8, format) {
       return this.fromBytes(hexToBytes(hex8), format);
@@ -20557,7 +21035,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       return new Signature(this.r, this.s, recovery);
     }
     recoverPublicKey(messageHash) {
-      const FIELD_ORDER = Fp.ORDER;
+      const FIELD_ORDER = Fp2.ORDER;
       const { r, s, recovery: rec } = this;
       if (rec == null || ![0, 1, 2, 3].includes(rec))
         throw new Error("recovery id invalid");
@@ -20565,14 +21043,14 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       if (hasCofactor && rec > 1)
         throw new Error("recovery id is ambiguous for h>1 curve");
       const radj = rec === 2 || rec === 3 ? r + CURVE_ORDER : r;
-      if (!Fp.isValid(radj))
+      if (!Fp2.isValid(radj))
         throw new Error("recovery id 2 or 3 invalid");
-      const x = Fp.toBytes(radj);
+      const x = Fp2.toBytes(radj);
       const R = Point.fromBytes(concatBytes(pprefix((rec & 1) === 0), x));
-      const ir = Fn.inv(radj);
+      const ir = Fn2.inv(radj);
       const h = bits2int_modN(ensureBytes("msgHash", messageHash));
-      const u1 = Fn.create(-h * ir);
-      const u2 = Fn.create(s * ir);
+      const u1 = Fn2.create(-h * ir);
+      const u2 = Fn2.create(s * ir);
       const Q = Point.BASE.multiplyUnsafe(u1).add(R.multiplyUnsafe(u2));
       if (Q.is0())
         throw new Error("point at infinify");
@@ -20587,8 +21065,8 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       validateSigFormat(format);
       if (format === "der")
         return hexToBytes(DER.hexFromSig(this));
-      const r = Fn.toBytes(this.r);
-      const s = Fn.toBytes(this.s);
+      const r = Fn2.toBytes(this.r);
+      const s = Fn2.toBytes(this.s);
       if (format === "recovered") {
         if (this.recovery == null)
           throw new Error("recovery bit must be present");
@@ -20609,7 +21087,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
       return Signature.fromBytes(ensureBytes("sig", hex8), "der");
     }
     normalizeS() {
-      return this.hasHighS() ? new Signature(this.r, Fn.neg(this.s), this.recovery) : this;
+      return this.hasHighS() ? new Signature(this.r, Fn2.neg(this.s), this.recovery) : this;
     }
     toDERRawBytes() {
       return this.toBytes("der");
@@ -20632,12 +21110,12 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     return delta > 0 ? num >> BigInt(delta) : num;
   };
   const bits2int_modN = ecdsaOpts.bits2int_modN || function bits2int_modN_def(bytes2) {
-    return Fn.create(bits2int(bytes2));
+    return Fn2.create(bits2int(bytes2));
   };
   const ORDER_MASK = bitMask(fnBits);
   function int2octets(num) {
     aInRange("num < 2^" + fnBits, num, _0n4, ORDER_MASK);
-    return Fn.toBytes(num);
+    return Fn2.toBytes(num);
   }
   function validateMsgAndHash(message, prehash) {
     _abytes2(message, void 0, "message");
@@ -20649,7 +21127,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     const { lowS, prehash, extraEntropy } = validateSigOpts(opts, defaultSigOpts);
     message = validateMsgAndHash(message, prehash);
     const h1int = bits2int_modN(message);
-    const d = _normFnElement(Fn, privateKey);
+    const d = _normFnElement(Fn2, privateKey);
     const seedArgs = [int2octets(d), int2octets(h1int)];
     if (extraEntropy != null && extraEntropy !== false) {
       const e = extraEntropy === true ? randomBytes2(lengths.secretKey) : extraEntropy;
@@ -20659,20 +21137,20 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     const m = h1int;
     function k2sig(kBytes) {
       const k = bits2int(kBytes);
-      if (!Fn.isValidNot0(k))
+      if (!Fn2.isValidNot0(k))
         return;
-      const ik = Fn.inv(k);
+      const ik = Fn2.inv(k);
       const q = Point.BASE.multiply(k).toAffine();
-      const r = Fn.create(q.x);
+      const r = Fn2.create(q.x);
       if (r === _0n4)
         return;
-      const s = Fn.create(ik * Fn.create(m + r * d));
+      const s = Fn2.create(ik * Fn2.create(m + r * d));
       if (s === _0n4)
         return;
       let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n4);
       let normS = s;
       if (lowS && isBiggerThanHalfOrder(s)) {
-        normS = Fn.neg(s);
+        normS = Fn2.neg(s);
         recovery ^= 1;
       }
       return new Signature(r, normS, recovery);
@@ -20682,19 +21160,19 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
   function sign2(message, secretKey, opts = {}) {
     message = ensureBytes("message", message);
     const { seed, k2sig } = prepSig(message, secretKey, opts);
-    const drbg = createHmacDrbg(hash.outputLen, Fn.BYTES, hmac2);
+    const drbg = createHmacDrbg(hash.outputLen, Fn2.BYTES, hmac2);
     const sig2 = drbg(seed, k2sig);
     return sig2;
   }
   function tryParsingSig(sg) {
     let sig2 = void 0;
-    const isHex9 = typeof sg === "string" || isBytes2(sg);
-    const isObj = !isHex9 && sg !== null && typeof sg === "object" && typeof sg.r === "bigint" && typeof sg.s === "bigint";
-    if (!isHex9 && !isObj)
+    const isHex10 = typeof sg === "string" || isBytes2(sg);
+    const isObj = !isHex10 && sg !== null && typeof sg === "object" && typeof sg.r === "bigint" && typeof sg.s === "bigint";
+    if (!isHex10 && !isObj)
       throw new Error("invalid signature, expected Uint8Array, hex string or Signature instance");
     if (isObj) {
       sig2 = new Signature(sg.r, sg.s);
-    } else if (isHex9) {
+    } else if (isHex10) {
       try {
         sig2 = Signature.fromBytes(ensureBytes("sig", sg), "der");
       } catch (derError) {
@@ -20728,13 +21206,13 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
         return false;
       const { r, s } = sig2;
       const h = bits2int_modN(message);
-      const is2 = Fn.inv(s);
-      const u1 = Fn.create(h * is2);
-      const u2 = Fn.create(r * is2);
+      const is2 = Fn2.inv(s);
+      const u1 = Fn2.create(h * is2);
+      const u2 = Fn2.create(r * is2);
       const R = Point.BASE.multiplyUnsafe(u1).add(P.multiplyUnsafe(u2));
       if (R.is0())
         return false;
-      const v = Fn.create(R.x);
+      const v = Fn2.create(R.x);
       return v === r;
     } catch (e) {
       return false;
@@ -20769,16 +21247,16 @@ function _weierstrass_legacy_opts_to_new(c) {
     Gx: c.Gx,
     Gy: c.Gy
   };
-  const Fp = c.Fp;
+  const Fp2 = c.Fp;
   let allowedLengths = c.allowedPrivateKeyLengths ? Array.from(new Set(c.allowedPrivateKeyLengths.map((l13) => Math.ceil(l13 / 2)))) : void 0;
-  const Fn = Field(CURVE.n, {
+  const Fn2 = Field(CURVE.n, {
     BITS: c.nBitLength,
     allowedLengths,
     modFromBytes: c.wrapPrivateKey
   });
   const curveOpts = {
-    Fp,
-    Fn,
+    Fp: Fp2,
+    Fn: Fn2,
     allowInfinityPoint: c.allowInfinityPoint,
     endo: c.endo,
     isTorsionFree: c.isTorsionFree,
@@ -20839,19 +21317,19 @@ var secp256k1_ENDO = {
 var _2n3 = /* @__PURE__ */ BigInt(2);
 function sqrtMod(y) {
   const P = secp256k1_CURVE.p;
-  const _3n3 = BigInt(3), _6n = BigInt(6), _11n2 = BigInt(11), _22n = BigInt(22);
+  const _3n4 = BigInt(3), _6n = BigInt(6), _11n2 = BigInt(11), _22n = BigInt(22);
   const _23n2 = BigInt(23), _44n = BigInt(44), _88n = BigInt(88);
   const b2 = y * y * y % P;
   const b3 = b2 * b2 * y % P;
-  const b6 = pow2(b3, _3n3, P) * b3 % P;
-  const b9 = pow2(b6, _3n3, P) * b3 % P;
+  const b6 = pow2(b3, _3n4, P) * b3 % P;
+  const b9 = pow2(b6, _3n4, P) * b3 % P;
   const b11 = pow2(b9, _2n3, P) * b2 % P;
   const b22 = pow2(b11, _11n2, P) * b11 % P;
   const b44 = pow2(b22, _22n, P) * b22 % P;
   const b88 = pow2(b44, _44n, P) * b44 % P;
   const b176 = pow2(b88, _88n, P) * b88 % P;
   const b220 = pow2(b176, _44n, P) * b44 % P;
-  const b223 = pow2(b220, _3n3, P) * b3 % P;
+  const b223 = pow2(b220, _3n4, P) * b3 % P;
   const t1 = pow2(b223, _23n2, P) * b22 % P;
   const t2 = pow2(t1, _6n, P) * b2 % P;
   const root = pow2(t2, _2n3, P);
@@ -20862,25 +21340,799 @@ function sqrtMod(y) {
 var Fpk1 = Field(secp256k1_CURVE.p, { sqrt: sqrtMod });
 var secp256k1 = createCurve({ ...secp256k1_CURVE, Fp: Fpk1, lowS: true, endo: secp256k1_ENDO }, sha256);
 
-// node_modules/@noble/hashes/esm/sha3.js
+// node_modules/@noble/curves/esm/abstract/edwards.js
 var _0n5 = BigInt(0);
 var _1n5 = BigInt(1);
 var _2n4 = BigInt(2);
+var _8n2 = BigInt(8);
+function isEdValidXY(Fp2, CURVE, x, y) {
+  const x2 = Fp2.sqr(x);
+  const y2 = Fp2.sqr(y);
+  const left = Fp2.add(Fp2.mul(CURVE.a, x2), y2);
+  const right = Fp2.add(Fp2.ONE, Fp2.mul(CURVE.d, Fp2.mul(x2, y2)));
+  return Fp2.eql(left, right);
+}
+function edwards(params, extraOpts = {}) {
+  const validated = _createCurveFields("edwards", params, extraOpts, extraOpts.FpFnLE);
+  const { Fp: Fp2, Fn: Fn2 } = validated;
+  let CURVE = validated.CURVE;
+  const { h: cofactor } = CURVE;
+  _validateObject(extraOpts, {}, { uvRatio: "function" });
+  const MASK = _2n4 << BigInt(Fn2.BYTES * 8) - _1n5;
+  const modP = (n) => Fp2.create(n);
+  const uvRatio2 = extraOpts.uvRatio || ((u, v) => {
+    try {
+      return { isValid: true, value: Fp2.sqrt(Fp2.div(u, v)) };
+    } catch (e) {
+      return { isValid: false, value: _0n5 };
+    }
+  });
+  if (!isEdValidXY(Fp2, CURVE, CURVE.Gx, CURVE.Gy))
+    throw new Error("bad curve params: generator point");
+  function acoord(title, n, banZero = false) {
+    const min = banZero ? _1n5 : _0n5;
+    aInRange("coordinate " + title, n, min, MASK);
+    return n;
+  }
+  function aextpoint(other) {
+    if (!(other instanceof Point))
+      throw new Error("ExtendedPoint expected");
+  }
+  const toAffineMemo = memoized((p, iz) => {
+    const { X, Y, Z } = p;
+    const is0 = p.is0();
+    if (iz == null)
+      iz = is0 ? _8n2 : Fp2.inv(Z);
+    const x = modP(X * iz);
+    const y = modP(Y * iz);
+    const zz = Fp2.mul(Z, iz);
+    if (is0)
+      return { x: _0n5, y: _1n5 };
+    if (zz !== _1n5)
+      throw new Error("invZ was invalid");
+    return { x, y };
+  });
+  const assertValidMemo = memoized((p) => {
+    const { a, d } = CURVE;
+    if (p.is0())
+      throw new Error("bad point: ZERO");
+    const { X, Y, Z, T } = p;
+    const X2 = modP(X * X);
+    const Y2 = modP(Y * Y);
+    const Z2 = modP(Z * Z);
+    const Z4 = modP(Z2 * Z2);
+    const aX2 = modP(X2 * a);
+    const left = modP(Z2 * modP(aX2 + Y2));
+    const right = modP(Z4 + modP(d * modP(X2 * Y2)));
+    if (left !== right)
+      throw new Error("bad point: equation left != right (1)");
+    const XY = modP(X * Y);
+    const ZT = modP(Z * T);
+    if (XY !== ZT)
+      throw new Error("bad point: equation left != right (2)");
+    return true;
+  });
+  class Point {
+    constructor(X, Y, Z, T) {
+      this.X = acoord("x", X);
+      this.Y = acoord("y", Y);
+      this.Z = acoord("z", Z, true);
+      this.T = acoord("t", T);
+      Object.freeze(this);
+    }
+    static CURVE() {
+      return CURVE;
+    }
+    static fromAffine(p) {
+      if (p instanceof Point)
+        throw new Error("extended point not allowed");
+      const { x, y } = p || {};
+      acoord("x", x);
+      acoord("y", y);
+      return new Point(x, y, _1n5, modP(x * y));
+    }
+    // Uses algo from RFC8032 5.1.3.
+    static fromBytes(bytes2, zip215 = false) {
+      const len = Fp2.BYTES;
+      const { a, d } = CURVE;
+      bytes2 = copyBytes(_abytes2(bytes2, len, "point"));
+      _abool2(zip215, "zip215");
+      const normed = copyBytes(bytes2);
+      const lastByte = bytes2[len - 1];
+      normed[len - 1] = lastByte & ~128;
+      const y = bytesToNumberLE(normed);
+      const max2 = zip215 ? MASK : Fp2.ORDER;
+      aInRange("point.y", y, _0n5, max2);
+      const y2 = modP(y * y);
+      const u = modP(y2 - _1n5);
+      const v = modP(d * y2 - a);
+      let { isValid: isValid2, value: x } = uvRatio2(u, v);
+      if (!isValid2)
+        throw new Error("bad point: invalid y coordinate");
+      const isXOdd = (x & _1n5) === _1n5;
+      const isLastByteOdd = (lastByte & 128) !== 0;
+      if (!zip215 && x === _0n5 && isLastByteOdd)
+        throw new Error("bad point: x=0 and x_0=1");
+      if (isLastByteOdd !== isXOdd)
+        x = modP(-x);
+      return Point.fromAffine({ x, y });
+    }
+    static fromHex(bytes2, zip215 = false) {
+      return Point.fromBytes(ensureBytes("point", bytes2), zip215);
+    }
+    get x() {
+      return this.toAffine().x;
+    }
+    get y() {
+      return this.toAffine().y;
+    }
+    precompute(windowSize = 8, isLazy = true) {
+      wnaf.createCache(this, windowSize);
+      if (!isLazy)
+        this.multiply(_2n4);
+      return this;
+    }
+    // Useful in fromAffine() - not for fromBytes(), which always created valid points.
+    assertValidity() {
+      assertValidMemo(this);
+    }
+    // Compare one point to another.
+    equals(other) {
+      aextpoint(other);
+      const { X: X1, Y: Y1, Z: Z1 } = this;
+      const { X: X2, Y: Y2, Z: Z2 } = other;
+      const X1Z2 = modP(X1 * Z2);
+      const X2Z1 = modP(X2 * Z1);
+      const Y1Z2 = modP(Y1 * Z2);
+      const Y2Z1 = modP(Y2 * Z1);
+      return X1Z2 === X2Z1 && Y1Z2 === Y2Z1;
+    }
+    is0() {
+      return this.equals(Point.ZERO);
+    }
+    negate() {
+      return new Point(modP(-this.X), this.Y, this.Z, modP(-this.T));
+    }
+    // Fast algo for doubling Extended Point.
+    // https://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html#doubling-dbl-2008-hwcd
+    // Cost: 4M + 4S + 1*a + 6add + 1*2.
+    double() {
+      const { a } = CURVE;
+      const { X: X1, Y: Y1, Z: Z1 } = this;
+      const A = modP(X1 * X1);
+      const B = modP(Y1 * Y1);
+      const C = modP(_2n4 * modP(Z1 * Z1));
+      const D = modP(a * A);
+      const x1y1 = X1 + Y1;
+      const E = modP(modP(x1y1 * x1y1) - A - B);
+      const G = D + B;
+      const F = G - C;
+      const H = D - B;
+      const X3 = modP(E * F);
+      const Y3 = modP(G * H);
+      const T3 = modP(E * H);
+      const Z3 = modP(F * G);
+      return new Point(X3, Y3, Z3, T3);
+    }
+    // Fast algo for adding 2 Extended Points.
+    // https://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html#addition-add-2008-hwcd
+    // Cost: 9M + 1*a + 1*d + 7add.
+    add(other) {
+      aextpoint(other);
+      const { a, d } = CURVE;
+      const { X: X1, Y: Y1, Z: Z1, T: T1 } = this;
+      const { X: X2, Y: Y2, Z: Z2, T: T2 } = other;
+      const A = modP(X1 * X2);
+      const B = modP(Y1 * Y2);
+      const C = modP(T1 * d * T2);
+      const D = modP(Z1 * Z2);
+      const E = modP((X1 + Y1) * (X2 + Y2) - A - B);
+      const F = D - C;
+      const G = D + C;
+      const H = modP(B - a * A);
+      const X3 = modP(E * F);
+      const Y3 = modP(G * H);
+      const T3 = modP(E * H);
+      const Z3 = modP(F * G);
+      return new Point(X3, Y3, Z3, T3);
+    }
+    subtract(other) {
+      return this.add(other.negate());
+    }
+    // Constant-time multiplication.
+    multiply(scalar) {
+      if (!Fn2.isValidNot0(scalar))
+        throw new Error("invalid scalar: expected 1 <= sc < curve.n");
+      const { p, f } = wnaf.cached(this, scalar, (p2) => normalizeZ(Point, p2));
+      return normalizeZ(Point, [p, f])[0];
+    }
+    // Non-constant-time multiplication. Uses double-and-add algorithm.
+    // It's faster, but should only be used when you don't care about
+    // an exposed private key e.g. sig verification.
+    // Does NOT allow scalars higher than CURVE.n.
+    // Accepts optional accumulator to merge with multiply (important for sparse scalars)
+    multiplyUnsafe(scalar, acc = Point.ZERO) {
+      if (!Fn2.isValid(scalar))
+        throw new Error("invalid scalar: expected 0 <= sc < curve.n");
+      if (scalar === _0n5)
+        return Point.ZERO;
+      if (this.is0() || scalar === _1n5)
+        return this;
+      return wnaf.unsafe(this, scalar, (p) => normalizeZ(Point, p), acc);
+    }
+    // Checks if point is of small order.
+    // If you add something to small order point, you will have "dirty"
+    // point with torsion component.
+    // Multiplies point by cofactor and checks if the result is 0.
+    isSmallOrder() {
+      return this.multiplyUnsafe(cofactor).is0();
+    }
+    // Multiplies point by curve order and checks if the result is 0.
+    // Returns `false` is the point is dirty.
+    isTorsionFree() {
+      return wnaf.unsafe(this, CURVE.n).is0();
+    }
+    // Converts Extended point to default (x, y) coordinates.
+    // Can accept precomputed Z^-1 - for example, from invertBatch.
+    toAffine(invertedZ) {
+      return toAffineMemo(this, invertedZ);
+    }
+    clearCofactor() {
+      if (cofactor === _1n5)
+        return this;
+      return this.multiplyUnsafe(cofactor);
+    }
+    toBytes() {
+      const { x, y } = this.toAffine();
+      const bytes2 = Fp2.toBytes(y);
+      bytes2[bytes2.length - 1] |= x & _1n5 ? 128 : 0;
+      return bytes2;
+    }
+    toHex() {
+      return bytesToHex(this.toBytes());
+    }
+    toString() {
+      return `<Point ${this.is0() ? "ZERO" : this.toHex()}>`;
+    }
+    // TODO: remove
+    get ex() {
+      return this.X;
+    }
+    get ey() {
+      return this.Y;
+    }
+    get ez() {
+      return this.Z;
+    }
+    get et() {
+      return this.T;
+    }
+    static normalizeZ(points) {
+      return normalizeZ(Point, points);
+    }
+    static msm(points, scalars) {
+      return pippenger(Point, Fn2, points, scalars);
+    }
+    _setWindowSize(windowSize) {
+      this.precompute(windowSize);
+    }
+    toRawBytes() {
+      return this.toBytes();
+    }
+  }
+  Point.BASE = new Point(CURVE.Gx, CURVE.Gy, _1n5, modP(CURVE.Gx * CURVE.Gy));
+  Point.ZERO = new Point(_0n5, _1n5, _1n5, _0n5);
+  Point.Fp = Fp2;
+  Point.Fn = Fn2;
+  const wnaf = new wNAF(Point, Fn2.BITS);
+  Point.BASE.precompute(8);
+  return Point;
+}
+var PrimeEdwardsPoint = class {
+  constructor(ep) {
+    this.ep = ep;
+  }
+  // Static methods that must be implemented by subclasses
+  static fromBytes(_bytes) {
+    notImplemented();
+  }
+  static fromHex(_hex) {
+    notImplemented();
+  }
+  get x() {
+    return this.toAffine().x;
+  }
+  get y() {
+    return this.toAffine().y;
+  }
+  // Common implementations
+  clearCofactor() {
+    return this;
+  }
+  assertValidity() {
+    this.ep.assertValidity();
+  }
+  toAffine(invertedZ) {
+    return this.ep.toAffine(invertedZ);
+  }
+  toHex() {
+    return bytesToHex(this.toBytes());
+  }
+  toString() {
+    return this.toHex();
+  }
+  isTorsionFree() {
+    return true;
+  }
+  isSmallOrder() {
+    return false;
+  }
+  add(other) {
+    this.assertSame(other);
+    return this.init(this.ep.add(other.ep));
+  }
+  subtract(other) {
+    this.assertSame(other);
+    return this.init(this.ep.subtract(other.ep));
+  }
+  multiply(scalar) {
+    return this.init(this.ep.multiply(scalar));
+  }
+  multiplyUnsafe(scalar) {
+    return this.init(this.ep.multiplyUnsafe(scalar));
+  }
+  double() {
+    return this.init(this.ep.double());
+  }
+  negate() {
+    return this.init(this.ep.negate());
+  }
+  precompute(windowSize, isLazy) {
+    return this.init(this.ep.precompute(windowSize, isLazy));
+  }
+  /** @deprecated use `toBytes` */
+  toRawBytes() {
+    return this.toBytes();
+  }
+};
+function eddsa(Point, cHash, eddsaOpts = {}) {
+  if (typeof cHash !== "function")
+    throw new Error('"hash" function param is required');
+  _validateObject(eddsaOpts, {}, {
+    adjustScalarBytes: "function",
+    randomBytes: "function",
+    domain: "function",
+    prehash: "function",
+    mapToCurve: "function"
+  });
+  const { prehash } = eddsaOpts;
+  const { BASE, Fp: Fp2, Fn: Fn2 } = Point;
+  const randomBytes2 = eddsaOpts.randomBytes || randomBytes;
+  const adjustScalarBytes2 = eddsaOpts.adjustScalarBytes || ((bytes2) => bytes2);
+  const domain = eddsaOpts.domain || ((data, ctx, phflag) => {
+    _abool2(phflag, "phflag");
+    if (ctx.length || phflag)
+      throw new Error("Contexts/pre-hash are not supported");
+    return data;
+  });
+  function modN_LE(hash) {
+    return Fn2.create(bytesToNumberLE(hash));
+  }
+  function getPrivateScalar(key) {
+    const len = lengths.secretKey;
+    key = ensureBytes("private key", key, len);
+    const hashed = ensureBytes("hashed private key", cHash(key), 2 * len);
+    const head = adjustScalarBytes2(hashed.slice(0, len));
+    const prefix2 = hashed.slice(len, 2 * len);
+    const scalar = modN_LE(head);
+    return { head, prefix: prefix2, scalar };
+  }
+  function getExtendedPublicKey(secretKey) {
+    const { head, prefix: prefix2, scalar } = getPrivateScalar(secretKey);
+    const point = BASE.multiply(scalar);
+    const pointBytes = point.toBytes();
+    return { head, prefix: prefix2, scalar, point, pointBytes };
+  }
+  function getPublicKey(secretKey) {
+    return getExtendedPublicKey(secretKey).pointBytes;
+  }
+  function hashDomainToScalar(context2 = Uint8Array.of(), ...msgs) {
+    const msg = concatBytes(...msgs);
+    return modN_LE(cHash(domain(msg, ensureBytes("context", context2), !!prehash)));
+  }
+  function sign2(msg, secretKey, options = {}) {
+    msg = ensureBytes("message", msg);
+    if (prehash)
+      msg = prehash(msg);
+    const { prefix: prefix2, scalar, pointBytes } = getExtendedPublicKey(secretKey);
+    const r = hashDomainToScalar(options.context, prefix2, msg);
+    const R = BASE.multiply(r).toBytes();
+    const k = hashDomainToScalar(options.context, R, pointBytes, msg);
+    const s = Fn2.create(r + k * scalar);
+    if (!Fn2.isValid(s))
+      throw new Error("sign failed: invalid s");
+    const rs = concatBytes(R, Fn2.toBytes(s));
+    return _abytes2(rs, lengths.signature, "result");
+  }
+  const verifyOpts = { zip215: true };
+  function verify(sig2, msg, publicKey, options = verifyOpts) {
+    const { context: context2, zip215 } = options;
+    const len = lengths.signature;
+    sig2 = ensureBytes("signature", sig2, len);
+    msg = ensureBytes("message", msg);
+    publicKey = ensureBytes("publicKey", publicKey, lengths.publicKey);
+    if (zip215 !== void 0)
+      _abool2(zip215, "zip215");
+    if (prehash)
+      msg = prehash(msg);
+    const mid = len / 2;
+    const r = sig2.subarray(0, mid);
+    const s = bytesToNumberLE(sig2.subarray(mid, len));
+    let A, R, SB;
+    try {
+      A = Point.fromBytes(publicKey, zip215);
+      R = Point.fromBytes(r, zip215);
+      SB = BASE.multiplyUnsafe(s);
+    } catch (error) {
+      return false;
+    }
+    if (!zip215 && A.isSmallOrder())
+      return false;
+    const k = hashDomainToScalar(context2, R.toBytes(), A.toBytes(), msg);
+    const RkA = R.add(A.multiplyUnsafe(k));
+    return RkA.subtract(SB).clearCofactor().is0();
+  }
+  const _size = Fp2.BYTES;
+  const lengths = {
+    secretKey: _size,
+    publicKey: _size,
+    signature: 2 * _size,
+    seed: _size
+  };
+  function randomSecretKey(seed = randomBytes2(lengths.seed)) {
+    return _abytes2(seed, lengths.seed, "seed");
+  }
+  function keygen(seed) {
+    const secretKey = utils.randomSecretKey(seed);
+    return { secretKey, publicKey: getPublicKey(secretKey) };
+  }
+  function isValidSecretKey(key) {
+    return isBytes2(key) && key.length === Fn2.BYTES;
+  }
+  function isValidPublicKey(key, zip215) {
+    try {
+      return !!Point.fromBytes(key, zip215);
+    } catch (error) {
+      return false;
+    }
+  }
+  const utils = {
+    getExtendedPublicKey,
+    randomSecretKey,
+    isValidSecretKey,
+    isValidPublicKey,
+    /**
+     * Converts ed public key to x public key. Uses formula:
+     * - ed25519:
+     *   - `(u, v) = ((1+y)/(1-y), sqrt(-486664)*u/x)`
+     *   - `(x, y) = (sqrt(-486664)*u/v, (u-1)/(u+1))`
+     * - ed448:
+     *   - `(u, v) = ((y-1)/(y+1), sqrt(156324)*u/x)`
+     *   - `(x, y) = (sqrt(156324)*u/v, (1+u)/(1-u))`
+     */
+    toMontgomery(publicKey) {
+      const { y } = Point.fromBytes(publicKey);
+      const size = lengths.publicKey;
+      const is25519 = size === 32;
+      if (!is25519 && size !== 57)
+        throw new Error("only defined for 25519 and 448");
+      const u = is25519 ? Fp2.div(_1n5 + y, _1n5 - y) : Fp2.div(y - _1n5, y + _1n5);
+      return Fp2.toBytes(u);
+    },
+    toMontgomeryPriv(secretKey) {
+      const size = lengths.secretKey;
+      _abytes2(secretKey, size);
+      const hashed = cHash(secretKey.subarray(0, size));
+      return adjustScalarBytes2(hashed).subarray(0, size);
+    },
+    /** @deprecated */
+    randomPrivateKey: randomSecretKey,
+    /** @deprecated */
+    precompute(windowSize = 8, point = Point.BASE) {
+      return point.precompute(windowSize, false);
+    }
+  };
+  return Object.freeze({
+    keygen,
+    getPublicKey,
+    sign: sign2,
+    verify,
+    utils,
+    Point,
+    lengths
+  });
+}
+function _eddsa_legacy_opts_to_new(c) {
+  const CURVE = {
+    a: c.a,
+    d: c.d,
+    p: c.Fp.ORDER,
+    n: c.n,
+    h: c.h,
+    Gx: c.Gx,
+    Gy: c.Gy
+  };
+  const Fp2 = c.Fp;
+  const Fn2 = Field(CURVE.n, c.nBitLength, true);
+  const curveOpts = { Fp: Fp2, Fn: Fn2, uvRatio: c.uvRatio };
+  const eddsaOpts = {
+    randomBytes: c.randomBytes,
+    adjustScalarBytes: c.adjustScalarBytes,
+    domain: c.domain,
+    prehash: c.prehash,
+    mapToCurve: c.mapToCurve
+  };
+  return { CURVE, curveOpts, hash: c.hash, eddsaOpts };
+}
+function _eddsa_new_output_to_legacy(c, eddsa2) {
+  const Point = eddsa2.Point;
+  const legacy = Object.assign({}, eddsa2, {
+    ExtendedPoint: Point,
+    CURVE: c,
+    nBitLength: Point.Fn.BITS,
+    nByteLength: Point.Fn.BYTES
+  });
+  return legacy;
+}
+function twistedEdwards(c) {
+  const { CURVE, curveOpts, hash, eddsaOpts } = _eddsa_legacy_opts_to_new(c);
+  const Point = edwards(CURVE, curveOpts);
+  const EDDSA = eddsa(Point, hash, eddsaOpts);
+  return _eddsa_new_output_to_legacy(c, EDDSA);
+}
+
+// node_modules/@noble/curves/esm/ed25519.js
+var _0n6 = /* @__PURE__ */ BigInt(0);
+var _1n6 = BigInt(1);
+var _2n5 = BigInt(2);
+var _3n3 = BigInt(3);
+var _5n2 = BigInt(5);
+var _8n3 = BigInt(8);
+var ed25519_CURVE_p = BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed");
+var ed25519_CURVE = /* @__PURE__ */ (() => ({
+  p: ed25519_CURVE_p,
+  n: BigInt("0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"),
+  h: _8n3,
+  a: BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec"),
+  d: BigInt("0x52036cee2b6ffe738cc740797779e89800700a4d4141d8ab75eb4dca135978a3"),
+  Gx: BigInt("0x216936d3cd6e53fec0a4e231fdd6dc5c692cc7609525a7b2c9562d608f25d51a"),
+  Gy: BigInt("0x6666666666666666666666666666666666666666666666666666666666666658")
+}))();
+function ed25519_pow_2_252_3(x) {
+  const _10n = BigInt(10), _20n = BigInt(20), _40n = BigInt(40), _80n = BigInt(80);
+  const P = ed25519_CURVE_p;
+  const x2 = x * x % P;
+  const b2 = x2 * x % P;
+  const b4 = pow2(b2, _2n5, P) * b2 % P;
+  const b5 = pow2(b4, _1n6, P) * x % P;
+  const b10 = pow2(b5, _5n2, P) * b5 % P;
+  const b20 = pow2(b10, _10n, P) * b10 % P;
+  const b40 = pow2(b20, _20n, P) * b20 % P;
+  const b80 = pow2(b40, _40n, P) * b40 % P;
+  const b160 = pow2(b80, _80n, P) * b80 % P;
+  const b240 = pow2(b160, _80n, P) * b80 % P;
+  const b250 = pow2(b240, _10n, P) * b10 % P;
+  const pow_p_5_8 = pow2(b250, _2n5, P) * x % P;
+  return { pow_p_5_8, b2 };
+}
+function adjustScalarBytes(bytes2) {
+  bytes2[0] &= 248;
+  bytes2[31] &= 127;
+  bytes2[31] |= 64;
+  return bytes2;
+}
+var ED25519_SQRT_M1 = /* @__PURE__ */ BigInt("19681161376707505956807079304988542015446066515923890162744021073123829784752");
+function uvRatio(u, v) {
+  const P = ed25519_CURVE_p;
+  const v32 = mod(v * v * v, P);
+  const v7 = mod(v32 * v32 * v, P);
+  const pow = ed25519_pow_2_252_3(u * v7).pow_p_5_8;
+  let x = mod(u * v32 * pow, P);
+  const vx2 = mod(v * x * x, P);
+  const root1 = x;
+  const root2 = mod(x * ED25519_SQRT_M1, P);
+  const useRoot1 = vx2 === u;
+  const useRoot2 = vx2 === mod(-u, P);
+  const noRoot = vx2 === mod(-u * ED25519_SQRT_M1, P);
+  if (useRoot1)
+    x = root1;
+  if (useRoot2 || noRoot)
+    x = root2;
+  if (isNegativeLE(x, P))
+    x = mod(-x, P);
+  return { isValid: useRoot1 || useRoot2, value: x };
+}
+var Fp = /* @__PURE__ */ (() => Field(ed25519_CURVE.p, { isLE: true }))();
+var Fn = /* @__PURE__ */ (() => Field(ed25519_CURVE.n, { isLE: true }))();
+var ed25519Defaults = /* @__PURE__ */ (() => ({
+  ...ed25519_CURVE,
+  Fp,
+  hash: sha512,
+  adjustScalarBytes,
+  // dom2
+  // Ratio of u to v. Allows us to combine inversion and square root. Uses algo from RFC8032 5.1.3.
+  // Constant-time, u/√v
+  uvRatio
+}))();
+var ed25519 = /* @__PURE__ */ (() => twistedEdwards(ed25519Defaults))();
+var SQRT_M1 = ED25519_SQRT_M1;
+var SQRT_AD_MINUS_ONE = /* @__PURE__ */ BigInt("25063068953384623474111414158702152701244531502492656460079210482610430750235");
+var INVSQRT_A_MINUS_D = /* @__PURE__ */ BigInt("54469307008909316920995813868745141605393597292927456921205312896311721017578");
+var ONE_MINUS_D_SQ = /* @__PURE__ */ BigInt("1159843021668779879193775521855586647937357759715417654439879720876111806838");
+var D_MINUS_ONE_SQ = /* @__PURE__ */ BigInt("40440834346308536858101042469323190826248399146238708352240133220865137265952");
+var invertSqrt = (number) => uvRatio(_1n6, number);
+var MAX_255B = /* @__PURE__ */ BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+var bytes255ToNumberLE = (bytes2) => ed25519.Point.Fp.create(bytesToNumberLE(bytes2) & MAX_255B);
+function calcElligatorRistrettoMap(r0) {
+  const { d } = ed25519_CURVE;
+  const P = ed25519_CURVE_p;
+  const mod2 = (n) => Fp.create(n);
+  const r = mod2(SQRT_M1 * r0 * r0);
+  const Ns = mod2((r + _1n6) * ONE_MINUS_D_SQ);
+  let c = BigInt(-1);
+  const D = mod2((c - d * r) * mod2(r + d));
+  let { isValid: Ns_D_is_sq, value: s } = uvRatio(Ns, D);
+  let s_ = mod2(s * r0);
+  if (!isNegativeLE(s_, P))
+    s_ = mod2(-s_);
+  if (!Ns_D_is_sq)
+    s = s_;
+  if (!Ns_D_is_sq)
+    c = r;
+  const Nt = mod2(c * (r - _1n6) * D_MINUS_ONE_SQ - D);
+  const s2 = s * s;
+  const W0 = mod2((s + s) * D);
+  const W1 = mod2(Nt * SQRT_AD_MINUS_ONE);
+  const W2 = mod2(_1n6 - s2);
+  const W3 = mod2(_1n6 + s2);
+  return new ed25519.Point(mod2(W0 * W3), mod2(W2 * W1), mod2(W1 * W3), mod2(W0 * W2));
+}
+function ristretto255_map(bytes2) {
+  abytes(bytes2, 64);
+  const r1 = bytes255ToNumberLE(bytes2.subarray(0, 32));
+  const R1 = calcElligatorRistrettoMap(r1);
+  const r2 = bytes255ToNumberLE(bytes2.subarray(32, 64));
+  const R2 = calcElligatorRistrettoMap(r2);
+  return new _RistrettoPoint(R1.add(R2));
+}
+var _RistrettoPoint = class __RistrettoPoint extends PrimeEdwardsPoint {
+  constructor(ep) {
+    super(ep);
+  }
+  static fromAffine(ap) {
+    return new __RistrettoPoint(ed25519.Point.fromAffine(ap));
+  }
+  assertSame(other) {
+    if (!(other instanceof __RistrettoPoint))
+      throw new Error("RistrettoPoint expected");
+  }
+  init(ep) {
+    return new __RistrettoPoint(ep);
+  }
+  /** @deprecated use `import { ristretto255_hasher } from '@noble/curves/ed25519.js';` */
+  static hashToCurve(hex8) {
+    return ristretto255_map(ensureBytes("ristrettoHash", hex8, 64));
+  }
+  static fromBytes(bytes2) {
+    abytes(bytes2, 32);
+    const { a, d } = ed25519_CURVE;
+    const P = ed25519_CURVE_p;
+    const mod2 = (n) => Fp.create(n);
+    const s = bytes255ToNumberLE(bytes2);
+    if (!equalBytes(Fp.toBytes(s), bytes2) || isNegativeLE(s, P))
+      throw new Error("invalid ristretto255 encoding 1");
+    const s2 = mod2(s * s);
+    const u1 = mod2(_1n6 + a * s2);
+    const u2 = mod2(_1n6 - a * s2);
+    const u1_2 = mod2(u1 * u1);
+    const u2_2 = mod2(u2 * u2);
+    const v = mod2(a * d * u1_2 - u2_2);
+    const { isValid: isValid2, value: I } = invertSqrt(mod2(v * u2_2));
+    const Dx = mod2(I * u2);
+    const Dy = mod2(I * Dx * v);
+    let x = mod2((s + s) * Dx);
+    if (isNegativeLE(x, P))
+      x = mod2(-x);
+    const y = mod2(u1 * Dy);
+    const t = mod2(x * y);
+    if (!isValid2 || isNegativeLE(t, P) || y === _0n6)
+      throw new Error("invalid ristretto255 encoding 2");
+    return new __RistrettoPoint(new ed25519.Point(x, y, _1n6, t));
+  }
+  /**
+   * Converts ristretto-encoded string to ristretto point.
+   * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-decode).
+   * @param hex Ristretto-encoded 32 bytes. Not every 32-byte string is valid ristretto encoding
+   */
+  static fromHex(hex8) {
+    return __RistrettoPoint.fromBytes(ensureBytes("ristrettoHex", hex8, 32));
+  }
+  static msm(points, scalars) {
+    return pippenger(__RistrettoPoint, ed25519.Point.Fn, points, scalars);
+  }
+  /**
+   * Encodes ristretto point to Uint8Array.
+   * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-encode).
+   */
+  toBytes() {
+    let { X, Y, Z, T } = this.ep;
+    const P = ed25519_CURVE_p;
+    const mod2 = (n) => Fp.create(n);
+    const u1 = mod2(mod2(Z + Y) * mod2(Z - Y));
+    const u2 = mod2(X * Y);
+    const u2sq = mod2(u2 * u2);
+    const { value: invsqrt } = invertSqrt(mod2(u1 * u2sq));
+    const D1 = mod2(invsqrt * u1);
+    const D2 = mod2(invsqrt * u2);
+    const zInv = mod2(D1 * D2 * T);
+    let D;
+    if (isNegativeLE(T * zInv, P)) {
+      let _x = mod2(Y * SQRT_M1);
+      let _y = mod2(X * SQRT_M1);
+      X = _x;
+      Y = _y;
+      D = mod2(D1 * INVSQRT_A_MINUS_D);
+    } else {
+      D = D2;
+    }
+    if (isNegativeLE(X * zInv, P))
+      Y = mod2(-Y);
+    let s = mod2((Z - Y) * D);
+    if (isNegativeLE(s, P))
+      s = mod2(-s);
+    return Fp.toBytes(s);
+  }
+  /**
+   * Compares two Ristretto points.
+   * Described in [RFC9496](https://www.rfc-editor.org/rfc/rfc9496#name-equals).
+   */
+  equals(other) {
+    this.assertSame(other);
+    const { X: X1, Y: Y1 } = this.ep;
+    const { X: X2, Y: Y2 } = other.ep;
+    const mod2 = (n) => Fp.create(n);
+    const one = mod2(X1 * Y2) === mod2(Y1 * X2);
+    const two = mod2(Y1 * Y2) === mod2(X1 * X2);
+    return one || two;
+  }
+  is0() {
+    return this.equals(__RistrettoPoint.ZERO);
+  }
+};
+_RistrettoPoint.BASE = /* @__PURE__ */ (() => new _RistrettoPoint(ed25519.Point.BASE))();
+_RistrettoPoint.ZERO = /* @__PURE__ */ (() => new _RistrettoPoint(ed25519.Point.ZERO))();
+_RistrettoPoint.Fp = /* @__PURE__ */ (() => Fp)();
+_RistrettoPoint.Fn = /* @__PURE__ */ (() => Fn)();
+
+// node_modules/@noble/hashes/esm/sha3.js
+var _0n7 = BigInt(0);
+var _1n7 = BigInt(1);
+var _2n6 = BigInt(2);
 var _7n2 = BigInt(7);
 var _256n = BigInt(256);
 var _0x71n = BigInt(113);
 var SHA3_PI = [];
 var SHA3_ROTL = [];
 var _SHA3_IOTA = [];
-for (let round = 0, R = _1n5, x = 1, y = 0; round < 24; round++) {
+for (let round = 0, R = _1n7, x = 1, y = 0; round < 24; round++) {
   [x, y] = [y, (2 * x + 3 * y) % 5];
   SHA3_PI.push(2 * (5 * y + x));
   SHA3_ROTL.push((round + 1) * (round + 2) / 2 % 64);
-  let t = _0n5;
+  let t = _0n7;
   for (let j = 0; j < 7; j++) {
-    R = (R << _1n5 ^ (R >> _7n2) * _0x71n) % _256n;
-    if (R & _2n4)
-      t ^= _1n5 << (_1n5 << /* @__PURE__ */ BigInt(j)) - _1n5;
+    R = (R << _1n7 ^ (R >> _7n2) * _0x71n) % _256n;
+    if (R & _2n6)
+      t ^= _1n7 << (_1n7 << /* @__PURE__ */ BigInt(j)) - _1n7;
   }
   _SHA3_IOTA.push(t);
 }
@@ -21060,27 +22312,27 @@ var TextEncoder6 = class {
 var TextEncoder7 = /* @__PURE__ */ extractGlobal("TextEncoder", TextEncoder6);
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/function.js
-function isFunction2(value) {
+function isFunction3(value) {
   return typeof value === "function";
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/hex/toU8a.js
-var CHR3 = "0123456789abcdef";
-var U83 = new Uint8Array(256);
-var U163 = new Uint8Array(256 * 256);
-for (let i = 0, count = CHR3.length; i < count; i++) {
-  U83[CHR3[i].charCodeAt(0) | 0] = i | 0;
+var CHR4 = "0123456789abcdef";
+var U84 = new Uint8Array(256);
+var U164 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR4.length; i < count; i++) {
+  U84[CHR4[i].charCodeAt(0) | 0] = i | 0;
   if (i > 9) {
-    U83[CHR3[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+    U84[CHR4[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
   }
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U163[s | j] = U83[i] << 4 | U83[j];
+    U164[s | j] = U84[i] << 4 | U84[j];
   }
 }
-function hexToU8a2(value, bitLength = -1) {
+function hexToU8a3(value, bitLength = -1) {
   if (!value) {
     return new Uint8Array();
   }
@@ -21090,47 +22342,47 @@ function hexToU8a2(value, bitLength = -1) {
   const result = new Uint8Array(endLength);
   const offset = endLength > decLength ? endLength - decLength : 0;
   for (let i = offset; i < endLength; i++, s += 2) {
-    result[i] = U163[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+    result[i] = U164[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
   }
   return result;
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/bn/bn.js
-var import_bn9 = __toESM(require_bn(), 1);
+var import_bn12 = __toESM(require_bn(), 1);
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/bn.js
 function isBn2(value) {
-  return import_bn9.default.isBN(value);
+  return import_bn12.default.isBN(value);
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/hex.js
-var REGEX_HEX_PREFIXED2 = /^0x[\da-fA-F]+$/;
-function isHex2(value, bitLength = -1, ignoreLength) {
-  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED2.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+var REGEX_HEX_PREFIXED3 = /^0x[\da-fA-F]+$/;
+function isHex3(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED3.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/object.js
-function isObject2(value) {
+function isObject3(value) {
   return !!value && typeof value === "object";
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/helpers.js
 function isOnFunction(...fns) {
-  return (value) => isFunction2(value) && fns.every((f) => isFunction2(value[f]));
+  return (value) => isFunction3(value) && fns.every((f) => isFunction3(value[f]));
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/has.js
-var hasBigInt2 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
-var hasBuffer2 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
-var hasProcess2 = typeof xglobal.process === "object";
+var hasBigInt3 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
+var hasBuffer3 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
+var hasProcess3 = typeof xglobal.process === "object";
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/buffer.js
-function isBuffer2(value) {
-  return hasBuffer2 && !!value && isFunction2(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
+function isBuffer3(value) {
+  return hasBuffer3 && !!value && isFunction3(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/u8a.js
-function isU8a2(value) {
+function isU8a3(value) {
   return (value && value.constructor) === Uint8Array || value instanceof Uint8Array;
 }
 
@@ -21141,33 +22393,33 @@ function stringToU8a3(value) {
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/u8a/toU8a.js
-function u8aToU8a2(value, strict = false) {
+function u8aToU8a3(value, strict = false) {
   if (strict && (value === null || value === void 0)) {
     throw new Error("u8aToU8a: Expected non-null, non-undefined value");
   }
-  return isU8a2(value) ? isBuffer2(value) ? new Uint8Array(value) : value : isHex2(value) ? hexToU8a2(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a3(value);
+  return isU8a3(value) ? isBuffer3(value) ? new Uint8Array(value) : value : isHex3(value) ? hexToU8a3(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a3(value);
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/u8a/toHex.js
-var U84 = new Array(256);
-var U164 = new Array(256 * 256);
+var U85 = new Array(256);
+var U165 = new Array(256 * 256);
 for (let n = 0; n < 256; n++) {
-  U84[n] = n.toString(16).padStart(2, "0");
+  U85[n] = n.toString(16).padStart(2, "0");
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U164[s | j] = U84[i] + U84[j];
+    U165[s | j] = U85[i] + U85[j];
   }
 }
 function hex2(value, result) {
   const mod2 = value.length % 2 | 0;
   const length = value.length - mod2 | 0;
   for (let i = 0; i < length; i += 2) {
-    result += U164[value[i] << 8 | value[i + 1]];
+    result += U165[value[i] << 8 | value[i + 1]];
   }
   if (mod2) {
-    result += U84[value[length] | 0];
+    result += U85[value[length] | 0];
   }
   return result;
 }
@@ -21185,7 +22437,7 @@ function u8aToHex2(value, bitLength = -1, isPrefixed = true) {
 }
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/is/bigInt.js
-function isBigInt(value) {
+function isBigInt2(value) {
   return typeof value === "bigint";
 }
 
@@ -21218,7 +22470,7 @@ function isChildClass(Parent, Child) {
 
 // node_modules/@polkadot/rpc-provider/node_modules/@polkadot/util/stringify.js
 function replacer(_, v) {
-  return isBigInt(v) ? v.toString() : v;
+  return isBigInt2(v) ? v.toString() : v;
 }
 function stringify(value, space) {
   return JSON.stringify(value, replacer, space);
@@ -21251,7 +22503,7 @@ var logTo2 = {
   warn: "warn"
 };
 function formatOther2(value) {
-  if (value && isObject2(value) && value.constructor === Object) {
+  if (value && isObject3(value) && value.constructor === Object) {
     const result = {};
     for (const [k, v] of Object.entries(value)) {
       result[k] = loggerFormat2(v);
@@ -21265,8 +22517,8 @@ function loggerFormat2(value) {
     return value.map(loggerFormat2);
   } else if (isBn2(value)) {
     return value.toString();
-  } else if (isU8a2(value) || isBuffer2(value)) {
-    return u8aToHex2(u8aToU8a2(value));
+  } else if (isU8a3(value) || isBuffer3(value)) {
+    return u8aToHex2(u8aToU8a3(value));
   }
   return formatOther2(value);
 }
@@ -21280,7 +22532,7 @@ function formatWithLength2(maxLength) {
   };
 }
 function apply2(log, type, values, maxSize = -1) {
-  if (values.length === 1 && isFunction2(values[0])) {
+  if (values.length === 1 && isFunction3(values[0])) {
     const fnResult = values[0]();
     return apply2(log, type, Array.isArray(fnResult) ? fnResult : [fnResult], maxSize);
   }
@@ -21369,7 +22621,7 @@ var RpcError = class extends Error {
     extend(this, "name", this.constructor.name);
     extend(this, "data", data);
     extend(this, "code", code);
-    if (isFunction2(Error.captureStackTrace)) {
+    if (isFunction3(Error.captureStackTrace)) {
       Error.captureStackTrace(this, this.constructor);
     } else {
       const { stack } = new Error(message);
@@ -22265,7 +23517,7 @@ function __asyncValues(o) {
 }
 
 // node_modules/rxjs/dist/esm5/internal/util/isFunction.js
-function isFunction3(value) {
+function isFunction4(value) {
   return typeof value === "function";
 }
 
@@ -22337,7 +23589,7 @@ var Subscription = function() {
         }
       }
       var initialFinalizer = this.initialTeardown;
-      if (isFunction3(initialFinalizer)) {
+      if (isFunction4(initialFinalizer)) {
         try {
           initialFinalizer();
         } catch (e) {
@@ -22424,10 +23676,10 @@ var Subscription = function() {
 }();
 var EMPTY_SUBSCRIPTION = Subscription.EMPTY;
 function isSubscription(value) {
-  return value instanceof Subscription || value && "closed" in value && isFunction3(value.remove) && isFunction3(value.add) && isFunction3(value.unsubscribe);
+  return value instanceof Subscription || value && "closed" in value && isFunction4(value.remove) && isFunction4(value.add) && isFunction4(value.unsubscribe);
 }
 function execFinalizer(finalizer) {
-  if (isFunction3(finalizer)) {
+  if (isFunction4(finalizer)) {
     finalizer();
   } else {
     finalizer.unsubscribe();
@@ -22639,7 +23891,7 @@ var SafeSubscriber = function(_super) {
   function SafeSubscriber2(observerOrNext, error, complete) {
     var _this = _super.call(this) || this;
     var partialObserver;
-    if (isFunction3(observerOrNext) || !observerOrNext) {
+    if (isFunction4(observerOrNext) || !observerOrNext) {
       partialObserver = {
         next: observerOrNext !== null && observerOrNext !== void 0 ? observerOrNext : void 0,
         error: error !== null && error !== void 0 ? error : void 0,
@@ -22800,7 +24052,7 @@ function getPromiseCtor(promiseCtor) {
   return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config.Promise) !== null && _a !== void 0 ? _a : Promise;
 }
 function isObserver(value) {
-  return value && isFunction3(value.next) && isFunction3(value.error) && isFunction3(value.complete);
+  return value && isFunction4(value.next) && isFunction4(value.error) && isFunction4(value.complete);
 }
 function isSubscriber(value) {
   return value && value instanceof Subscriber || isObserver(value) && isSubscription(value);
@@ -22808,7 +24060,7 @@ function isSubscriber(value) {
 
 // node_modules/rxjs/dist/esm5/internal/util/lift.js
 function hasLift(source) {
-  return isFunction3(source === null || source === void 0 ? void 0 : source.lift);
+  return isFunction4(source === null || source === void 0 ? void 0 : source.lift);
 }
 function operate(init2) {
   return function(source) {
@@ -23529,7 +24781,7 @@ var EMPTY = new Observable(function(subscriber) {
 
 // node_modules/rxjs/dist/esm5/internal/util/isScheduler.js
 function isScheduler(value) {
-  return value && isFunction3(value.schedule);
+  return value && isFunction4(value.schedule);
 }
 
 // node_modules/rxjs/dist/esm5/internal/util/args.js
@@ -23537,7 +24789,7 @@ function last(arr) {
   return arr[arr.length - 1];
 }
 function popResultSelector(args) {
-  return isFunction3(last(args)) ? args.pop() : void 0;
+  return isFunction4(last(args)) ? args.pop() : void 0;
 }
 function popScheduler(args) {
   return isScheduler(last(args)) ? args.pop() : void 0;
@@ -23550,17 +24802,17 @@ var isArrayLike = function(x) {
 
 // node_modules/rxjs/dist/esm5/internal/util/isPromise.js
 function isPromise(value) {
-  return isFunction3(value === null || value === void 0 ? void 0 : value.then);
+  return isFunction4(value === null || value === void 0 ? void 0 : value.then);
 }
 
 // node_modules/rxjs/dist/esm5/internal/util/isInteropObservable.js
 function isInteropObservable(input) {
-  return isFunction3(input[observable]);
+  return isFunction4(input[observable]);
 }
 
 // node_modules/rxjs/dist/esm5/internal/util/isAsyncIterable.js
 function isAsyncIterable(obj) {
-  return Symbol.asyncIterator && isFunction3(obj === null || obj === void 0 ? void 0 : obj[Symbol.asyncIterator]);
+  return Symbol.asyncIterator && isFunction4(obj === null || obj === void 0 ? void 0 : obj[Symbol.asyncIterator]);
 }
 
 // node_modules/rxjs/dist/esm5/internal/util/throwUnobservableError.js
@@ -23579,7 +24831,7 @@ var iterator = getSymbolIterator();
 
 // node_modules/rxjs/dist/esm5/internal/util/isIterable.js
 function isIterable(input) {
-  return isFunction3(input === null || input === void 0 ? void 0 : input[iterator]);
+  return isFunction4(input === null || input === void 0 ? void 0 : input[iterator]);
 }
 
 // node_modules/rxjs/dist/esm5/internal/util/isReadableStreamLike.js
@@ -23622,7 +24874,7 @@ function readableStreamLikeToAsyncGenerator(readableStream) {
   });
 }
 function isReadableStreamLike(obj) {
-  return isFunction3(obj === null || obj === void 0 ? void 0 : obj.getReader);
+  return isFunction4(obj === null || obj === void 0 ? void 0 : obj.getReader);
 }
 
 // node_modules/rxjs/dist/esm5/internal/observable/innerFrom.js
@@ -23655,7 +24907,7 @@ function innerFrom(input) {
 function fromInteropObservable(obj) {
   return new Observable(function(subscriber) {
     var obs = obj[observable]();
-    if (isFunction3(obs.subscribe)) {
+    if (isFunction4(obs.subscribe)) {
       return obs.subscribe(subscriber);
     }
     throw new TypeError("Provided object does not correctly implement Symbol.observable");
@@ -23872,7 +25124,7 @@ function scheduleIterable(input, scheduler) {
       }, 0, true);
     });
     return function() {
-      return isFunction3(iterator2 === null || iterator2 === void 0 ? void 0 : iterator2.return) && iterator2.return();
+      return isFunction4(iterator2 === null || iterator2 === void 0 ? void 0 : iterator2.return) && iterator2.return();
     };
   });
 }
@@ -23953,8 +25205,8 @@ var EmptyError = createErrorClass(function(_super) {
 });
 
 // node_modules/rxjs/dist/esm5/internal/firstValueFrom.js
-function firstValueFrom(source, config4) {
-  var hasConfig = typeof config4 === "object";
+function firstValueFrom(source, config5) {
+  var hasConfig = typeof config5 === "object";
   return new Promise(function(resolve, reject) {
     var subscriber = new SafeSubscriber({
       next: function(value) {
@@ -23964,7 +25216,7 @@ function firstValueFrom(source, config4) {
       error: reject,
       complete: function() {
         if (hasConfig) {
-          resolve(config4.defaultValue);
+          resolve(config5.defaultValue);
         } else {
           reject(new EmptyError());
         }
@@ -24155,7 +25407,7 @@ function mergeMap(project, resultSelector, concurrent) {
   if (concurrent === void 0) {
     concurrent = Infinity;
   }
-  if (isFunction3(resultSelector)) {
+  if (isFunction4(resultSelector)) {
     return mergeMap(function(a, i) {
       return map2(function(b, ii) {
         return resultSelector(a, b, i, ii);
@@ -24270,11 +25522,11 @@ var DEFAULT_CONFIG = {
     return new Subject();
   }
 };
-function connect(selector, config4) {
-  if (config4 === void 0) {
-    config4 = DEFAULT_CONFIG;
+function connect(selector, config5) {
+  if (config5 === void 0) {
+    config5 = DEFAULT_CONFIG;
   }
-  var connector = config4.connector;
+  var connector = config5.connector;
   return operate(function(source, subscriber) {
     var subject = connector();
     innerFrom(selector(fromSubscribable(subject))).subscribe(subscriber);
@@ -24371,10 +25623,10 @@ function first(predicate, defaultValue) {
 
 // node_modules/rxjs/dist/esm5/internal/operators/multicast.js
 function multicast(subjectOrSubjectFactory, selector) {
-  var subjectFactory = isFunction3(subjectOrSubjectFactory) ? subjectOrSubjectFactory : function() {
+  var subjectFactory = isFunction4(subjectOrSubjectFactory) ? subjectOrSubjectFactory : function() {
     return subjectOrSubjectFactory;
   };
-  if (isFunction3(selector)) {
+  if (isFunction4(selector)) {
     return connect(selector, {
       connector: subjectFactory
     });
@@ -24386,10 +25638,10 @@ function multicast(subjectOrSubjectFactory, selector) {
 
 // node_modules/rxjs/dist/esm5/internal/operators/publishReplay.js
 function publishReplay(bufferSize, windowTime, selectorOrScheduler, timestampProvider) {
-  if (selectorOrScheduler && !isFunction3(selectorOrScheduler)) {
+  if (selectorOrScheduler && !isFunction4(selectorOrScheduler)) {
     timestampProvider = selectorOrScheduler;
   }
-  var selector = isFunction3(selectorOrScheduler) ? selectorOrScheduler : void 0;
+  var selector = isFunction4(selectorOrScheduler) ? selectorOrScheduler : void 0;
   return function(source) {
     return multicast(new ReplaySubject(bufferSize, windowTime, timestampProvider), selector)(source);
   };
@@ -24435,7 +25687,7 @@ function switchMap(project, resultSelector) {
 
 // node_modules/rxjs/dist/esm5/internal/operators/tap.js
 function tap(observerOrNext, error, complete) {
-  var tapObserver = isFunction3(observerOrNext) || error || complete ? { next: observerOrNext, error, complete } : observerOrNext;
+  var tapObserver = isFunction4(observerOrNext) || error || complete ? { next: observerOrNext, error, complete } : observerOrNext;
   return tapObserver ? operate(function(source, subscriber) {
     var _a;
     (_a = tapObserver.subscribe) === null || _a === void 0 ? void 0 : _a.call(tapObserver);
@@ -24524,7 +25776,7 @@ var TextEncoder8 = class {
 var TextEncoder9 = /* @__PURE__ */ extractGlobal("TextEncoder", TextEncoder8);
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/function.js
-function isFunction4(value) {
+function isFunction5(value) {
   return typeof value === "function";
 }
 
@@ -24568,7 +25820,7 @@ function arrayFlatten2(arrays) {
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/assert.js
 function assert2(condition, message) {
   if (!condition) {
-    throw new Error(isFunction4(message) ? message() : message);
+    throw new Error(isFunction5(message) ? message() : message);
   }
 }
 function assertReturn2(value, message) {
@@ -24594,22 +25846,22 @@ function createCmp(cmp) {
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/hex/toU8a.js
-var CHR4 = "0123456789abcdef";
-var U85 = new Uint8Array(256);
-var U165 = new Uint8Array(256 * 256);
-for (let i = 0, count = CHR4.length; i < count; i++) {
-  U85[CHR4[i].charCodeAt(0) | 0] = i | 0;
+var CHR5 = "0123456789abcdef";
+var U86 = new Uint8Array(256);
+var U166 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR5.length; i < count; i++) {
+  U86[CHR5[i].charCodeAt(0) | 0] = i | 0;
   if (i > 9) {
-    U85[CHR4[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+    U86[CHR5[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
   }
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U165[s | j] = U85[i] << 4 | U85[j];
+    U166[s | j] = U86[i] << 4 | U86[j];
   }
 }
-function hexToU8a3(value, bitLength = -1) {
+function hexToU8a4(value, bitLength = -1) {
   if (!value) {
     return new Uint8Array();
   }
@@ -24619,52 +25871,52 @@ function hexToU8a3(value, bitLength = -1) {
   const result = new Uint8Array(endLength);
   const offset = endLength > decLength ? endLength - decLength : 0;
   for (let i = offset; i < endLength; i++, s += 2) {
-    result[i] = U165[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+    result[i] = U166[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
   }
   return result;
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/bn/bn.js
-var import_bn12 = __toESM(require_bn(), 1);
+var import_bn15 = __toESM(require_bn(), 1);
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/hex.js
-var REGEX_HEX_PREFIXED3 = /^0x[\da-fA-F]+$/;
-var REGEX_HEX_NOPREFIX = /^[\da-fA-F]+$/;
-function isHex3(value, bitLength = -1, ignoreLength) {
-  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED3.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+var REGEX_HEX_PREFIXED4 = /^0x[\da-fA-F]+$/;
+var REGEX_HEX_NOPREFIX2 = /^[\da-fA-F]+$/;
+function isHex4(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED4.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/object.js
-function isObject3(value) {
+function isObject4(value) {
   return !!value && typeof value === "object";
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/helpers.js
-function isOn(...fns) {
-  return (value) => (isObject3(value) || isFunction4(value)) && fns.every((f) => isFunction4(value[f]));
+function isOn2(...fns) {
+  return (value) => (isObject4(value) || isFunction5(value)) && fns.every((f) => isFunction5(value[f]));
 }
 function isOnObject2(...fns) {
-  return (value) => isObject3(value) && fns.every((f) => isFunction4(value[f]));
+  return (value) => isObject4(value) && fns.every((f) => isFunction5(value[f]));
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/toBigInt.js
-var isToBigInt = /* @__PURE__ */ isOn("toBigInt");
+var isToBigInt2 = /* @__PURE__ */ isOn2("toBigInt");
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/toBn.js
-var isToBn = /* @__PURE__ */ isOn("toBn");
+var isToBn2 = /* @__PURE__ */ isOn2("toBn");
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/has.js
-var hasBigInt3 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
-var hasBuffer3 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
-var hasProcess3 = typeof xglobal.process === "object";
+var hasBigInt4 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
+var hasBuffer4 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
+var hasProcess4 = typeof xglobal.process === "object";
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/buffer.js
-function isBuffer3(value) {
-  return hasBuffer3 && !!value && isFunction4(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
+function isBuffer4(value) {
+  return hasBuffer4 && !!value && isFunction5(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/u8a.js
-function isU8a3(value) {
+function isU8a4(value) {
   return (value && value.constructor) === Uint8Array || value instanceof Uint8Array;
 }
 
@@ -24675,25 +25927,25 @@ function stringToU8a4(value) {
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/u8a/toU8a.js
-function u8aToU8a3(value, strict = false) {
+function u8aToU8a4(value, strict = false) {
   if (strict && (value === null || value === void 0)) {
     throw new Error("u8aToU8a: Expected non-null, non-undefined value");
   }
-  return isU8a3(value) ? isBuffer3(value) ? new Uint8Array(value) : value : isHex3(value) ? hexToU8a3(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a4(value);
+  return isU8a4(value) ? isBuffer4(value) ? new Uint8Array(value) : value : isHex4(value) ? hexToU8a4(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a4(value);
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/u8a/concat.js
-function u8aConcat2(...list) {
+function u8aConcat3(...list) {
   const count = list.length;
   const u8as = new Array(count);
   let length = 0;
   for (let i = 0; i < count; i++) {
-    u8as[i] = u8aToU8a3(list[i]);
+    u8as[i] = u8aToU8a4(list[i]);
     length += u8as[i].length;
   }
-  return u8aConcatStrict2(u8as, length);
+  return u8aConcatStrict3(u8as, length);
 }
-function u8aConcatStrict2(u8as, length = 0) {
+function u8aConcatStrict3(u8as, length = 0) {
   const count = u8as.length;
   let offset = 0;
   if (!length) {
@@ -24710,25 +25962,25 @@ function u8aConcatStrict2(u8as, length = 0) {
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/u8a/toHex.js
-var U86 = new Array(256);
-var U166 = new Array(256 * 256);
+var U87 = new Array(256);
+var U167 = new Array(256 * 256);
 for (let n = 0; n < 256; n++) {
-  U86[n] = n.toString(16).padStart(2, "0");
+  U87[n] = n.toString(16).padStart(2, "0");
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U166[s | j] = U86[i] + U86[j];
+    U167[s | j] = U87[i] + U87[j];
   }
 }
 function hex3(value, result) {
   const mod2 = value.length % 2 | 0;
   const length = value.length - mod2 | 0;
   for (let i = 0; i < length; i += 2) {
-    result += U166[value[i] << 8 | value[i + 1]];
+    result += U167[value[i] << 8 | value[i + 1]];
   }
   if (mod2) {
-    result += U86[value[length] | 0];
+    result += U87[value[length] | 0];
   }
   return result;
 }
@@ -24752,24 +26004,24 @@ function u8aToString2(value) {
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/hex/stripPrefix.js
-function hexStripPrefix(value) {
+function hexStripPrefix2(value) {
   if (!value || value === "0x") {
     return "";
-  } else if (REGEX_HEX_PREFIXED3.test(value)) {
+  } else if (REGEX_HEX_PREFIXED4.test(value)) {
     return value.substring(2);
-  } else if (REGEX_HEX_NOPREFIX.test(value)) {
+  } else if (REGEX_HEX_NOPREFIX2.test(value)) {
     return value;
   }
   throw new Error(`Expected hex value to convert, found '${value}'`);
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/hex/toBn.js
-function hexToBn(value, { isLe = false, isNegative = false } = {}) {
+function hexToBn2(value, { isLe = false, isNegative = false } = {}) {
   if (!value || value === "0x") {
-    return new import_bn12.default(0);
+    return new import_bn15.default(0);
   }
-  const stripped = hexStripPrefix(value);
-  const bn = new import_bn12.default(stripped, 16, isLe ? "le" : "be");
+  const stripped = hexStripPrefix2(value);
+  const bn = new import_bn15.default(stripped, 16, isLe ? "le" : "be");
   return isNegative ? bn.fromTwos(stripped.length * 4) : bn;
 }
 
@@ -24778,31 +26030,31 @@ var bnMax = /* @__PURE__ */ createCmp((a, b) => a.gt(b));
 var bnMin = /* @__PURE__ */ createCmp((a, b) => a.lt(b));
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/bn/consts.js
-var BN_ZERO2 = /* @__PURE__ */ new import_bn12.default(0);
-var BN_ONE = /* @__PURE__ */ new import_bn12.default(1);
-var BN_BILLION2 = /* @__PURE__ */ new import_bn12.default(1e9);
+var BN_ZERO2 = /* @__PURE__ */ new import_bn15.default(0);
+var BN_ONE = /* @__PURE__ */ new import_bn15.default(1);
+var BN_BILLION2 = /* @__PURE__ */ new import_bn15.default(1e9);
 var BN_QUINTILL2 = BN_BILLION2.mul(BN_BILLION2);
-var BN_MAX_INTEGER2 = /* @__PURE__ */ new import_bn12.default(Number.MAX_SAFE_INTEGER);
-var BN_SQRT_MAX_INTEGER = /* @__PURE__ */ new import_bn12.default(94906265);
+var BN_MAX_INTEGER2 = /* @__PURE__ */ new import_bn15.default(Number.MAX_SAFE_INTEGER);
+var BN_SQRT_MAX_INTEGER = /* @__PURE__ */ new import_bn15.default(94906265);
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/is/bigInt.js
-function isBigInt2(value) {
+function isBigInt3(value) {
   return typeof value === "bigint";
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/bn/toBn.js
-function bnToBn(value) {
-  return value ? import_bn12.default.isBN(value) ? value : isHex3(value) ? hexToBn(value.toString()) : isBigInt2(value) ? new import_bn12.default(value.toString()) : isToBn(value) ? value.toBn() : isToBigInt(value) ? new import_bn12.default(value.toBigInt().toString()) : new import_bn12.default(value) : new import_bn12.default(0);
+function bnToBn2(value) {
+  return value ? import_bn15.default.isBN(value) ? value : isHex4(value) ? hexToBn2(value.toString()) : isBigInt3(value) ? new import_bn15.default(value.toString()) : isToBn2(value) ? value.toBn() : isToBigInt2(value) ? new import_bn15.default(value.toBigInt().toString()) : new import_bn15.default(value) : new import_bn15.default(0);
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util/bn/sqrt.js
 function bnSqrt(value) {
-  const n = bnToBn(value);
+  const n = bnToBn2(value);
   if (n.isNeg()) {
     throw new Error("square root of negative numbers is not supported");
   }
   if (n.lte(BN_MAX_INTEGER2)) {
-    return new import_bn12.default(~~Math.sqrt(n.toNumber()));
+    return new import_bn15.default(~~Math.sqrt(n.toNumber()));
   }
   let x0 = BN_SQRT_MAX_INTEGER.clone();
   while (true) {
@@ -24925,27 +26177,27 @@ var TextEncoder10 = class {
 var TextEncoder11 = /* @__PURE__ */ extractGlobal("TextEncoder", TextEncoder10);
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/is/function.js
-function isFunction5(value) {
+function isFunction6(value) {
   return typeof value === "function";
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/hex/toU8a.js
-var CHR5 = "0123456789abcdef";
-var U87 = new Uint8Array(256);
-var U167 = new Uint8Array(256 * 256);
-for (let i = 0, count = CHR5.length; i < count; i++) {
-  U87[CHR5[i].charCodeAt(0) | 0] = i | 0;
+var CHR6 = "0123456789abcdef";
+var U88 = new Uint8Array(256);
+var U168 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR6.length; i < count; i++) {
+  U88[CHR6[i].charCodeAt(0) | 0] = i | 0;
   if (i > 9) {
-    U87[CHR5[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+    U88[CHR6[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
   }
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U167[s | j] = U87[i] << 4 | U87[j];
+    U168[s | j] = U88[i] << 4 | U88[j];
   }
 }
-function hexToU8a4(value, bitLength = -1) {
+function hexToU8a5(value, bitLength = -1) {
   if (!value) {
     return new Uint8Array();
   }
@@ -24955,42 +26207,42 @@ function hexToU8a4(value, bitLength = -1) {
   const result = new Uint8Array(endLength);
   const offset = endLength > decLength ? endLength - decLength : 0;
   for (let i = offset; i < endLength; i++, s += 2) {
-    result[i] = U167[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+    result[i] = U168[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
   }
   return result;
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/bn/bn.js
-var import_bn18 = __toESM(require_bn(), 1);
+var import_bn21 = __toESM(require_bn(), 1);
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/is/bn.js
 function isBn3(value) {
-  return import_bn18.default.isBN(value);
+  return import_bn21.default.isBN(value);
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/is/hex.js
-var REGEX_HEX_PREFIXED4 = /^0x[\da-fA-F]+$/;
-function isHex4(value, bitLength = -1, ignoreLength) {
-  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED4.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+var REGEX_HEX_PREFIXED5 = /^0x[\da-fA-F]+$/;
+function isHex5(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED5.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/is/object.js
-function isObject4(value) {
+function isObject5(value) {
   return !!value && typeof value === "object";
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/has.js
-var hasBigInt4 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
-var hasBuffer4 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
-var hasProcess4 = typeof xglobal.process === "object";
+var hasBigInt5 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
+var hasBuffer5 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
+var hasProcess5 = typeof xglobal.process === "object";
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/is/buffer.js
-function isBuffer4(value) {
-  return hasBuffer4 && !!value && isFunction5(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
+function isBuffer5(value) {
+  return hasBuffer5 && !!value && isFunction6(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/is/u8a.js
-function isU8a4(value) {
+function isU8a5(value) {
   return (value && value.constructor) === Uint8Array || value instanceof Uint8Array;
 }
 
@@ -25001,25 +26253,25 @@ function stringToU8a5(value) {
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/u8a/toU8a.js
-function u8aToU8a4(value, strict = false) {
+function u8aToU8a5(value, strict = false) {
   if (strict && (value === null || value === void 0)) {
     throw new Error("u8aToU8a: Expected non-null, non-undefined value");
   }
-  return isU8a4(value) ? isBuffer4(value) ? new Uint8Array(value) : value : isHex4(value) ? hexToU8a4(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a5(value);
+  return isU8a5(value) ? isBuffer5(value) ? new Uint8Array(value) : value : isHex5(value) ? hexToU8a5(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a5(value);
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/u8a/concat.js
-function u8aConcat3(...list) {
+function u8aConcat4(...list) {
   const count = list.length;
   const u8as = new Array(count);
   let length = 0;
   for (let i = 0; i < count; i++) {
-    u8as[i] = u8aToU8a4(list[i]);
+    u8as[i] = u8aToU8a5(list[i]);
     length += u8as[i].length;
   }
-  return u8aConcatStrict3(u8as, length);
+  return u8aConcatStrict4(u8as, length);
 }
-function u8aConcatStrict3(u8as, length = 0) {
+function u8aConcatStrict4(u8as, length = 0) {
   const count = u8as.length;
   let offset = 0;
   if (!length) {
@@ -25036,25 +26288,25 @@ function u8aConcatStrict3(u8as, length = 0) {
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/u8a/toHex.js
-var U88 = new Array(256);
-var U168 = new Array(256 * 256);
+var U89 = new Array(256);
+var U169 = new Array(256 * 256);
 for (let n = 0; n < 256; n++) {
-  U88[n] = n.toString(16).padStart(2, "0");
+  U89[n] = n.toString(16).padStart(2, "0");
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U168[s | j] = U88[i] + U88[j];
+    U169[s | j] = U89[i] + U89[j];
   }
 }
 function hex4(value, result) {
   const mod2 = value.length % 2 | 0;
   const length = value.length - mod2 | 0;
   for (let i = 0; i < length; i += 2) {
-    result += U168[value[i] << 8 | value[i + 1]];
+    result += U169[value[i] << 8 | value[i + 1]];
   }
   if (mod2) {
-    result += U88[value[length] | 0];
+    result += U89[value[length] | 0];
   }
   return result;
 }
@@ -25072,7 +26324,7 @@ function u8aToHex4(value, bitLength = -1, isPrefixed = true) {
 }
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/is/bigInt.js
-function isBigInt3(value) {
+function isBigInt4(value) {
   return typeof value === "bigint";
 }
 
@@ -25092,7 +26344,7 @@ function formatDate3(date) {
 
 // node_modules/@polkadot/rpc-core/node_modules/@polkadot/util/stringify.js
 function replacer2(_, v) {
-  return isBigInt3(v) ? v.toString() : v;
+  return isBigInt4(v) ? v.toString() : v;
 }
 function stringify2(value, space) {
   return JSON.stringify(value, replacer2, space);
@@ -25145,7 +26397,7 @@ var logTo3 = {
   warn: "warn"
 };
 function formatOther3(value) {
-  if (value && isObject4(value) && value.constructor === Object) {
+  if (value && isObject5(value) && value.constructor === Object) {
     const result = {};
     for (const [k, v] of Object.entries(value)) {
       result[k] = loggerFormat3(v);
@@ -25159,8 +26411,8 @@ function loggerFormat3(value) {
     return value.map(loggerFormat3);
   } else if (isBn3(value)) {
     return value.toString();
-  } else if (isU8a4(value) || isBuffer4(value)) {
-    return u8aToHex4(u8aToU8a4(value));
+  } else if (isU8a5(value) || isBuffer5(value)) {
+    return u8aToHex4(u8aToU8a5(value));
   }
   return formatOther3(value);
 }
@@ -25174,7 +26426,7 @@ function formatWithLength3(maxLength) {
   };
 }
 function apply3(log, type, values, maxSize = -1) {
-  if (values.length === 1 && isFunction5(values[0])) {
+  if (values.length === 1 && isFunction6(values[0])) {
     const fnResult = values[0]();
     return apply3(log, type, Array.isArray(fnResult) ? fnResult : [fnResult], maxSize);
   }
@@ -25303,14 +26555,14 @@ var TextEncoder12 = class {
 var TextEncoder13 = /* @__PURE__ */ extractGlobal("TextEncoder", TextEncoder12);
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/function.js
-function isFunction6(value) {
+function isFunction7(value) {
   return typeof value === "function";
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/assert.js
 function assert3(condition, message) {
   if (!condition) {
-    throw new Error(isFunction6(message) ? message() : message);
+    throw new Error(isFunction7(message) ? message() : message);
   }
 }
 function assertReturn3(value, message) {
@@ -25322,29 +26574,29 @@ function assertUnreachable(x) {
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/bi/consts.js
-var _0n6 = /* @__PURE__ */ BigInt2(0);
-var _1n6 = /* @__PURE__ */ BigInt2(1);
+var _0n8 = /* @__PURE__ */ BigInt2(0);
+var _1n8 = /* @__PURE__ */ BigInt2(1);
 var _1Bn = /* @__PURE__ */ BigInt2(1e9);
 var _1Qn = _1Bn * _1Bn;
 var _2pow53n = /* @__PURE__ */ BigInt2(Number.MAX_SAFE_INTEGER);
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/hex/toU8a.js
-var CHR6 = "0123456789abcdef";
-var U89 = new Uint8Array(256);
-var U169 = new Uint8Array(256 * 256);
-for (let i = 0, count = CHR6.length; i < count; i++) {
-  U89[CHR6[i].charCodeAt(0) | 0] = i | 0;
+var CHR7 = "0123456789abcdef";
+var U810 = new Uint8Array(256);
+var U1610 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR7.length; i < count; i++) {
+  U810[CHR7[i].charCodeAt(0) | 0] = i | 0;
   if (i > 9) {
-    U89[CHR6[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+    U810[CHR7[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
   }
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U169[s | j] = U89[i] << 4 | U89[j];
+    U1610[s | j] = U810[i] << 4 | U810[j];
   }
 }
-function hexToU8a5(value, bitLength = -1) {
+function hexToU8a6(value, bitLength = -1) {
   if (!value) {
     return new Uint8Array();
   }
@@ -25354,57 +26606,57 @@ function hexToU8a5(value, bitLength = -1) {
   const result = new Uint8Array(endLength);
   const offset = endLength > decLength ? endLength - decLength : 0;
   for (let i = offset; i < endLength; i++, s += 2) {
-    result[i] = U169[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+    result[i] = U1610[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
   }
   return result;
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/bn/bn.js
-var import_bn21 = __toESM(require_bn(), 1);
+var import_bn24 = __toESM(require_bn(), 1);
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/bn.js
 function isBn4(value) {
-  return import_bn21.default.isBN(value);
+  return import_bn24.default.isBN(value);
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/hex.js
-var REGEX_HEX_PREFIXED5 = /^0x[\da-fA-F]+$/;
-var REGEX_HEX_NOPREFIX2 = /^[\da-fA-F]+$/;
-function isHex5(value, bitLength = -1, ignoreLength) {
-  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED5.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+var REGEX_HEX_PREFIXED6 = /^0x[\da-fA-F]+$/;
+var REGEX_HEX_NOPREFIX3 = /^[\da-fA-F]+$/;
+function isHex6(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED6.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/object.js
-function isObject5(value) {
+function isObject6(value) {
   return !!value && typeof value === "object";
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/helpers.js
-function isOn2(...fns) {
-  return (value) => (isObject5(value) || isFunction6(value)) && fns.every((f) => isFunction6(value[f]));
+function isOn3(...fns) {
+  return (value) => (isObject6(value) || isFunction7(value)) && fns.every((f) => isFunction7(value[f]));
 }
 function isOnObject3(...fns) {
-  return (value) => isObject5(value) && fns.every((f) => isFunction6(value[f]));
+  return (value) => isObject6(value) && fns.every((f) => isFunction7(value[f]));
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/toBigInt.js
-var isToBigInt2 = /* @__PURE__ */ isOn2("toBigInt");
+var isToBigInt3 = /* @__PURE__ */ isOn3("toBigInt");
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/toBn.js
-var isToBn2 = /* @__PURE__ */ isOn2("toBn");
+var isToBn3 = /* @__PURE__ */ isOn3("toBn");
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/has.js
-var hasBigInt5 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
-var hasBuffer5 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
-var hasProcess5 = typeof xglobal.process === "object";
+var hasBigInt6 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
+var hasBuffer6 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
+var hasProcess6 = typeof xglobal.process === "object";
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/buffer.js
-function isBuffer5(value) {
-  return hasBuffer5 && !!value && isFunction6(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
+function isBuffer6(value) {
+  return hasBuffer6 && !!value && isFunction7(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/u8a.js
-function isU8a5(value) {
+function isU8a6(value) {
   return (value && value.constructor) === Uint8Array || value instanceof Uint8Array;
 }
 
@@ -25415,25 +26667,25 @@ function stringToU8a6(value) {
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/u8a/toU8a.js
-function u8aToU8a5(value, strict = false) {
+function u8aToU8a6(value, strict = false) {
   if (strict && (value === null || value === void 0)) {
     throw new Error("u8aToU8a: Expected non-null, non-undefined value");
   }
-  return isU8a5(value) ? isBuffer5(value) ? new Uint8Array(value) : value : isHex5(value) ? hexToU8a5(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a6(value);
+  return isU8a6(value) ? isBuffer6(value) ? new Uint8Array(value) : value : isHex6(value) ? hexToU8a6(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a6(value);
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/u8a/concat.js
-function u8aConcat4(...list) {
+function u8aConcat5(...list) {
   const count = list.length;
   const u8as = new Array(count);
   let length = 0;
   for (let i = 0; i < count; i++) {
-    u8as[i] = u8aToU8a5(list[i]);
+    u8as[i] = u8aToU8a6(list[i]);
     length += u8as[i].length;
   }
-  return u8aConcatStrict4(u8as, length);
+  return u8aConcatStrict5(u8as, length);
 }
-function u8aConcatStrict4(u8as, length = 0) {
+function u8aConcatStrict5(u8as, length = 0) {
   const count = u8as.length;
   let offset = 0;
   if (!length) {
@@ -25458,63 +26710,63 @@ function u8aToBn2(value, { isLe = true, isNegative = false } = {}) {
   if (isNegative && count && value[count - 1] & 128) {
     switch (count) {
       case 0:
-        return new import_bn21.default(0);
+        return new import_bn24.default(0);
       case 1:
-        return new import_bn21.default((value[0] ^ 255) * -1 - 1);
+        return new import_bn24.default((value[0] ^ 255) * -1 - 1);
       case 2:
-        return new import_bn21.default((value[0] + (value[1] << 8) ^ 65535) * -1 - 1);
+        return new import_bn24.default((value[0] + (value[1] << 8) ^ 65535) * -1 - 1);
       case 3:
-        return new import_bn21.default((value[0] + (value[1] << 8) + (value[2] << 16) ^ 16777215) * -1 - 1);
+        return new import_bn24.default((value[0] + (value[1] << 8) + (value[2] << 16) ^ 16777215) * -1 - 1);
       case 4:
-        return new import_bn21.default((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) * -1 - 1);
+        return new import_bn24.default((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) * -1 - 1);
       case 5:
-        return new import_bn21.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] ^ 255) * 4294967296) * -1 - 1);
+        return new import_bn24.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] ^ 255) * 4294967296) * -1 - 1);
       case 6:
-        return new import_bn21.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] + (value[5] << 8) ^ 65535) * 4294967296) * -1 - 1);
+        return new import_bn24.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] + (value[5] << 8) ^ 65535) * 4294967296) * -1 - 1);
       default:
-        return new import_bn21.default(value, "le").fromTwos(count * 8);
+        return new import_bn24.default(value, "le").fromTwos(count * 8);
     }
   }
   switch (count) {
     case 0:
-      return new import_bn21.default(0);
+      return new import_bn24.default(0);
     case 1:
-      return new import_bn21.default(value[0]);
+      return new import_bn24.default(value[0]);
     case 2:
-      return new import_bn21.default(value[0] + (value[1] << 8));
+      return new import_bn24.default(value[0] + (value[1] << 8));
     case 3:
-      return new import_bn21.default(value[0] + (value[1] << 8) + (value[2] << 16));
+      return new import_bn24.default(value[0] + (value[1] << 8) + (value[2] << 16));
     case 4:
-      return new import_bn21.default(value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216);
+      return new import_bn24.default(value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216);
     case 5:
-      return new import_bn21.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8)) * 16777216);
+      return new import_bn24.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8)) * 16777216);
     case 6:
-      return new import_bn21.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8) + (value[5] << 16)) * 16777216);
+      return new import_bn24.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8) + (value[5] << 16)) * 16777216);
     default:
-      return new import_bn21.default(value, "le");
+      return new import_bn24.default(value, "le");
   }
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/u8a/toHex.js
-var U810 = new Array(256);
-var U1610 = new Array(256 * 256);
+var U811 = new Array(256);
+var U1611 = new Array(256 * 256);
 for (let n = 0; n < 256; n++) {
-  U810[n] = n.toString(16).padStart(2, "0");
+  U811[n] = n.toString(16).padStart(2, "0");
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U1610[s | j] = U810[i] + U810[j];
+    U1611[s | j] = U811[i] + U811[j];
   }
 }
 function hex5(value, result) {
   const mod2 = value.length % 2 | 0;
   const length = value.length - mod2 | 0;
   for (let i = 0; i < length; i += 2) {
-    result += U1610[value[i] << 8 | value[i + 1]];
+    result += U1611[value[i] << 8 | value[i + 1]];
   }
   if (mod2) {
-    result += U810[value[length] | 0];
+    result += U811[value[length] | 0];
   }
   return result;
 }
@@ -25538,49 +26790,49 @@ function u8aToString3(value) {
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/hex/stripPrefix.js
-function hexStripPrefix2(value) {
+function hexStripPrefix3(value) {
   if (!value || value === "0x") {
     return "";
-  } else if (REGEX_HEX_PREFIXED5.test(value)) {
+  } else if (REGEX_HEX_PREFIXED6.test(value)) {
     return value.substring(2);
-  } else if (REGEX_HEX_NOPREFIX2.test(value)) {
+  } else if (REGEX_HEX_NOPREFIX3.test(value)) {
     return value;
   }
   throw new Error(`Expected hex value to convert, found '${value}'`);
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/hex/toBn.js
-function hexToBn2(value, { isLe = false, isNegative = false } = {}) {
+function hexToBn3(value, { isLe = false, isNegative = false } = {}) {
   if (!value || value === "0x") {
-    return new import_bn21.default(0);
+    return new import_bn24.default(0);
   }
-  const stripped = hexStripPrefix2(value);
-  const bn = new import_bn21.default(stripped, 16, isLe ? "le" : "be");
+  const stripped = hexStripPrefix3(value);
+  const bn = new import_bn24.default(stripped, 16, isLe ? "le" : "be");
   return isNegative ? bn.fromTwos(stripped.length * 4) : bn;
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/bn/consts.js
-var BN_ZERO3 = /* @__PURE__ */ new import_bn21.default(0);
-var BN_ONE2 = /* @__PURE__ */ new import_bn21.default(1);
-var BN_TWO = /* @__PURE__ */ new import_bn21.default(2);
-var BN_BILLION3 = /* @__PURE__ */ new import_bn21.default(1e9);
+var BN_ZERO3 = /* @__PURE__ */ new import_bn24.default(0);
+var BN_ONE2 = /* @__PURE__ */ new import_bn24.default(1);
+var BN_TWO = /* @__PURE__ */ new import_bn24.default(2);
+var BN_BILLION3 = /* @__PURE__ */ new import_bn24.default(1e9);
 var BN_QUINTILL3 = BN_BILLION3.mul(BN_BILLION3);
-var BN_MAX_INTEGER3 = /* @__PURE__ */ new import_bn21.default(Number.MAX_SAFE_INTEGER);
+var BN_MAX_INTEGER3 = /* @__PURE__ */ new import_bn24.default(Number.MAX_SAFE_INTEGER);
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/bigInt.js
-function isBigInt4(value) {
+function isBigInt5(value) {
   return typeof value === "bigint";
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/bn/toBn.js
-function bnToBn2(value) {
-  return value ? import_bn21.default.isBN(value) ? value : isHex5(value) ? hexToBn2(value.toString()) : isBigInt4(value) ? new import_bn21.default(value.toString()) : isToBn2(value) ? value.toBn() : isToBigInt2(value) ? new import_bn21.default(value.toBigInt().toString()) : new import_bn21.default(value) : new import_bn21.default(0);
+function bnToBn3(value) {
+  return value ? import_bn24.default.isBN(value) ? value : isHex6(value) ? hexToBn3(value.toString()) : isBigInt5(value) ? new import_bn24.default(value.toString()) : isToBn3(value) ? value.toBn() : isToBigInt3(value) ? new import_bn24.default(value.toBigInt().toString()) : new import_bn24.default(value) : new import_bn24.default(0);
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/bn/toU8a.js
-var DEFAULT_OPTS = { bitLength: -1, isLe: true, isNegative: false };
-function bnToU8a(value, { bitLength = -1, isLe = true, isNegative = false } = DEFAULT_OPTS) {
-  const valueBn = bnToBn2(value);
+var DEFAULT_OPTS2 = { bitLength: -1, isLe: true, isNegative: false };
+function bnToU8a2(value, { bitLength = -1, isLe = true, isNegative = false } = DEFAULT_OPTS2) {
+  const valueBn = bnToBn3(value);
   const byteLength = bitLength === -1 ? Math.ceil(valueBn.bitLength() / 8) : Math.ceil((bitLength || 0) / 8);
   if (!value) {
     return bitLength === -1 ? new Uint8Array(1) : new Uint8Array(byteLength);
@@ -25592,21 +26844,21 @@ function bnToU8a(value, { bitLength = -1, isLe = true, isNegative = false } = DE
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/compact/toU8a.js
-var MAX_U8 = BN_TWO.pow(new import_bn21.default(8 - 2)).isub(BN_ONE2);
-var MAX_U16 = BN_TWO.pow(new import_bn21.default(16 - 2)).isub(BN_ONE2);
-var MAX_U32 = BN_TWO.pow(new import_bn21.default(32 - 2)).isub(BN_ONE2);
+var MAX_U8 = BN_TWO.pow(new import_bn24.default(8 - 2)).isub(BN_ONE2);
+var MAX_U16 = BN_TWO.pow(new import_bn24.default(16 - 2)).isub(BN_ONE2);
+var MAX_U32 = BN_TWO.pow(new import_bn24.default(32 - 2)).isub(BN_ONE2);
 var BL_16 = { bitLength: 16 };
 var BL_32 = { bitLength: 32 };
 function compactToU8a(value) {
-  const bn = bnToBn2(value);
+  const bn = bnToBn3(value);
   if (bn.lte(MAX_U8)) {
     return new Uint8Array([bn.toNumber() << 2]);
   } else if (bn.lte(MAX_U16)) {
-    return bnToU8a(bn.shln(2).iadd(BN_ONE2), BL_16);
+    return bnToU8a2(bn.shln(2).iadd(BN_ONE2), BL_16);
   } else if (bn.lte(MAX_U32)) {
-    return bnToU8a(bn.shln(2).iadd(BN_TWO), BL_32);
+    return bnToU8a2(bn.shln(2).iadd(BN_TWO), BL_32);
   }
-  const u8a = bnToU8a(bn);
+  const u8a = bnToU8a2(bn);
   let length = u8a.length;
   while (u8a[length - 1] === 0) {
     length--;
@@ -25614,7 +26866,7 @@ function compactToU8a(value) {
   if (length < 4) {
     throw new Error("Invalid length, previous checks match anything less than 2^30");
   }
-  return u8aConcatStrict4([
+  return u8aConcatStrict5([
     // subtract 4 as minimum (also catered for in decoding)
     new Uint8Array([(length - 4 << 2) + 3]),
     u8a.subarray(0, length)
@@ -25623,7 +26875,7 @@ function compactToU8a(value) {
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/compact/addLength.js
 function compactAddLength(input) {
-  return u8aConcatStrict4([
+  return u8aConcatStrict5([
     compactToU8a(input.length),
     input
   ]);
@@ -25631,23 +26883,23 @@ function compactAddLength(input) {
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/compact/fromU8a.js
 function compactFromU8a2(input) {
-  const u8a = u8aToU8a5(input);
+  const u8a = u8aToU8a6(input);
   switch (u8a[0] & 3) {
     case 0:
-      return [1, new import_bn21.default(u8a[0] >>> 2)];
+      return [1, new import_bn24.default(u8a[0] >>> 2)];
     case 1:
-      return [2, new import_bn21.default(u8a[0] + (u8a[1] << 8) >>> 2)];
+      return [2, new import_bn24.default(u8a[0] + (u8a[1] << 8) >>> 2)];
     case 2:
-      return [4, new import_bn21.default(u8a[0] + (u8a[1] << 8) + (u8a[2] << 16) + u8a[3] * 16777216 >>> 2)];
+      return [4, new import_bn24.default(u8a[0] + (u8a[1] << 8) + (u8a[2] << 16) + u8a[3] * 16777216 >>> 2)];
     default: {
       const offset = (u8a[0] >>> 2) + 5;
       switch (offset) {
         case 5:
-          return [5, new import_bn21.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + u8a[4] * 16777216)];
+          return [5, new import_bn24.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + u8a[4] * 16777216)];
         case 6:
-          return [6, new import_bn21.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8)) * 16777216)];
+          return [6, new import_bn24.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8)) * 16777216)];
         case 7:
-          return [7, new import_bn21.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8) + (u8a[6] << 16)) * 16777216)];
+          return [7, new import_bn24.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8) + (u8a[6] << 16)) * 16777216)];
         default:
           return [offset, u8aToBn2(u8a.subarray(1, offset))];
       }
@@ -25733,7 +26985,7 @@ var DEFAULT_UNIT = SI[SI_MID].text;
 var defaultDecimals = DEFAULT_DECIMALS;
 var defaultUnit = DEFAULT_UNIT;
 function _formatBalance(input, { decimals = defaultDecimals, forceUnit, locale = "en", withAll = false, withSi = true, withSiFull = false, withUnit = true, withZero = true } = {}) {
-  let text2 = bnToBn2(input).toString();
+  let text2 = bnToBn3(input).toString();
   if (text2.length === 0 || text2 === "0") {
     return "0";
   }
@@ -25795,7 +27047,7 @@ function formatDate4(date) {
 // node_modules/@polkadot/types/node_modules/@polkadot/util/format/formatNumber.js
 function formatNumber(value, { locale = "en" } = {}) {
   const { thousand } = getSeparator(locale);
-  return formatDecimal(bnToBn2(value).toString(), thousand);
+  return formatDecimal(bnToBn3(value).toString(), thousand);
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/is/string.js
@@ -25812,7 +27064,7 @@ function isCodec(value) {
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util/stringify.js
 function replacer3(_, v) {
-  return isBigInt4(v) ? v.toString() : v;
+  return isBigInt5(v) ? v.toString() : v;
 }
 function stringify3(value, space) {
   return JSON.stringify(value, replacer3, space);
@@ -25876,7 +27128,7 @@ var logTo4 = {
   warn: "warn"
 };
 function formatOther4(value) {
-  if (value && isObject5(value) && value.constructor === Object) {
+  if (value && isObject6(value) && value.constructor === Object) {
     const result = {};
     for (const [k, v] of Object.entries(value)) {
       result[k] = loggerFormat4(v);
@@ -25890,8 +27142,8 @@ function loggerFormat4(value) {
     return value.map(loggerFormat4);
   } else if (isBn4(value)) {
     return value.toString();
-  } else if (isU8a5(value) || isBuffer5(value)) {
-    return u8aToHex5(u8aToU8a5(value));
+  } else if (isU8a6(value) || isBuffer6(value)) {
+    return u8aToHex5(u8aToU8a6(value));
   }
   return formatOther4(value);
 }
@@ -25905,7 +27157,7 @@ function formatWithLength4(maxLength) {
   };
 }
 function apply4(log, type, values, maxSize = -1) {
-  if (values.length === 1 && isFunction6(values[0])) {
+  if (values.length === 1 && isFunction7(values[0])) {
     const fnResult = values[0]();
     return apply4(log, type, Array.isArray(fnResult) ? fnResult : [fnResult], maxSize);
   }
@@ -32835,27 +34087,27 @@ var TextEncoder14 = class {
 var TextEncoder15 = /* @__PURE__ */ extractGlobal("TextEncoder", TextEncoder14);
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/is/function.js
-function isFunction7(value) {
+function isFunction8(value) {
   return typeof value === "function";
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/hex/toU8a.js
-var CHR7 = "0123456789abcdef";
-var U811 = new Uint8Array(256);
-var U1611 = new Uint8Array(256 * 256);
-for (let i = 0, count = CHR7.length; i < count; i++) {
-  U811[CHR7[i].charCodeAt(0) | 0] = i | 0;
+var CHR8 = "0123456789abcdef";
+var U812 = new Uint8Array(256);
+var U1612 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR8.length; i < count; i++) {
+  U812[CHR8[i].charCodeAt(0) | 0] = i | 0;
   if (i > 9) {
-    U811[CHR7[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+    U812[CHR8[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
   }
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U1611[s | j] = U811[i] << 4 | U811[j];
+    U1612[s | j] = U812[i] << 4 | U812[j];
   }
 }
-function hexToU8a6(value, bitLength = -1) {
+function hexToU8a7(value, bitLength = -1) {
   if (!value) {
     return new Uint8Array();
   }
@@ -32865,29 +34117,29 @@ function hexToU8a6(value, bitLength = -1) {
   const result = new Uint8Array(endLength);
   const offset = endLength > decLength ? endLength - decLength : 0;
   for (let i = offset; i < endLength; i++, s += 2) {
-    result[i] = U1611[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+    result[i] = U1612[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
   }
   return result;
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/is/hex.js
-var REGEX_HEX_PREFIXED6 = /^0x[\da-fA-F]+$/;
-function isHex6(value, bitLength = -1, ignoreLength) {
-  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED6.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+var REGEX_HEX_PREFIXED7 = /^0x[\da-fA-F]+$/;
+function isHex7(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED7.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/has.js
-var hasBigInt6 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
-var hasBuffer6 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
-var hasProcess6 = typeof xglobal.process === "object";
+var hasBigInt7 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
+var hasBuffer7 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
+var hasProcess7 = typeof xglobal.process === "object";
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/is/buffer.js
-function isBuffer6(value) {
-  return hasBuffer6 && !!value && isFunction7(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
+function isBuffer7(value) {
+  return hasBuffer7 && !!value && isFunction8(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/is/u8a.js
-function isU8a6(value) {
+function isU8a7(value) {
   return (value && value.constructor) === Uint8Array || value instanceof Uint8Array;
 }
 
@@ -32898,17 +34150,17 @@ function stringToU8a7(value) {
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/u8a/toU8a.js
-function u8aToU8a6(value, strict = false) {
+function u8aToU8a7(value, strict = false) {
   if (strict && (value === null || value === void 0)) {
     throw new Error("u8aToU8a: Expected non-null, non-undefined value");
   }
-  return isU8a6(value) ? isBuffer6(value) ? new Uint8Array(value) : value : isHex6(value) ? hexToU8a6(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a7(value);
+  return isU8a7(value) ? isBuffer7(value) ? new Uint8Array(value) : value : isHex7(value) ? hexToU8a7(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a7(value);
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/u8a/eq.js
-function u8aEq2(a, b) {
-  const u8aa = u8aToU8a6(a);
-  const u8ab = u8aToU8a6(b);
+function u8aEq3(a, b) {
+  const u8aa = u8aToU8a7(a);
+  const u8ab = u8aToU8a7(b);
   if (u8aa.length === u8ab.length) {
     const dvA = new DataView(u8aa.buffer, u8aa.byteOffset);
     const dvB = new DataView(u8ab.buffer, u8ab.byteOffset);
@@ -32930,25 +34182,25 @@ function u8aEq2(a, b) {
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/u8a/toHex.js
-var U812 = new Array(256);
-var U1612 = new Array(256 * 256);
+var U813 = new Array(256);
+var U1613 = new Array(256 * 256);
 for (let n = 0; n < 256; n++) {
-  U812[n] = n.toString(16).padStart(2, "0");
+  U813[n] = n.toString(16).padStart(2, "0");
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U1612[s | j] = U812[i] + U812[j];
+    U1613[s | j] = U813[i] + U813[j];
   }
 }
 function hex6(value, result) {
   const mod2 = value.length % 2 | 0;
   const length = value.length - mod2 | 0;
   for (let i = 0; i < length; i += 2) {
-    result += U1612[value[i] << 8 | value[i + 1]];
+    result += U1613[value[i] << 8 | value[i + 1]];
   }
   if (mod2) {
-    result += U812[value[length] | 0];
+    result += U813[value[length] | 0];
   }
   return result;
 }
@@ -32966,7 +34218,7 @@ function u8aToHex6(value, bitLength = -1, isPrefixed = true) {
 }
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/is/bigInt.js
-function isBigInt5(value) {
+function isBigInt6(value) {
   return typeof value === "bigint";
 }
 
@@ -32977,7 +34229,7 @@ function isString5(value) {
 
 // node_modules/@polkadot/types-create/node_modules/@polkadot/util/stringify.js
 function replacer4(_, v) {
-  return isBigInt5(v) ? v.toString() : v;
+  return isBigInt6(v) ? v.toString() : v;
 }
 function stringify4(value, space) {
   return JSON.stringify(value, replacer4, space);
@@ -33081,27 +34333,27 @@ var TextEncoder16 = class {
 var TextEncoder17 = /* @__PURE__ */ extractGlobal("TextEncoder", TextEncoder16);
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/function.js
-function isFunction8(value) {
+function isFunction9(value) {
   return typeof value === "function";
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/hex/toU8a.js
-var CHR8 = "0123456789abcdef";
-var U813 = new Uint8Array(256);
-var U1613 = new Uint8Array(256 * 256);
-for (let i = 0, count = CHR8.length; i < count; i++) {
-  U813[CHR8[i].charCodeAt(0) | 0] = i | 0;
+var CHR9 = "0123456789abcdef";
+var U814 = new Uint8Array(256);
+var U1614 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR9.length; i < count; i++) {
+  U814[CHR9[i].charCodeAt(0) | 0] = i | 0;
   if (i > 9) {
-    U813[CHR8[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+    U814[CHR9[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
   }
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U1613[s | j] = U813[i] << 4 | U813[j];
+    U1614[s | j] = U814[i] << 4 | U814[j];
   }
 }
-function hexToU8a7(value, bitLength = -1) {
+function hexToU8a8(value, bitLength = -1) {
   if (!value) {
     return new Uint8Array();
   }
@@ -33111,57 +34363,57 @@ function hexToU8a7(value, bitLength = -1) {
   const result = new Uint8Array(endLength);
   const offset = endLength > decLength ? endLength - decLength : 0;
   for (let i = offset; i < endLength; i++, s += 2) {
-    result[i] = U1613[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+    result[i] = U1614[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
   }
   return result;
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/bn/bn.js
-var import_bn32 = __toESM(require_bn(), 1);
+var import_bn35 = __toESM(require_bn(), 1);
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/bn.js
 function isBn5(value) {
-  return import_bn32.default.isBN(value);
+  return import_bn35.default.isBN(value);
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/hex.js
-var REGEX_HEX_PREFIXED7 = /^0x[\da-fA-F]+$/;
-var REGEX_HEX_NOPREFIX3 = /^[\da-fA-F]+$/;
-function isHex7(value, bitLength = -1, ignoreLength) {
-  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED7.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+var REGEX_HEX_PREFIXED8 = /^0x[\da-fA-F]+$/;
+var REGEX_HEX_NOPREFIX4 = /^[\da-fA-F]+$/;
+function isHex8(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED8.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/object.js
-function isObject6(value) {
+function isObject7(value) {
   return !!value && typeof value === "object";
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/helpers.js
-function isOn3(...fns) {
-  return (value) => (isObject6(value) || isFunction8(value)) && fns.every((f) => isFunction8(value[f]));
+function isOn4(...fns) {
+  return (value) => (isObject7(value) || isFunction9(value)) && fns.every((f) => isFunction9(value[f]));
 }
 function isOnObject4(...fns) {
-  return (value) => isObject6(value) && fns.every((f) => isFunction8(value[f]));
+  return (value) => isObject7(value) && fns.every((f) => isFunction9(value[f]));
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/toBigInt.js
-var isToBigInt3 = /* @__PURE__ */ isOn3("toBigInt");
+var isToBigInt4 = /* @__PURE__ */ isOn4("toBigInt");
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/toBn.js
-var isToBn3 = /* @__PURE__ */ isOn3("toBn");
+var isToBn4 = /* @__PURE__ */ isOn4("toBn");
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/has.js
-var hasBigInt7 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
-var hasBuffer7 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
-var hasProcess7 = typeof xglobal.process === "object";
+var hasBigInt8 = typeof BigInt2 === "function" && typeof BigInt2.asIntN === "function";
+var hasBuffer8 = typeof xglobal.Buffer === "function" && typeof xglobal.Buffer.isBuffer === "function";
+var hasProcess8 = typeof xglobal.process === "object";
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/buffer.js
-function isBuffer7(value) {
-  return hasBuffer7 && !!value && isFunction8(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
+function isBuffer8(value) {
+  return hasBuffer8 && !!value && isFunction9(value.readDoubleLE) && xglobal.Buffer.isBuffer(value);
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/u8a.js
-function isU8a7(value) {
+function isU8a8(value) {
   return (value && value.constructor) === Uint8Array || value instanceof Uint8Array;
 }
 
@@ -33172,15 +34424,15 @@ function stringToU8a8(value) {
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/u8a/toU8a.js
-function u8aToU8a7(value, strict = false) {
+function u8aToU8a8(value, strict = false) {
   if (strict && (value === null || value === void 0)) {
     throw new Error("u8aToU8a: Expected non-null, non-undefined value");
   }
-  return isU8a7(value) ? isBuffer7(value) ? new Uint8Array(value) : value : isHex7(value) ? hexToU8a7(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a8(value);
+  return isU8a8(value) ? isBuffer8(value) ? new Uint8Array(value) : value : isHex8(value) ? hexToU8a8(value) : Array.isArray(value) ? new Uint8Array(value) : stringToU8a8(value);
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/u8a/concat.js
-function u8aConcatStrict5(u8as, length = 0) {
+function u8aConcatStrict6(u8as, length = 0) {
   const count = u8as.length;
   let offset = 0;
   if (!length) {
@@ -33205,40 +34457,40 @@ function u8aToBn3(value, { isLe = true, isNegative = false } = {}) {
   if (isNegative && count && value[count - 1] & 128) {
     switch (count) {
       case 0:
-        return new import_bn32.default(0);
+        return new import_bn35.default(0);
       case 1:
-        return new import_bn32.default((value[0] ^ 255) * -1 - 1);
+        return new import_bn35.default((value[0] ^ 255) * -1 - 1);
       case 2:
-        return new import_bn32.default((value[0] + (value[1] << 8) ^ 65535) * -1 - 1);
+        return new import_bn35.default((value[0] + (value[1] << 8) ^ 65535) * -1 - 1);
       case 3:
-        return new import_bn32.default((value[0] + (value[1] << 8) + (value[2] << 16) ^ 16777215) * -1 - 1);
+        return new import_bn35.default((value[0] + (value[1] << 8) + (value[2] << 16) ^ 16777215) * -1 - 1);
       case 4:
-        return new import_bn32.default((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) * -1 - 1);
+        return new import_bn35.default((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) * -1 - 1);
       case 5:
-        return new import_bn32.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] ^ 255) * 4294967296) * -1 - 1);
+        return new import_bn35.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] ^ 255) * 4294967296) * -1 - 1);
       case 6:
-        return new import_bn32.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] + (value[5] << 8) ^ 65535) * 4294967296) * -1 - 1);
+        return new import_bn35.default(((value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216 ^ 4294967295) + (value[4] + (value[5] << 8) ^ 65535) * 4294967296) * -1 - 1);
       default:
-        return new import_bn32.default(value, "le").fromTwos(count * 8);
+        return new import_bn35.default(value, "le").fromTwos(count * 8);
     }
   }
   switch (count) {
     case 0:
-      return new import_bn32.default(0);
+      return new import_bn35.default(0);
     case 1:
-      return new import_bn32.default(value[0]);
+      return new import_bn35.default(value[0]);
     case 2:
-      return new import_bn32.default(value[0] + (value[1] << 8));
+      return new import_bn35.default(value[0] + (value[1] << 8));
     case 3:
-      return new import_bn32.default(value[0] + (value[1] << 8) + (value[2] << 16));
+      return new import_bn35.default(value[0] + (value[1] << 8) + (value[2] << 16));
     case 4:
-      return new import_bn32.default(value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216);
+      return new import_bn35.default(value[0] + (value[1] << 8) + (value[2] << 16) + value[3] * 16777216);
     case 5:
-      return new import_bn32.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8)) * 16777216);
+      return new import_bn35.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8)) * 16777216);
     case 6:
-      return new import_bn32.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8) + (value[5] << 16)) * 16777216);
+      return new import_bn35.default(value[0] + (value[1] << 8) + (value[2] << 16) + (value[3] + (value[4] << 8) + (value[5] << 16)) * 16777216);
     default:
-      return new import_bn32.default(value, "le");
+      return new import_bn35.default(value, "le");
   }
 }
 
@@ -33254,25 +34506,25 @@ function u8aToFloat(value, { bitLength = 32, isLe = true } = {}) {
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/u8a/toHex.js
-var U814 = new Array(256);
-var U1614 = new Array(256 * 256);
+var U815 = new Array(256);
+var U1615 = new Array(256 * 256);
 for (let n = 0; n < 256; n++) {
-  U814[n] = n.toString(16).padStart(2, "0");
+  U815[n] = n.toString(16).padStart(2, "0");
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U1614[s | j] = U814[i] + U814[j];
+    U1615[s | j] = U815[i] + U815[j];
   }
 }
 function hex7(value, result) {
   const mod2 = value.length % 2 | 0;
   const length = value.length - mod2 | 0;
   for (let i = 0; i < length; i += 2) {
-    result += U1614[value[i] << 8 | value[i + 1]];
+    result += U1615[value[i] << 8 | value[i + 1]];
   }
   if (mod2) {
-    result += U814[value[length] | 0];
+    result += U815[value[length] | 0];
   }
   return result;
 }
@@ -33342,50 +34594,50 @@ function u8aToString4(value) {
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/hex/stripPrefix.js
-function hexStripPrefix3(value) {
+function hexStripPrefix4(value) {
   if (!value || value === "0x") {
     return "";
-  } else if (REGEX_HEX_PREFIXED7.test(value)) {
+  } else if (REGEX_HEX_PREFIXED8.test(value)) {
     return value.substring(2);
-  } else if (REGEX_HEX_NOPREFIX3.test(value)) {
+  } else if (REGEX_HEX_NOPREFIX4.test(value)) {
     return value;
   }
   throw new Error(`Expected hex value to convert, found '${value}'`);
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/hex/toBn.js
-function hexToBn3(value, { isLe = false, isNegative = false } = {}) {
+function hexToBn4(value, { isLe = false, isNegative = false } = {}) {
   if (!value || value === "0x") {
-    return new import_bn32.default(0);
+    return new import_bn35.default(0);
   }
-  const stripped = hexStripPrefix3(value);
-  const bn = new import_bn32.default(stripped, 16, isLe ? "le" : "be");
+  const stripped = hexStripPrefix4(value);
+  const bn = new import_bn35.default(stripped, 16, isLe ? "le" : "be");
   return isNegative ? bn.fromTwos(stripped.length * 4) : bn;
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/bn/consts.js
-var BN_ONE3 = /* @__PURE__ */ new import_bn32.default(1);
-var BN_TWO2 = /* @__PURE__ */ new import_bn32.default(2);
-var BN_HUNDRED = /* @__PURE__ */ new import_bn32.default(100);
-var BN_MILLION = /* @__PURE__ */ new import_bn32.default(1e6);
-var BN_BILLION4 = /* @__PURE__ */ new import_bn32.default(1e9);
+var BN_ONE3 = /* @__PURE__ */ new import_bn35.default(1);
+var BN_TWO2 = /* @__PURE__ */ new import_bn35.default(2);
+var BN_HUNDRED = /* @__PURE__ */ new import_bn35.default(100);
+var BN_MILLION = /* @__PURE__ */ new import_bn35.default(1e6);
+var BN_BILLION4 = /* @__PURE__ */ new import_bn35.default(1e9);
 var BN_QUINTILL4 = BN_BILLION4.mul(BN_BILLION4);
-var BN_MAX_INTEGER4 = /* @__PURE__ */ new import_bn32.default(Number.MAX_SAFE_INTEGER);
+var BN_MAX_INTEGER4 = /* @__PURE__ */ new import_bn35.default(Number.MAX_SAFE_INTEGER);
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/bigInt.js
-function isBigInt6(value) {
+function isBigInt7(value) {
   return typeof value === "bigint";
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/bn/toBn.js
-function bnToBn3(value) {
-  return value ? import_bn32.default.isBN(value) ? value : isHex7(value) ? hexToBn3(value.toString()) : isBigInt6(value) ? new import_bn32.default(value.toString()) : isToBn3(value) ? value.toBn() : isToBigInt3(value) ? new import_bn32.default(value.toBigInt().toString()) : new import_bn32.default(value) : new import_bn32.default(0);
+function bnToBn4(value) {
+  return value ? import_bn35.default.isBN(value) ? value : isHex8(value) ? hexToBn4(value.toString()) : isBigInt7(value) ? new import_bn35.default(value.toString()) : isToBn4(value) ? value.toBn() : isToBigInt4(value) ? new import_bn35.default(value.toBigInt().toString()) : new import_bn35.default(value) : new import_bn35.default(0);
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/bn/toU8a.js
-var DEFAULT_OPTS2 = { bitLength: -1, isLe: true, isNegative: false };
-function bnToU8a2(value, { bitLength = -1, isLe = true, isNegative = false } = DEFAULT_OPTS2) {
-  const valueBn = bnToBn3(value);
+var DEFAULT_OPTS3 = { bitLength: -1, isLe: true, isNegative: false };
+function bnToU8a3(value, { bitLength = -1, isLe = true, isNegative = false } = DEFAULT_OPTS3) {
+  const valueBn = bnToBn4(value);
   const byteLength = bitLength === -1 ? Math.ceil(valueBn.bitLength() / 8) : Math.ceil((bitLength || 0) / 8);
   if (!value) {
     return bitLength === -1 ? new Uint8Array(1) : new Uint8Array(byteLength);
@@ -33398,25 +34650,25 @@ function bnToU8a2(value, { bitLength = -1, isLe = true, isNegative = false } = D
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/bn/toHex.js
 function bnToHex(value, { bitLength = -1, isLe = false, isNegative = false } = {}) {
-  return u8aToHex7(bnToU8a2(value, { bitLength, isLe, isNegative }));
+  return u8aToHex7(bnToU8a3(value, { bitLength, isLe, isNegative }));
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/compact/toU8a.js
-var MAX_U82 = BN_TWO2.pow(new import_bn32.default(8 - 2)).isub(BN_ONE3);
-var MAX_U162 = BN_TWO2.pow(new import_bn32.default(16 - 2)).isub(BN_ONE3);
-var MAX_U322 = BN_TWO2.pow(new import_bn32.default(32 - 2)).isub(BN_ONE3);
+var MAX_U82 = BN_TWO2.pow(new import_bn35.default(8 - 2)).isub(BN_ONE3);
+var MAX_U162 = BN_TWO2.pow(new import_bn35.default(16 - 2)).isub(BN_ONE3);
+var MAX_U322 = BN_TWO2.pow(new import_bn35.default(32 - 2)).isub(BN_ONE3);
 var BL_162 = { bitLength: 16 };
 var BL_322 = { bitLength: 32 };
 function compactToU8a2(value) {
-  const bn = bnToBn3(value);
+  const bn = bnToBn4(value);
   if (bn.lte(MAX_U82)) {
     return new Uint8Array([bn.toNumber() << 2]);
   } else if (bn.lte(MAX_U162)) {
-    return bnToU8a2(bn.shln(2).iadd(BN_ONE3), BL_162);
+    return bnToU8a3(bn.shln(2).iadd(BN_ONE3), BL_162);
   } else if (bn.lte(MAX_U322)) {
-    return bnToU8a2(bn.shln(2).iadd(BN_TWO2), BL_322);
+    return bnToU8a3(bn.shln(2).iadd(BN_TWO2), BL_322);
   }
-  const u8a = bnToU8a2(bn);
+  const u8a = bnToU8a3(bn);
   let length = u8a.length;
   while (u8a[length - 1] === 0) {
     length--;
@@ -33424,7 +34676,7 @@ function compactToU8a2(value) {
   if (length < 4) {
     throw new Error("Invalid length, previous checks match anything less than 2^30");
   }
-  return u8aConcatStrict5([
+  return u8aConcatStrict6([
     // subtract 4 as minimum (also catered for in decoding)
     new Uint8Array([(length - 4 << 2) + 3]),
     u8a.subarray(0, length)
@@ -33433,7 +34685,7 @@ function compactToU8a2(value) {
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/compact/addLength.js
 function compactAddLength2(input) {
-  return u8aConcatStrict5([
+  return u8aConcatStrict6([
     compactToU8a2(input.length),
     input
   ]);
@@ -33441,23 +34693,23 @@ function compactAddLength2(input) {
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/compact/fromU8a.js
 function compactFromU8a3(input) {
-  const u8a = u8aToU8a7(input);
+  const u8a = u8aToU8a8(input);
   switch (u8a[0] & 3) {
     case 0:
-      return [1, new import_bn32.default(u8a[0] >>> 2)];
+      return [1, new import_bn35.default(u8a[0] >>> 2)];
     case 1:
-      return [2, new import_bn32.default(u8a[0] + (u8a[1] << 8) >>> 2)];
+      return [2, new import_bn35.default(u8a[0] + (u8a[1] << 8) >>> 2)];
     case 2:
-      return [4, new import_bn32.default(u8a[0] + (u8a[1] << 8) + (u8a[2] << 16) + u8a[3] * 16777216 >>> 2)];
+      return [4, new import_bn35.default(u8a[0] + (u8a[1] << 8) + (u8a[2] << 16) + u8a[3] * 16777216 >>> 2)];
     default: {
       const offset = (u8a[0] >>> 2) + 5;
       switch (offset) {
         case 5:
-          return [5, new import_bn32.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + u8a[4] * 16777216)];
+          return [5, new import_bn35.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + u8a[4] * 16777216)];
         case 6:
-          return [6, new import_bn32.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8)) * 16777216)];
+          return [6, new import_bn35.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8)) * 16777216)];
         case 7:
-          return [7, new import_bn32.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8) + (u8a[6] << 16)) * 16777216)];
+          return [7, new import_bn35.default(u8a[1] + (u8a[2] << 8) + (u8a[3] << 16) + (u8a[4] + (u8a[5] << 8) + (u8a[6] << 16)) * 16777216)];
         default:
           return [offset, u8aToBn3(u8a.subarray(1, offset))];
       }
@@ -33580,7 +34832,7 @@ var DEFAULT_UNIT2 = SI2[SI_MID2].text;
 var defaultDecimals2 = DEFAULT_DECIMALS2;
 var defaultUnit2 = DEFAULT_UNIT2;
 function _formatBalance2(input, { decimals = defaultDecimals2, forceUnit, locale = "en", withAll = false, withSi = true, withSiFull = false, withUnit = true, withZero = true } = {}) {
-  let text2 = bnToBn3(input).toString();
+  let text2 = bnToBn4(input).toString();
   if (text2.length === 0 || text2 === "0") {
     return "0";
   }
@@ -33642,7 +34894,7 @@ function formatDate5(date) {
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/format/formatNumber.js
 function formatNumber2(value, { locale = "en" } = {}) {
   const { thousand } = getSeparator2(locale);
-  return formatDecimal2(bnToBn3(value).toString(), thousand);
+  return formatDecimal2(bnToBn4(value).toString(), thousand);
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/string.js
@@ -33670,7 +34922,7 @@ function isAsciiBytes(u8a) {
   return true;
 }
 function isAscii(value) {
-  return isString6(value) ? isHex7(value) ? isAsciiBytes(u8aToU8a7(value)) : isAsciiStr(value) : value ? isAsciiBytes(value) : false;
+  return isString6(value) ? isHex8(value) ? isAsciiBytes(u8aToU8a8(value)) : isAsciiStr(value) : value ? isAsciiBytes(value) : false;
 }
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/is/codec.js
@@ -33682,7 +34934,7 @@ function isCodec2(value) {
 
 // node_modules/@polkadot/types-codec/node_modules/@polkadot/util/stringify.js
 function replacer5(_, v) {
-  return isBigInt6(v) ? v.toString() : v;
+  return isBigInt7(v) ? v.toString() : v;
 }
 function stringify5(value, space) {
   return JSON.stringify(value, replacer5, space);
@@ -33708,7 +34960,7 @@ function isUtf8(value) {
   if (!value) {
     return isString6(value);
   }
-  const u8a = u8aToU8a7(value);
+  const u8a = u8aToU8a8(value);
   const len = u8a.length;
   let i = 0;
   while (i < len) {
@@ -33838,7 +35090,7 @@ var logTo5 = {
   warn: "warn"
 };
 function formatOther5(value) {
-  if (value && isObject6(value) && value.constructor === Object) {
+  if (value && isObject7(value) && value.constructor === Object) {
     const result = {};
     for (const [k, v] of Object.entries(value)) {
       result[k] = loggerFormat5(v);
@@ -33852,8 +35104,8 @@ function loggerFormat5(value) {
     return value.map(loggerFormat5);
   } else if (isBn5(value)) {
     return value.toString();
-  } else if (isU8a7(value) || isBuffer7(value)) {
-    return u8aToHex7(u8aToU8a7(value));
+  } else if (isU8a8(value) || isBuffer8(value)) {
+    return u8aToHex7(u8aToU8a8(value));
   }
   return formatOther5(value);
 }
@@ -33867,7 +35119,7 @@ function formatWithLength5(maxLength) {
   };
 }
 function apply5(log, type, values, maxSize = -1) {
-  if (values.length === 1 && isFunction8(values[0])) {
+  if (values.length === 1 && isFunction9(values[0])) {
     const fnResult = values[0]();
     return apply5(log, type, Array.isArray(fnResult) ? fnResult : [fnResult], maxSize);
   }
@@ -33955,7 +35207,7 @@ var stringPascalCase3 = /* @__PURE__ */ converter4((w) => CC_TO_UP3[w.charCodeAt
 
 // node_modules/@polkadot/types-codec/utils/util.js
 function hasEq(o) {
-  return isFunction8(o.eq);
+  return isFunction9(o.eq);
 }
 
 // node_modules/@polkadot/types-codec/utils/compareArray.js
@@ -34101,7 +35353,7 @@ var AbstractArray = class extends Array {
    */
   toU8a(isBare) {
     const encoded = this.toU8aInner();
-    return isBare ? u8aConcatStrict5(encoded) : u8aConcatStrict5([compactToU8a2(this.length), ...encoded]);
+    return isBare ? u8aConcatStrict6(encoded) : u8aConcatStrict6([compactToU8a2(this.length), ...encoded]);
   }
   /**
    * @internal
@@ -34220,15 +35472,15 @@ var AbstractBase = class {
 // node_modules/@polkadot/types-codec/abstract/Int.js
 var DEFAULT_UINT_BITS = 64;
 var MAX_NUMBER_BITS = 52;
-var MUL_P = new import_bn32.default(1e4);
+var MUL_P = new import_bn35.default(1e4);
 var FORMATTERS = [
   ["Perquintill", BN_QUINTILL4],
   ["Perbill", BN_BILLION4],
   ["Permill", BN_MILLION],
   ["Percent", BN_HUNDRED]
 ];
-function isToBn4(value) {
-  return isFunction8(value.toBn);
+function isToBn5(value) {
+  return isFunction9(value.toBn);
 }
 function toPercentage(value, divisor) {
   return `${(value.mul(MUL_P).div(divisor).toNumber() / 100).toFixed(2)}%`;
@@ -34240,17 +35492,17 @@ function decodeAbstractInt(value, isNegative) {
     }
     return value;
   } else if (isString6(value)) {
-    if (isHex7(value, -1, true)) {
-      return hexToBn3(value, { isLe: false, isNegative }).toString();
+    if (isHex8(value, -1, true)) {
+      return hexToBn4(value, { isLe: false, isNegative }).toString();
     }
     if (value.includes(".") || value.includes(",") || value.includes("e")) {
       throw new Error("String should not contain decimal points or scientific notation");
     }
     return value;
-  } else if (isBn5(value) || isBigInt6(value)) {
+  } else if (isBn5(value) || isBigInt7(value)) {
     return value.toString();
-  } else if (isObject6(value)) {
-    if (isToBn4(value)) {
+  } else if (isObject7(value)) {
+    if (isToBn5(value)) {
       return value.toBn().toString();
     }
     const keys2 = Object.keys(value);
@@ -34263,7 +35515,7 @@ function decodeAbstractInt(value, isNegative) {
   }
   throw new Error(`Unable to create BN from unknown type ${typeof value}`);
 }
-var AbstractInt = class extends import_bn32.default {
+var AbstractInt = class extends import_bn35.default {
   registry;
   encodedLength;
   isUnsigned;
@@ -34274,7 +35526,7 @@ var AbstractInt = class extends import_bn32.default {
   constructor(registry, value = 0, bitLength = DEFAULT_UINT_BITS, isSigned = false) {
     super(
       // shortcut isU8a as used in SCALE decoding
-      isU8a7(value) ? bitLength <= 48 ? u8aToNumber(value.subarray(0, bitLength / 8), { isNegative: isSigned }) : u8aToBn3(value.subarray(0, bitLength / 8), { isLe: true, isNegative: isSigned }).toString() : decodeAbstractInt(value, isSigned)
+      isU8a8(value) ? bitLength <= 48 ? u8aToNumber(value.subarray(0, bitLength / 8), { isNegative: isSigned }) : u8aToBn3(value.subarray(0, bitLength / 8), { isLe: true, isNegative: isSigned }).toString() : decodeAbstractInt(value, isSigned)
     );
     this.registry = registry;
     this.__internal__bitLength = bitLength;
@@ -34312,7 +35564,7 @@ var AbstractInt = class extends import_bn32.default {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eq(other) {
-    return super.eq(isHex7(other) ? hexToBn3(other.toString(), { isLe: false, isNegative: !this.isUnsigned }) : bnToBn3(other));
+    return super.eq(isHex8(other) ? hexToBn4(other.toString(), { isLe: false, isNegative: !this.isUnsigned }) : bnToBn4(other));
   }
   /**
    * @description Returns a breakdown of the hex encoding for this Codec
@@ -34391,7 +35643,7 @@ var AbstractInt = class extends import_bn32.default {
    * @description Encodes the value as a Uint8Array as per the SCALE specifications
    */
   toU8a(_isBare) {
-    return bnToU8a2(this, {
+    return bnToU8a3(this, {
       bitLength: this.bitLength(),
       isLe: true,
       isNegative: !this.isUnsigned
@@ -34414,7 +35666,7 @@ function compareMap(a, b) {
     return compareMapArray(a, b);
   } else if (b instanceof Map) {
     return compareMapArray(a, [...b.entries()]);
-  } else if (isObject6(b)) {
+  } else if (isObject7(b)) {
     return compareMapArray(a, Object.entries(b));
   }
   return false;
@@ -34429,7 +35681,7 @@ function compareSet(a, b) {
     return compareSetArray(a, b);
   } else if (b instanceof Set) {
     return compareSetArray(a, [...b.values()]);
-  } else if (isObject6(b)) {
+  } else if (isObject7(b)) {
     return compareSetArray(a, Object.values(b));
   }
   return false;
@@ -34697,7 +35949,7 @@ function isOption(arg) {
   return isCodec2(arg) && isBoolean2(arg.isSome) && isCodec2(arg.value);
 }
 function isNumberLike(arg) {
-  return isNumber6(arg) || isBn5(arg) || isBigInt6(arg);
+  return isNumber6(arg) || isBn5(arg) || isBigInt7(arg);
 }
 function sortArray(a, b) {
   let sortRes = 0;
@@ -34722,7 +35974,7 @@ function checkForDuplicates(container, seen, arg) {
 }
 function sortAsc(a, b) {
   if (isNumberLike(a) && isNumberLike(b)) {
-    return bnToBn3(a).cmp(bnToBn3(b));
+    return bnToBn4(a).cmp(bnToBn4(b));
   } else if (a instanceof Map && b instanceof Map) {
     return sortAsc(Array.from(a.values()), Array.from(b.values()));
   } else if (isEnum(a) && isEnum(b)) {
@@ -34779,7 +36031,7 @@ function typesToMap(registry, [Types, keys2]) {
 
 // node_modules/@polkadot/types-codec/base/Compact.js
 function decodeCompact(registry, Type2, value) {
-  if (isU8a7(value)) {
+  if (isU8a8(value)) {
     const [decodedLength, bn] = (value[0] & 3) < 3 ? compactFromU8aLim2(value) : compactFromU8a3(value);
     return [new Type2(registry, bn), decodedLength];
   } else if (value instanceof Compact) {
@@ -35167,8 +36419,8 @@ function decodeFromJSON(registry, def, key, value) {
 function decodeEnum(registry, def, value, index) {
   if (isNumber6(index)) {
     return createFromValue(registry, def, index, value);
-  } else if (isU8a7(value) || isHex7(value)) {
-    const u8a = u8aToU8a7(value);
+  } else if (isU8a8(value) || isHex8(value)) {
+    const u8a = u8aToU8a8(value);
     if (u8a.length) {
       return createFromU8a(registry, def, u8a[0], u8a.subarray(1));
     }
@@ -35178,7 +36430,7 @@ function decodeEnum(registry, def, value, index) {
     return createFromValue(registry, def, value);
   } else if (isString6(value)) {
     return decodeFromJSON(registry, def, value.toString());
-  } else if (isObject6(value)) {
+  } else if (isObject7(value)) {
     const key = Object.keys(value)[0];
     return decodeFromJSON(registry, def, key, value[key]);
   }
@@ -35197,7 +36449,7 @@ var Enum = class _Enum {
   __internal__raw;
   constructor(registry, Types, value, index, { definition, setDefinition = identity3 } = {}) {
     const { def, isBasic, isIndexed } = definition || setDefinition(extractDef(registry, Types));
-    const decoded = isU8a7(value) && value.length && !isNumber6(index) ? createFromU8a(registry, def, value[0], value.subarray(1)) : decodeEnum(registry, def, value, index);
+    const decoded = isU8a8(value) && value.length && !isNumber6(index) ? createFromU8a(registry, def, value[0], value.subarray(1)) : decodeEnum(registry, def, value, index);
     this.registry = registry;
     this.__internal__def = def;
     this.__internal__isBasic = isBasic;
@@ -35306,17 +36558,17 @@ var Enum = class _Enum {
    * @description Compares the value of the input to see if there is a match
    */
   eq(other) {
-    if (isU8a7(other)) {
+    if (isU8a8(other)) {
       return !this.toU8a().some((entry, index) => entry !== other[index]);
     } else if (isNumber6(other)) {
       return this.toNumber() === other;
     } else if (this.__internal__isBasic && isString6(other)) {
       return this.type === other;
-    } else if (isHex7(other)) {
+    } else if (isHex8(other)) {
       return this.toHex() === other;
     } else if (other instanceof _Enum) {
       return this.index === other.index && this.value.eq(other.value);
-    } else if (isObject6(other)) {
+    } else if (isObject7(other)) {
       return this.value.eq(other[this.type]);
     }
     return this.value.eq(other);
@@ -35398,7 +36650,7 @@ var Enum = class _Enum {
    * @param isBare true when the value has none of the type-specific prefixes (internal)
    */
   toU8a(isBare) {
-    return isBare ? this.__internal__raw.toU8a(isBare) : u8aConcatStrict5([
+    return isBare ? this.__internal__raw.toU8a(isBare) : u8aConcatStrict6([
       new Uint8Array([this.index]),
       this.__internal__raw.toU8a(isBare)
     ]);
@@ -35443,7 +36695,7 @@ function decodeOption(registry, Type2, value) {
     return new Type2(registry, value.value);
   } else if (isNull5(value) || isUndefined7(value) || value === "0x" || value instanceof None) {
     return new None(registry);
-  } else if (isU8a7(value)) {
+  } else if (isU8a8(value)) {
     return !value.length || value[0] === 0 ? new None(registry) : new Type2(registry, value.subarray(1));
   }
   return new Type2(registry, value);
@@ -35457,7 +36709,7 @@ var Option = class _Option {
   __internal__raw;
   constructor(registry, typeName, value, { definition, setDefinition = identity3 } = {}) {
     const Type2 = definition || setDefinition(typeToConstructor(registry, typeName));
-    const decoded = isU8a7(value) && value.length && !isCodec2(value) ? value[0] === 0 ? new None(registry) : new Type2(registry, value.subarray(1)) : decodeOption(registry, Type2, value);
+    const decoded = isU8a8(value) && value.length && !isCodec2(value) ? value[0] === 0 ? new None(registry) : new Type2(registry, value.subarray(1)) : decodeOption(registry, Type2, value);
     this.registry = registry;
     this.__internal__Type = Type2;
     this.__internal__raw = decoded;
@@ -35682,8 +36934,8 @@ function decodeTuple(registry, result, value, Classes) {
       }
     }
     return [result, 0];
-  } else if (isHex7(value)) {
-    return decodeU8a(registry, result, u8aToU8a7(value), Classes);
+  } else if (isHex8(value)) {
+    return decodeU8a(registry, result, u8aToU8a8(value), Classes);
   } else if (!value || !result.length) {
     const Types = Classes[0];
     for (let i = 0, count = Types.length; i < count; i++) {
@@ -35696,9 +36948,9 @@ function decodeTuple(registry, result, value, Classes) {
 var Tuple = class _Tuple extends AbstractArray {
   __internal__Types;
   constructor(registry, Types, value, { definition, setDefinition = identity3 } = {}) {
-    const Classes = definition || setDefinition(Array.isArray(Types) ? [typesToConstructors(registry, Types), []] : isFunction8(Types) || isString6(Types) ? [[typeToConstructor(registry, Types)], []] : mapToTypeMap(registry, Types));
+    const Classes = definition || setDefinition(Array.isArray(Types) ? [typesToConstructors(registry, Types), []] : isFunction9(Types) || isString6(Types) ? [[typeToConstructor(registry, Types)], []] : mapToTypeMap(registry, Types));
     super(registry, Classes[0].length);
-    this.initialU8aLength = (isU8a7(value) ? decodeU8a(registry, this, value, Classes) : decodeTuple(registry, this, value, Classes))[1];
+    this.initialU8aLength = (isU8a8(value) ? decodeU8a(registry, this, value, Classes) : decodeTuple(registry, this, value, Classes))[1];
     this.__internal__Types = Classes;
   }
   static with(Types) {
@@ -35752,7 +37004,7 @@ var Tuple = class _Tuple extends AbstractArray {
    * @param isBare true when the value has none of the type-specific prefixes (internal)
    */
   toU8a(isBare) {
-    return u8aConcatStrict5(this.toU8aInner(isBare));
+    return u8aConcatStrict6(this.toU8aInner(isBare));
   }
 };
 
@@ -35776,8 +37028,8 @@ var l3 = logger5("Vec");
 function decodeVecLength(value) {
   if (Array.isArray(value)) {
     return [value, value.length, 0];
-  } else if (isU8a7(value) || isHex7(value)) {
-    const u8a = u8aToU8a7(value);
+  } else if (isU8a8(value) || isHex8(value)) {
+    const u8a = u8aToU8a8(value);
     const [startAt, length] = compactFromU8aLim2(u8a);
     if (length > MAX_LENGTH) {
       throw new Error(`Vec length ${length.toString()} exceeds ${MAX_LENGTH}`);
@@ -35804,7 +37056,7 @@ function decodeVec(registry, result, value, startAt, Type2) {
   } else if (!value) {
     return [0, 0];
   }
-  return decodeU8aVec(registry, result, u8aToU8a7(value), startAt, Type2);
+  return decodeU8aVec(registry, result, u8aToU8a8(value), startAt, Type2);
 }
 var Vec = class _Vec extends AbstractArray {
   __internal__Type;
@@ -35812,7 +37064,7 @@ var Vec = class _Vec extends AbstractArray {
     const [decodeFrom, length, startAt] = decodeVecLength(value);
     super(registry, length);
     this.__internal__Type = definition || setDefinition(typeToConstructor(registry, Type2));
-    this.initialU8aLength = (isU8a7(decodeFrom) ? decodeU8aVec(registry, this, decodeFrom, startAt, this.__internal__Type) : decodeVec(registry, this, decodeFrom, startAt, this.__internal__Type))[0];
+    this.initialU8aLength = (isU8a8(decodeFrom) ? decodeU8aVec(registry, this, decodeFrom, startAt, this.__internal__Type) : decodeVec(registry, this, decodeFrom, startAt, this.__internal__Type))[0];
   }
   static with(Type2) {
     let definition;
@@ -35855,7 +37107,7 @@ var VecFixed = class _VecFixed extends AbstractArray {
   constructor(registry, Type2, length, value = [], { definition, setDefinition = identity3 } = {}) {
     super(registry, length);
     this.__internal__Type = definition || setDefinition(typeToConstructor(registry, Type2));
-    this.initialU8aLength = (isU8a7(value) ? decodeU8aVec(registry, this, value, 0, this.__internal__Type) : decodeVec(registry, this, value, 0, this.__internal__Type))[1];
+    this.initialU8aLength = (isU8a8(value) ? decodeU8aVec(registry, this, value, 0, this.__internal__Type) : decodeVec(registry, this, value, 0, this.__internal__Type))[1];
   }
   static with(Type2, length) {
     let definition;
@@ -35892,7 +37144,7 @@ var VecFixed = class _VecFixed extends AbstractArray {
   }
   toU8a() {
     const encoded = this.toU8aInner();
-    return encoded.length ? u8aConcatStrict5(encoded) : new Uint8Array([]);
+    return encoded.length ? u8aConcatStrict6(encoded) : new Uint8Array([]);
   }
   /**
    * @description Returns the base runtime type name for this instance
@@ -35916,7 +37168,7 @@ var Raw = class extends Uint8Array {
     return Uint8Array;
   }
   constructor(registry, value, initialU8aLength) {
-    super(u8aToU8a7(value));
+    super(u8aToU8a8(value));
     this.registry = registry;
     this.initialU8aLength = initialU8aLength;
   }
@@ -35963,7 +37215,7 @@ var Raw = class extends Uint8Array {
     if (other instanceof Uint8Array) {
       return this.length === other.length && !this.some((b, index) => b !== other[index]);
     }
-    return this.eq(u8aToU8a7(other));
+    return this.eq(u8aToU8a8(other));
   }
   /**
    * @description Returns a breakdown of the hex encoding for this Codec
@@ -36046,7 +37298,7 @@ function decodeBitVecU8a(value) {
 }
 function decodeBitVec(value) {
   if (Array.isArray(value) || isString6(value)) {
-    const u8a = u8aToU8a7(value);
+    const u8a = u8aToU8a8(value);
     return [u8a.length / 8, u8a];
   }
   return decodeBitVecU8a(value);
@@ -36120,7 +37372,7 @@ var BitVec = class extends Raw {
    */
   toU8a(isBare) {
     const bitVec = super.toU8a(isBare);
-    return isBare ? bitVec : u8aConcatStrict5([compactToU8a2(this.__internal__decodedLength), bitVec]);
+    return isBare ? bitVec : u8aConcatStrict6([compactToU8a2(this.__internal__decodedLength), bitVec]);
   }
 };
 
@@ -36133,7 +37385,7 @@ function decodeStructFromObject(registry, [Types, keys2], value, jsonMap) {
   const typeofArray = Array.isArray(value);
   const typeofMap = value instanceof Map;
   const count = keys2.length;
-  if (!typeofArray && !typeofMap && !isObject6(value)) {
+  if (!typeofArray && !typeofMap && !isObject7(value)) {
     throw new Error(`Struct: Cannot decode value ${stringify5(value)} (typeof ${typeof value}), expected an input object, map or array`);
   } else if (typeofArray && value.length !== count) {
     throw new Error(`Struct: Unable to map ${stringify5(value)} array to object with known keys ${keys2.join(", ")}`);
@@ -36186,7 +37438,7 @@ var Struct = class _Struct extends Map {
   __internal__Types;
   constructor(registry, Types, value, jsonMap = /* @__PURE__ */ new Map(), { definition, setDefinition = noopSetDefinition } = {}) {
     const typeMap = definition || setDefinition(mapToTypeMap(registry, Types));
-    const [decoded, decodedLength] = isU8a7(value) || isHex7(value) ? decodeU8aStruct(registry, new Array(typeMap[0].length), u8aToU8a7(value), typeMap) : value instanceof _Struct ? [value, 0] : decodeStructFromObject(registry, typeMap, value || {}, jsonMap);
+    const [decoded, decodedLength] = isU8a8(value) || isHex8(value) ? decodeU8aStruct(registry, new Array(typeMap[0].length), u8aToU8a8(value), typeMap) : value instanceof _Struct ? [value, 0] : decodeStructFromObject(registry, typeMap, value || {}, jsonMap);
     super(decoded);
     this.initialU8aLength = decodedLength;
     this.registry = registry;
@@ -36353,7 +37605,7 @@ var Struct = class _Struct extends Map {
     for (const [k, v] of this.entries()) {
       encoded.push(v.toU8a(!isBare || isBoolean2(isBare) ? isBare : isBare[k]));
     }
-    return u8aConcatStrict5(encoded);
+    return u8aConcatStrict6(encoded);
   }
 };
 
@@ -36390,11 +37642,11 @@ function decodeMap(registry, keyType, valType, value) {
   const ValClass = typeToConstructor(registry, valType);
   if (!value) {
     return [KeyClass, ValClass, /* @__PURE__ */ new Map(), 0];
-  } else if (isU8a7(value) || isHex7(value)) {
-    return decodeMapFromU8a(registry, KeyClass, ValClass, u8aToU8a7(value));
+  } else if (isU8a8(value) || isHex8(value)) {
+    return decodeMapFromU8a(registry, KeyClass, ValClass, u8aToU8a8(value));
   } else if (value instanceof Map) {
     return decodeMapFromMap(registry, KeyClass, ValClass, value);
-  } else if (isObject6(value)) {
+  } else if (isObject7(value)) {
     return decodeMapFromMap(registry, KeyClass, ValClass, new Map(Object.entries(value)));
   }
   throw new Error("Map: cannot decode type");
@@ -36518,7 +37770,7 @@ var CodecMap = class extends Map {
     for (const [k, v] of this.entries()) {
       encoded.push(k.toU8a(isBare), v.toU8a(isBare));
     }
-    return u8aConcatStrict5(encoded);
+    return u8aConcatStrict6(encoded);
   }
 };
 
@@ -36561,8 +37813,8 @@ function decodeSet(registry, valType, value) {
   const ValClass = typeToConstructor(registry, valType);
   if (!value) {
     return [ValClass, /* @__PURE__ */ new Set(), 0];
-  } else if (isU8a7(value) || isHex7(value)) {
-    return decodeSetFromU8a(registry, ValClass, u8aToU8a7(value));
+  } else if (isU8a8(value) || isHex8(value)) {
+    return decodeSetFromU8a(registry, ValClass, u8aToU8a8(value));
   } else if (Array.isArray(value) || value instanceof Set) {
     return decodeSetFromSet(registry, ValClass, value);
   }
@@ -36695,7 +37947,7 @@ var BTreeSet = class _BTreeSet extends Set {
     for (const v of this.values()) {
       encoded.push(v.toU8a(isBare));
     }
-    return u8aConcatStrict5(encoded);
+    return u8aConcatStrict6(encoded);
   }
 };
 
@@ -36716,7 +37968,7 @@ function decodeBytesU8a(value) {
 }
 var Bytes = class extends Raw {
   constructor(registry, value) {
-    const [u8a, decodedLength] = isU8a7(value) && !(value instanceof Raw) ? decodeBytesU8a(value) : Array.isArray(value) || isString6(value) ? [u8aToU8a7(value), 0] : [value, 0];
+    const [u8a, decodedLength] = isU8a8(value) && !(value instanceof Raw) ? decodeBytesU8a(value) : Array.isArray(value) || isString6(value) ? [u8aToU8a8(value), 0] : [value, 0];
     super(registry, u8a, decodedLength);
   }
   /**
@@ -36767,7 +38019,7 @@ var bool = class extends Boolean {
   initialU8aLength = 1;
   isStorageFallback;
   constructor(registry, value = false) {
-    super(isU8a7(value) ? value[0] === 1 : value instanceof Boolean ? value.valueOf() : !!value);
+    super(isU8a8(value) ? value[0] === 1 : value instanceof Boolean ? value.valueOf() : !!value);
     this.registry = registry;
   }
   /**
@@ -36864,7 +38116,7 @@ function decodeU8a2(registry, value) {
 }
 var OptionBool = class extends Option {
   constructor(registry, value) {
-    super(registry, bool, isU8a7(value) || isHex7(value) ? decodeU8a2(registry, u8aToU8a7(value)) : value);
+    super(registry, bool, isU8a8(value) || isHex8(value) ? decodeU8a2(registry, u8aToU8a8(value)) : value);
     this.initialU8aLength = 1;
   }
   /**
@@ -36960,7 +38212,7 @@ var RangeInclusive = class _RangeInclusive extends Range {
 // node_modules/@polkadot/types-codec/native/Text.js
 var MAX_LENGTH3 = 128 * 1024;
 function decodeText(value) {
-  if (isU8a7(value)) {
+  if (isU8a8(value)) {
     if (!value.length) {
       return ["", 0];
     }
@@ -36975,8 +38227,8 @@ function decodeText(value) {
       throw new Error(`Text: required length less than remainder, expected at least ${total}, found ${value.length}`);
     }
     return [u8aToString4(value.subarray(offset, total)), total];
-  } else if (isHex7(value)) {
-    return [u8aToString4(hexToU8a7(value)), 0];
+  } else if (isHex8(value)) {
+    return [u8aToString4(hexToU8a8(value)), 0];
   }
   return [value ? value.toString() : "", 0];
 }
@@ -37099,12 +38351,12 @@ var Type = class extends Text {
 
 // node_modules/@polkadot/types-codec/extended/U8aFixed.js
 function decodeU8aFixed(value, bitLength) {
-  const u8a = u8aToU8a7(value);
+  const u8a = u8aToU8a8(value);
   const byteLength = bitLength / 8;
   if (!u8a.length) {
     return [new Uint8Array(byteLength), 0];
   }
-  if (isU8a7(value) ? u8a.length < byteLength : u8a.length !== byteLength) {
+  if (isU8a8(value) ? u8a.length < byteLength : u8a.length !== byteLength) {
     throw new Error(`Expected input with ${byteLength} bytes (${bitLength} bits), found ${u8a.length} bytes`);
   }
   return [u8a.subarray(0, byteLength), byteLength];
@@ -37135,9 +38387,9 @@ var U8aFixed = class _U8aFixed extends Raw {
 // node_modules/@polkadot/types-codec/extended/WrapperKeepOpaque.js
 function decodeRaw(registry, typeName, value) {
   const Type2 = typeToConstructor(registry, typeName);
-  if (isU8a7(value) || isHex7(value)) {
+  if (isU8a8(value) || isHex8(value)) {
     try {
-      const [, u8a] = isHex7(value) ? [0, u8aToU8a7(value)] : value instanceof Raw ? [0, value.subarray()] : compactStripLength3(value);
+      const [, u8a] = isHex8(value) ? [0, u8aToU8a8(value)] : value instanceof Raw ? [0, value.subarray()] : compactStripLength3(value);
       return [Type2, new Type2(registry, u8a), value];
     } catch {
       return [Type2, null, value];
@@ -37245,7 +38497,7 @@ var Float = class _Float extends Number {
   isStorageFallback;
   __internal__bitLength;
   constructor(registry, value, { bitLength = 32 } = {}) {
-    super(isU8a7(value) || isHex7(value) ? value.length === 0 ? 0 : u8aToFloat(u8aToU8a7(value), { bitLength }) : value || 0);
+    super(isU8a8(value) || isHex8(value) ? value.length === 0 ? 0 : u8aToFloat(u8aToU8a8(value), { bitLength }) : value || 0);
     this.__internal__bitLength = bitLength;
     this.encodedLength = bitLength / 8;
     this.initialU8aLength = this.encodedLength;
@@ -37392,7 +38644,7 @@ var Json = class extends Map {
    */
   toHuman() {
     return [...this.entries()].reduce((json, [key, value]) => {
-      json[key] = isFunction8(value?.toHuman) ? value.toHuman() : value;
+      json[key] = isFunction9(value?.toHuman) ? value.toHuman() : value;
       return json;
     }, {});
   }
@@ -37410,7 +38662,7 @@ var Json = class extends Map {
    */
   toPrimitive(disableAscii) {
     return [...this.entries()].reduce((json, [key, value]) => {
-      json[key] = isFunction8(value.toPrimitive) ? value.toPrimitive(disableAscii) : value;
+      json[key] = isFunction9(value.toPrimitive) ? value.toPrimitive(disableAscii) : value;
       return json;
     }, {});
   }
@@ -37436,9 +38688,9 @@ var Json = class extends Map {
 
 // node_modules/@polkadot/types-codec/native/Set.js
 function encodeSet(setValues, values) {
-  const encoded = new import_bn32.default(0);
+  const encoded = new import_bn35.default(0);
   for (let i = 0, count = values.length; i < count; i++) {
-    encoded.ior(bnToBn3(setValues[values[i]] || 0));
+    encoded.ior(bnToBn4(setValues[values[i]] || 0));
   }
   return encoded;
 }
@@ -37455,12 +38707,12 @@ function decodeSetArray(setValues, values) {
   return result;
 }
 function decodeSetNumber(setValues, _value) {
-  const bn = bnToBn3(_value);
+  const bn = bnToBn4(_value);
   const keys2 = Object.keys(setValues);
   const result = [];
   for (let i = 0, count = keys2.length; i < count; i++) {
     const key = keys2[i];
-    if (bn.and(bnToBn3(setValues[key])).eq(bnToBn3(setValues[key]))) {
+    if (bn.and(bnToBn4(setValues[key])).eq(bnToBn4(setValues[key]))) {
       result.push(key);
     }
   }
@@ -37475,10 +38727,10 @@ function decodeSet2(setValues, value = 0, bitLength) {
     throw new Error(`Expected valid bitLength, power of 8, found ${bitLength}`);
   }
   const byteLength = bitLength / 8;
-  if (isU8a7(value)) {
+  if (isU8a8(value)) {
     return value.length === 0 ? [] : decodeSetNumber(setValues, u8aToBn3(value.subarray(0, byteLength), { isLe: true }));
   } else if (isString6(value)) {
-    return decodeSet2(setValues, u8aToU8a7(value), byteLength);
+    return decodeSet2(setValues, u8aToU8a8(value), byteLength);
   } else if (value instanceof Set || Array.isArray(value)) {
     const input = Array.isArray(value) ? value : [...value.values()];
     return decodeSetArray(setValues, input);
@@ -37563,7 +38815,7 @@ var CodecSet = class _CodecSet extends Set {
     } else if (other instanceof Set) {
       return this.eq([...other.values()]);
     } else if (isNumber6(other) || isBn5(other)) {
-      return this.valueEncoded.eq(bnToBn3(other));
+      return this.valueEncoded.eq(bnToBn4(other));
     }
     return false;
   }
@@ -37621,7 +38873,7 @@ var CodecSet = class _CodecSet extends Set {
    * @description Encodes the value as a Uint8Array as per the SCALE specifications
    */
   toU8a(_isBare) {
-    return bnToU8a2(this.valueEncoded, {
+    return bnToU8a3(this.valueEncoded, {
       bitLength: this.__internal__byteLength * 8,
       isLe: true
     });
@@ -38096,7 +39348,7 @@ function checkInstance(created, matcher) {
   const rawType = created.toRawType();
   const isOk = (
     // full match, all ok
-    u8aEq2(u8a, matcher) || // on a length-prefixed type, just check the actual length
+    u8aEq3(u8a, matcher) || // on a length-prefixed type, just check the actual length
     ["Bytes", "Text", "Type"].includes(rawType) && matcher.length === created.length || // when the created is empty and matcher is also empty, let it slide...
     created.isEmpty && matcher.every((v) => !v)
   );
@@ -38105,10 +39357,10 @@ function checkInstance(created, matcher) {
   }
 }
 function checkPedantic(created, [value]) {
-  if (isU8a6(value)) {
+  if (isU8a7(value)) {
     checkInstance(created, value);
-  } else if (isHex6(value)) {
-    checkInstance(created, u8aToU8a6(value));
+  } else if (isHex7(value)) {
+    checkInstance(created, u8aToU8a7(value));
   }
 }
 function initType(registry, Type2, params = [], { blockHash, isFallback, isOptional, isPedantic } = {}) {
@@ -43699,7 +44951,7 @@ function createDecode({ coder, ipfs }, validate) {
 }
 function createEncode({ coder, ipfs }) {
   return (value, ipfsCompat) => {
-    const out = coder.encode(u8aToU8a5(value));
+    const out = coder.encode(u8aToU8a6(value));
     return ipfs && ipfsCompat ? `${ipfs}${out}` : out;
   };
 }
@@ -43740,22 +44992,22 @@ var base58Encode = /* @__PURE__ */ createEncode(config2);
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/helpers.js
 function createDualHasher(wa, js) {
   return (value, bitLength = 256, onlyJs) => {
-    const u8a = u8aToU8a5(value);
-    return !hasBigInt5 || !onlyJs && isReady() ? wa[bitLength](u8a) : js[bitLength](u8a);
+    const u8a = u8aToU8a6(value);
+    return !hasBigInt6 || !onlyJs && isReady() ? wa[bitLength](u8a) : js[bitLength](u8a);
   };
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/blake2/asU8a.js
 function blake2AsU8a(data, bitLength = 256, key, onlyJs) {
   const byteLength = Math.ceil(bitLength / 8);
-  const u8a = u8aToU8a5(data);
-  return !hasBigInt5 || !onlyJs && isReady() ? blake2b(u8a, u8aToU8a5(key), byteLength) : key ? blake2b3(u8a, { dkLen: byteLength, key }) : blake2b3(u8a, { dkLen: byteLength });
+  const u8a = u8aToU8a6(data);
+  return !hasBigInt6 || !onlyJs && isReady() ? blake2b(u8a, u8aToU8a6(key), byteLength) : key ? blake2b3(u8a, { dkLen: byteLength, key }) : blake2b3(u8a, { dkLen: byteLength });
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/address/sshash.js
 var SS58_PREFIX = stringToU8a6("SS58PRE");
 function sshash(key) {
-  return blake2AsU8a(u8aConcat4(SS58_PREFIX, key), 512);
+  return blake2AsU8a(u8aConcat5(SS58_PREFIX, key), 512);
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/address/checksum.js
@@ -43783,8 +45035,8 @@ function decodeAddress(encoded, ignoreChecksum, ss58Format = -1) {
   if (!encoded) {
     throw new Error("Invalid empty address passed");
   }
-  if (isU8a5(encoded) || isHex5(encoded)) {
-    return u8aToU8a5(encoded);
+  if (isU8a6(encoded) || isHex6(encoded)) {
+    return u8aToU8a6(encoded);
   }
   try {
     const decoded = base58Decode(encoded);
@@ -43814,11 +45066,11 @@ function encodeAddress(key, ss58Format = defaults.prefix) {
   } else if (!defaults.allowedDecodedLengths.includes(u8a.length)) {
     throw new Error(`Expected a valid key to convert, with length ${defaults.allowedDecodedLengths.join(", ")}`);
   }
-  const input = u8aConcat4(ss58Format < 64 ? [ss58Format] : [
+  const input = u8aConcat5(ss58Format < 64 ? [ss58Format] : [
     (ss58Format & 252) >> 2 | 64,
     ss58Format >> 8 | (ss58Format & 3) << 6
   ], u8a);
-  return base58Encode(u8aConcat4(input, sshash(input).subarray(0, [32, 33].includes(u8a.length) ? 2 : 1)));
+  return base58Encode(u8aConcat5(input, sshash(input).subarray(0, [32, 33].includes(u8a.length) ? 2 : 1)));
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/keccak/asU8a.js
@@ -43832,11 +45084,11 @@ function secp256k1Expand2(publicKey, onlyJs) {
   if (publicKey.length === 65) {
     return publicKey.subarray(1);
   }
-  if (!hasBigInt5 || !onlyJs && isReady()) {
+  if (!hasBigInt6 || !onlyJs && isReady()) {
     return secp256k1Expand(publicKey).subarray(1);
   }
   const { px, py } = secp256k1.ProjectivePoint.fromHex(publicKey);
-  return u8aConcat4(bnToU8a(px, BN_BE_256_OPTS), bnToU8a(py, BN_BE_256_OPTS));
+  return u8aConcat5(bnToU8a2(px, BN_BE_256_OPTS), bnToU8a2(py, BN_BE_256_OPTS));
 }
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/ethereum/encode.js
@@ -43850,7 +45102,7 @@ function ethereumEncode(addressOrPublic) {
   if (!addressOrPublic) {
     return "0x";
   }
-  const u8aAddress = u8aToU8a5(addressOrPublic);
+  const u8aAddress = u8aToU8a6(addressOrPublic);
   if (![20, 32, 33, 65].includes(u8aAddress.length)) {
     throw new Error(`Invalid address or publicKey provided, received ${u8aAddress.length} bytes input`);
   }
@@ -43880,7 +45132,7 @@ function isEthereumChecksum(_address) {
 
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/ethereum/isAddress.js
 function isEthereumAddress(address) {
-  if (!address || address.length !== 42 || !isHex5(address)) {
+  if (!address || address.length !== 42 || !isHex6(address)) {
     return false;
   } else if (/^(0x)?[0-9a-f]{40}$/.test(address) || /^(0x)?[0-9A-F]{40}$/.test(address)) {
     return true;
@@ -43918,7 +45170,7 @@ function fromU8a(u8a, p, count) {
   for (let i = 0; i < count; i++, offset += 2) {
     bigints[i] = BigInt2(u8a[p + offset] | u8a[p + 1 + offset] << 8);
   }
-  let result = _0n6;
+  let result = _0n8;
   for (let i = count - 1; i >= 0; i--) {
     result = (result << _16n2) + bigints[i];
   }
@@ -43963,7 +45215,7 @@ function init(seed, input) {
 function xxhash64(input, initSeed) {
   const { seed, u8a, u8asize, v1: v17, v2: v22, v3: v32, v4: v43 } = init(BigInt2(initSeed), input);
   let p = 0;
-  let h64 = U64 & BigInt2(input.length) + (input.length >= 32 ? ((((rotl(v17, _1n6) + rotl(v22, _7n3) + rotl(v32, _12n) + rotl(v43, _18n) ^ P64_1 * rotl(v17 * P64_2, _31n)) * P64_1 + P64_4 ^ P64_1 * rotl(v22 * P64_2, _31n)) * P64_1 + P64_4 ^ P64_1 * rotl(v32 * P64_2, _31n)) * P64_1 + P64_4 ^ P64_1 * rotl(v43 * P64_2, _31n)) * P64_1 + P64_4 : seed + P64_5);
+  let h64 = U64 & BigInt2(input.length) + (input.length >= 32 ? ((((rotl(v17, _1n8) + rotl(v22, _7n3) + rotl(v32, _12n) + rotl(v43, _18n) ^ P64_1 * rotl(v17 * P64_2, _31n)) * P64_1 + P64_4 ^ P64_1 * rotl(v22 * P64_2, _31n)) * P64_1 + P64_4 ^ P64_1 * rotl(v32 * P64_2, _31n)) * P64_1 + P64_4 ^ P64_1 * rotl(v43 * P64_2, _31n)) * P64_1 + P64_4 : seed + P64_5);
   while (p <= u8asize - 8) {
     h64 = U64 & P64_4 + P64_1 * rotl(h64 ^ P64_1 * rotl(P64_2 * fromU8a(u8a, p, 4), _31n), _27n);
     p += 8;
@@ -43989,8 +45241,8 @@ function xxhash64(input, initSeed) {
 // node_modules/@polkadot/types/node_modules/@polkadot/util-crypto/xxhash/asU8a.js
 function xxhashAsU8a(data, bitLength = 64, onlyJs) {
   const rounds = Math.ceil(bitLength / 64);
-  const u8a = u8aToU8a5(data);
-  if (!hasBigInt5 || !onlyJs && isReady()) {
+  const u8a = u8aToU8a6(data);
+  if (!hasBigInt6 || !onlyJs && isReady()) {
     return twox(u8a, rounds);
   }
   const result = new Uint8Array(rounds * 8);
@@ -44382,8 +45634,8 @@ function newFromValue(registry, value, version2, preamble) {
   return registry.createTypeUnsafe(type, [value, { isSigned, version: version2 }]);
 }
 function decodeExtrinsic(registry, value, version2 = LOWEST_SUPPORTED_EXTRINSIC_FORMAT_VERSION, preamble = DEFAULT_PREAMBLE) {
-  if (isU8a5(value) || Array.isArray(value) || isHex5(value)) {
-    return decodeU8a3(registry, u8aToU8a5(value), version2, preamble);
+  if (isU8a6(value) || Array.isArray(value) || isHex6(value)) {
+    return decodeU8a3(registry, u8aToU8a6(value), version2, preamble);
   } else if (value instanceof registry.createClassUnsafe("Call")) {
     return newFromValue(registry, { method: value }, version2, preamble);
   }
@@ -44587,7 +45839,7 @@ var GenericExtrinsic = class extends ExtrinsicBase {
    * @description Returns a breakdown of the hex encoding for this Codec
    */
   inspect() {
-    const encoded = u8aConcat4(...this.toU8aInner());
+    const encoded = u8aConcat5(...this.toU8aInner());
     return {
       inner: this.isSigned ? this.inner.inspect().inner : this.inner.method.inspect().inner,
       outer: [compactToU8a(encoded.length), new Uint8Array([this.version])]
@@ -44650,7 +45902,7 @@ var GenericExtrinsic = class extends ExtrinsicBase {
    * @param isBare true when the value is not length-prefixed
    */
   toU8a(isBare) {
-    const encoded = u8aConcat4(...this.toU8aInner());
+    const encoded = u8aConcat5(...this.toU8aInner());
     return isBare ? encoded : compactAddLength(encoded);
   }
   toU8aInner() {
@@ -44671,11 +45923,11 @@ function getTrailingZeros(period) {
   return index;
 }
 function decodeMortalEra(registry, value) {
-  if (isU8a5(value) || isHex5(value) || Array.isArray(value)) {
-    return decodeMortalU8a(registry, u8aToU8a5(value));
+  if (isU8a6(value) || isHex6(value) || Array.isArray(value)) {
+    return decodeMortalU8a(registry, u8aToU8a6(value));
   } else if (!value) {
     return [new u64(registry), new u64(registry)];
-  } else if (isObject5(value)) {
+  } else if (isObject6(value)) {
     return decodeMortalObject(registry, value);
   }
   throw new Error("Invalid data passed to Mortal era");
@@ -44705,15 +45957,15 @@ function decodeMortalU8a(registry, value) {
   return [new u64(registry, period), new u64(registry, phase)];
 }
 function decodeExtrinsicEra(value = new Uint8Array()) {
-  if (isU8a5(value)) {
+  if (isU8a6(value)) {
     return !value.length || value[0] === 0 ? new Uint8Array([0]) : new Uint8Array([1, value[0], value[1]]);
   } else if (!value) {
     return new Uint8Array([0]);
   } else if (value instanceof GenericExtrinsicEra) {
     return decodeExtrinsicEra(value.toU8a());
-  } else if (isHex5(value)) {
-    return decodeExtrinsicEra(hexToU8a5(value));
-  } else if (isObject5(value)) {
+  } else if (isHex6(value)) {
+    return decodeExtrinsicEra(hexToU8a6(value));
+  } else if (isObject6(value)) {
     const entries = Object.entries(value).map(([k, v]) => [k.toLowerCase(), v]);
     const mortal = entries.find(([k]) => k.toLowerCase() === "mortalera");
     const immortal = entries.find(([k]) => k.toLowerCase() === "immortalera");
@@ -44790,7 +46042,7 @@ var MortalEra = class extends Tuple {
   birth(current) {
     const phase = this.phase.toNumber();
     const period = this.period.toNumber();
-    return ~~((Math.max(bnToBn2(current).toNumber(), phase) - phase) / period) * period + phase;
+    return ~~((Math.max(bnToBn3(current).toNumber(), phase) - phase) / period) * period + phase;
   }
   /**
    * @description Get the block number of the first block at which the era has ended.
@@ -44872,10 +46124,10 @@ function decodeExtrinsicPayload(registry, value, version2 = LATEST_EXTRINSIC_VER
     return value.unwrap();
   }
   const extVersion = version2 === 5 ? PREAMBLES[preamble] : VERSIONS2[version2] || VERSIONS2[0];
-  if (value && value.assetId && isHex5(value.assetId)) {
+  if (value && value.assetId && isHex6(value.assetId)) {
     const adjustedPayload = {
       ...value,
-      assetId: registry.createType("TAssetConversion", hexToU8a5(value.assetId)).toJSON()
+      assetId: registry.createType("TAssetConversion", hexToU8a6(value.assetId)).toJSON()
     };
     return registry.createTypeUnsafe(extVersion, [adjustedPayload, { version: version2 }]);
   }
@@ -45149,7 +46401,7 @@ var GenericExtrinsicV4 = class _GenericExtrinsicV4 extends Struct {
       return value;
     } else if (value instanceof registry.createClassUnsafe("Call")) {
       return { method: value };
-    } else if (isU8a5(value)) {
+    } else if (isU8a6(value)) {
       const signature = registry.createTypeUnsafe("ExtrinsicSignatureV4", [value, { isSigned }]);
       const method = registry.createTypeUnsafe("Call", [value.subarray(signature.encodedLength)]);
       return {
@@ -45302,7 +46554,7 @@ var GenericExtrinsicPayloadV4 = class extends Struct {
 // node_modules/@polkadot/types/extrinsic/v4/ExtrinsicSignature.js
 var FAKE_SIGNATURE = new Uint8Array(256).fill(1);
 function toAddress(registry, address) {
-  return registry.createTypeUnsafe("Address", [isU8a5(address) ? u8aToHex5(address) : address]);
+  return registry.createTypeUnsafe("Address", [isU8a6(address) ? u8aToHex5(address) : address]);
 }
 var GenericExtrinsicSignatureV4 = class _GenericExtrinsicSignatureV4 extends Struct {
   __internal__signKeys;
@@ -45466,7 +46718,7 @@ var GenericExtrinsicV5 = class _GenericExtrinsicV5 extends Struct {
       return value;
     } else if (value instanceof registry.createClassUnsafe("Call")) {
       return { method: value };
-    } else if (isU8a5(value)) {
+    } else if (isU8a6(value)) {
       const signature = registry.createTypeUnsafe("ExtrinsicSignatureV5", [value, { isSigned }]);
       const method = registry.createTypeUnsafe("Call", [value.subarray(signature.encodedLength)]);
       return {
@@ -45615,7 +46867,7 @@ var GenericExtrinsicPayloadV5 = class extends Struct {
 // node_modules/@polkadot/types/extrinsic/v5/ExtrinsicSignature.js
 var FAKE_SIGNATURE2 = new Uint8Array(256).fill(1);
 function toAddress2(registry, address) {
-  return registry.createTypeUnsafe("Address", [isU8a5(address) ? u8aToHex5(address) : address]);
+  return registry.createTypeUnsafe("Address", [isU8a6(address) ? u8aToHex5(address) : address]);
 }
 var GenericExtrinsicSignatureV5 = class _GenericExtrinsicSignatureV5 extends Struct {
   __internal__signKeys;
@@ -45808,9 +47060,9 @@ var GeneralExtrinsic = class _GeneralExtrinsic extends Struct {
       return EMPTY_U8A;
     } else if (value instanceof _GeneralExtrinsic) {
       return value;
-    } else if (isU8a5(value) || Array.isArray(value) || isHex5(value)) {
-      return decodeU8a4(u8aToU8a5(value));
-    } else if (isObject5(value)) {
+    } else if (isU8a6(value) || Array.isArray(value) || isHex6(value)) {
+      return decodeU8a4(u8aToU8a6(value));
+    } else if (isObject6(value)) {
       const { payload, transactionExtensionVersion } = value;
       return objectSpread5(payload || {}, {
         transactionExtensionVersion: transactionExtensionVersion || registry.getTransactionExtensionVersion()
@@ -45898,7 +47150,7 @@ var GeneralExtrinsic = class _GeneralExtrinsic extends Struct {
    * @description Returns an encoded GeneralExtrinsic
    */
   encode() {
-    return u8aConcat4(new Uint8Array([this.version | this.preamble]), super.toU8a());
+    return u8aConcat5(new Uint8Array([this.version | this.preamble]), super.toU8a());
   }
   signFake() {
     throw new Error("Extrinsic: Type GeneralExtrinsic does not have signFake implemented");
@@ -45916,12 +47168,12 @@ var GeneralExtrinsic = class _GeneralExtrinsic extends Struct {
 
 // node_modules/@polkadot/types/generic/AccountId.js
 function decodeAccountId(value) {
-  if (isU8a5(value) || Array.isArray(value)) {
-    return u8aToU8a5(value);
+  if (isU8a6(value) || Array.isArray(value)) {
+    return u8aToU8a6(value);
   } else if (!value) {
     return new Uint8Array();
-  } else if (isHex5(value)) {
-    return hexToU8a5(value);
+  } else if (isHex6(value)) {
+    return hexToU8a6(value);
   } else if (isString4(value)) {
     return decodeAddress(value.toString());
   }
@@ -45989,23 +47241,23 @@ var PREFIX_1BYTE = 239;
 var PREFIX_2BYTE = 252;
 var PREFIX_4BYTE = 253;
 var PREFIX_8BYTE = 254;
-var MAX_1BYTE = new import_bn21.default(PREFIX_1BYTE);
-var MAX_2BYTE = new import_bn21.default(1).shln(16);
-var MAX_4BYTE = new import_bn21.default(1).shln(32);
+var MAX_1BYTE = new import_bn24.default(PREFIX_1BYTE);
+var MAX_2BYTE = new import_bn24.default(1).shln(16);
+var MAX_4BYTE = new import_bn24.default(1).shln(32);
 function decodeAccountIndex(value) {
   if (value instanceof GenericAccountIndex) {
     return value.toBn();
-  } else if (isBn4(value) || isNumber4(value) || isHex5(value) || isU8a5(value) || isBigInt4(value)) {
+  } else if (isBn4(value) || isNumber4(value) || isHex6(value) || isU8a6(value) || isBigInt5(value)) {
     return value;
   }
   return decodeAccountIndex(decodeAddress(value));
 }
 var GenericAccountIndex = class _GenericAccountIndex extends u323 {
-  constructor(registry, value = new import_bn21.default(0)) {
+  constructor(registry, value = new import_bn24.default(0)) {
     super(registry, decodeAccountIndex(value));
   }
   static calcLength(_value) {
-    const value = bnToBn2(_value);
+    const value = bnToBn3(_value);
     if (value.lte(MAX_1BYTE)) {
       return 1;
     } else if (value.lt(MAX_2BYTE)) {
@@ -46145,9 +47397,9 @@ function decodeCallViaU8a(registry, value, _meta) {
   };
 }
 function decodeCall(registry, value = new Uint8Array(), _meta) {
-  if (isU8a5(value) || isHex5(value)) {
-    return decodeCallViaU8a(registry, u8aToU8a5(value), _meta);
-  } else if (isObject5(value) && value.callIndex && value.args) {
+  if (isU8a6(value) || isHex6(value)) {
+    return decodeCallViaU8a(registry, u8aToU8a6(value), _meta);
+  } else if (isObject6(value) && value.callIndex && value.args) {
     return decodeCallViaObject(registry, value, _meta);
   }
   throw new Error(`Call: Cannot decode value '${value}' of type ${typeof value}`);
@@ -46263,7 +47515,7 @@ var GenericCall = class extends Struct {
 
 // node_modules/@polkadot/types/generic/ChainProperties.js
 function createValue(registry, type, value, asArray = true) {
-  if (value && isFunction6(value.unwrapOrDefault)) {
+  if (value && isFunction7(value.unwrapOrDefault)) {
     return value;
   }
   return registry.createTypeUnsafe(type, [
@@ -46276,7 +47528,7 @@ function decodeValue(registry, key, value) {
 function decode(registry, value) {
   return (
     // allow decoding from a map as well (ourselves)
-    (value && isFunction6(value.entries) ? [...value.entries()] : Object.entries(value || {})).reduce((all3, [key, value2]) => {
+    (value && isFunction7(value.entries) ? [...value.entries()] : Object.entries(value || {})).reduce((all3, [key, value2]) => {
       all3[key] = decodeValue(registry, key, value2);
       return all3;
     }, {
@@ -46324,7 +47576,7 @@ var CID_GRPA = /* @__PURE__ */ stringToU8a6("FRNK");
 var CID_POW = /* @__PURE__ */ stringToU8a6("pow_");
 var CID_NMBS = /* @__PURE__ */ stringToU8a6("nmbs");
 function getAuraAuthor(registry, bytes2, sessionValidators) {
-  return sessionValidators[registry.createTypeUnsafe("RawAuraPreDigest", [bytes2.toU8a(true)]).slotNumber.mod(new import_bn21.default(sessionValidators.length)).toNumber()];
+  return sessionValidators[registry.createTypeUnsafe("RawAuraPreDigest", [bytes2.toU8a(true)]).slotNumber.mod(new import_bn24.default(sessionValidators.length)).toNumber()];
 }
 function getBabeAuthor(registry, bytes2, sessionValidators) {
   const digest = registry.createTypeUnsafe("RawBabePreDigestCompat", [bytes2.toU8a(true)]);
@@ -46335,7 +47587,7 @@ function getBytesAsAuthor(registry, bytes2) {
 }
 var GenericConsensusEngineId = class extends U8aFixed {
   constructor(registry, value) {
-    super(registry, isNumber4(value) ? bnToU8a(value, { isLe: false }) : value, 32);
+    super(registry, isNumber4(value) ? bnToU8a2(value, { isLe: false }) : value, 32);
   }
   /**
    * @description `true` if the engine matches aura
@@ -46419,7 +47671,7 @@ function decodeU8a5(registry, value) {
   return registry.createTypeUnsafe("AccountIndex", [u8aToBn2(value.subarray(offset, offset + length))]);
 }
 function decodeAddressOrIndex(registry, value) {
-  return value instanceof GenericLookupSource ? value.inner : value instanceof GenericAccountId || value instanceof GenericAccountIndex ? value : isBn4(value) || isNumber4(value) || isBigInt4(value) ? registry.createTypeUnsafe("AccountIndex", [value]) : Array.isArray(value) || isHex5(value) || isU8a5(value) ? decodeU8a5(registry, u8aToU8a5(value)) : decodeString(registry, value);
+  return value instanceof GenericLookupSource ? value.inner : value instanceof GenericAccountId || value instanceof GenericAccountIndex ? value : isBn4(value) || isNumber4(value) || isBigInt5(value) ? registry.createTypeUnsafe("AccountIndex", [value]) : Array.isArray(value) || isHex6(value) || isU8a6(value) ? decodeU8a5(registry, u8aToU8a6(value)) : decodeString(registry, value);
 }
 var GenericLookupSource = class extends AbstractBase {
   constructor(registry, value = new Uint8Array()) {
@@ -46469,7 +47721,7 @@ var GenericLookupSource = class extends AbstractBase {
    */
   toU8a(isBare) {
     const encoded = this.inner.toU8a().subarray(0, this._rawLength);
-    return isBare ? encoded : u8aConcat4(this.inner instanceof GenericAccountIndex ? GenericAccountIndex.writeLength(encoded) : ACCOUNT_ID_PREFIX, encoded);
+    return isBare ? encoded : u8aConcat5(this.inner instanceof GenericAccountIndex ? GenericAccountIndex.writeLength(encoded) : ACCOUNT_ID_PREFIX, encoded);
   }
 };
 
@@ -46487,7 +47739,7 @@ function decodeU8a6(registry, u8a) {
 function decodeMultiAny(registry, value) {
   if (value instanceof GenericAccountId) {
     return { Id: value };
-  } else if (isU8a5(value)) {
+  } else if (isU8a6(value)) {
     return decodeU8a6(registry, value);
   } else if (value instanceof GenericMultiAddress) {
     return value;
@@ -46545,7 +47797,7 @@ function decodeVoteType(registry, value) {
   ]);
 }
 function decodeVote(registry, value) {
-  if (isU8a5(value)) {
+  if (isU8a6(value)) {
     return decodeVoteU8a(value);
   } else if (isUndefined5(value) || value instanceof Boolean || isBoolean(value)) {
     return decodeVoteBool(new bool(registry, value).isTrue);
@@ -46609,12 +47861,12 @@ var GenericVote = class extends U8aFixed {
 
 // node_modules/@polkadot/types/ethereum/AccountId.js
 function decodeAccountId2(value) {
-  if (isU8a5(value) || Array.isArray(value)) {
-    return u8aToU8a5(value);
-  } else if (isHex5(value) || isEthereumAddress(value.toString())) {
-    return hexToU8a5(value.toString());
+  if (isU8a6(value) || Array.isArray(value)) {
+    return u8aToU8a6(value);
+  } else if (isHex6(value) || isEthereumAddress(value.toString())) {
+    return hexToU8a6(value.toString());
   } else if (isString4(value)) {
-    return u8aToU8a5(value);
+    return u8aToU8a6(value);
   }
   return value;
 }
@@ -46676,7 +47928,7 @@ function decodeU8a7(registry, value) {
   return registry.createTypeUnsafe("AccountIndex", [u8aToBn2(value.subarray(offset, offset + length))]);
 }
 function decodeAddressOrIndex2(registry, value) {
-  return value instanceof GenericEthereumLookupSource ? value.inner : value instanceof GenericEthereumAccountId || value instanceof GenericAccountIndex ? value : isU8a5(value) || Array.isArray(value) || isHex5(value) ? decodeU8a7(registry, u8aToU8a5(value)) : isBn4(value) || isNumber4(value) || isBigInt4(value) ? registry.createTypeUnsafe("AccountIndex", [value]) : decodeString2(registry, value);
+  return value instanceof GenericEthereumLookupSource ? value.inner : value instanceof GenericEthereumAccountId || value instanceof GenericAccountIndex ? value : isU8a6(value) || Array.isArray(value) || isHex6(value) ? decodeU8a7(registry, u8aToU8a6(value)) : isBn4(value) || isNumber4(value) || isBigInt5(value) ? registry.createTypeUnsafe("AccountIndex", [value]) : decodeString2(registry, value);
 }
 var GenericEthereumLookupSource = class extends AbstractBase {
   constructor(registry, value = new Uint8Array()) {
@@ -46714,7 +47966,7 @@ var GenericEthereumLookupSource = class extends AbstractBase {
    */
   toU8a(isBare) {
     const encoded = this.inner.toU8a().subarray(0, this._rawLength);
-    return isBare ? encoded : u8aConcat4(this.inner instanceof GenericAccountIndex ? GenericAccountIndex.writeLength(encoded) : ACCOUNT_ID_PREFIX2, encoded);
+    return isBare ? encoded : u8aConcat5(this.inner instanceof GenericAccountIndex ? GenericAccountIndex.writeLength(encoded) : ACCOUNT_ID_PREFIX2, encoded);
   }
 };
 
@@ -46733,8 +47985,8 @@ function decodeDataU8a(registry, value) {
   throw new Error(`Unable to decode Data, invalid indicator byte ${indicator}`);
 }
 function decodeData(registry, value) {
-  if (isU8a5(value) || isString4(value)) {
-    return decodeDataU8a(registry, u8aToU8a5(value));
+  if (isU8a6(value) || isString4(value)) {
+    return decodeDataU8a(registry, u8aToU8a6(value));
   } else if (!value) {
     return [void 0, void 0];
   }
@@ -46837,7 +48089,7 @@ var HASHER_MAP = {
   Twox64Concat: [8, true]
 };
 function decodeStorageKey(value) {
-  if (isU8a5(value) || !value || isString4(value)) {
+  if (isU8a6(value) || !value || isString4(value)) {
     return { key: value };
   } else if (value instanceof StorageKey) {
     return {
@@ -46845,7 +48097,7 @@ function decodeStorageKey(value) {
       method: value.method,
       section: value.section
     };
-  } else if (isFunction6(value)) {
+  } else if (isFunction7(value)) {
     return {
       key: value(),
       method: value.method,
@@ -46853,7 +48105,7 @@ function decodeStorageKey(value) {
     };
   } else if (Array.isArray(value)) {
     const [fn, args = []] = value;
-    if (!isFunction6(fn)) {
+    if (!isFunction7(fn)) {
       throw new Error("Expected function input for key construction");
     }
     if (fn.meta && fn.meta.type.isMap) {
@@ -46875,8 +48127,8 @@ function decodeHashers(registry, value, hashers) {
   const count = hashers.length;
   const result = new Array(count);
   for (let i = 0; i < count; i++) {
-    const [hasher, type] = hashers[i];
-    const [hashLen, canDecode] = HASHER_MAP[hasher.type];
+    const [hasher2, type] = hashers[i];
+    const [hashLen, canDecode] = HASHER_MAP[hasher2.type];
     const decoded = canDecode ? registry.createTypeUnsafe(getSiName(registry.lookup, type), [value.subarray(offset + hashLen)]) : registry.createTypeUnsafe("Raw", [value.subarray(offset, offset + hashLen)]);
     offset += hashLen + (canDecode ? decoded.encodedLength : 0);
     result[i] = decoded;
@@ -46894,7 +48146,7 @@ function decodeArgsFromMeta(registry, value, meta) {
 function getMeta(value) {
   if (value instanceof StorageKey) {
     return value.meta;
-  } else if (isFunction6(value)) {
+  } else if (isFunction7(value)) {
     return value.meta;
   } else if (Array.isArray(value)) {
     const [fn] = value;
@@ -46905,7 +48157,7 @@ function getMeta(value) {
 function getType(registry, value) {
   if (value instanceof StorageKey) {
     return value.outputType;
-  } else if (isFunction6(value)) {
+  } else if (isFunction7(value)) {
     return unwrapStorageType(registry, value.meta.type);
   } else if (Array.isArray(value)) {
     const [fn] = value;
@@ -47051,11 +48303,11 @@ function decorateExtrinsics(registry, { lookup, pallets }, version2) {
 }
 
 // node_modules/@polkadot/types/metadata/v9/toV10.js
-function createStorageHasher(registry, hasher) {
-  if (hasher.toNumber() >= 2) {
-    return registry.createTypeUnsafe("StorageHasherV10", [hasher.toNumber() + 1]);
+function createStorageHasher(registry, hasher2) {
+  if (hasher2.toNumber() >= 2) {
+    return registry.createTypeUnsafe("StorageHasherV10", [hasher2.toNumber() + 1]);
   }
-  return registry.createTypeUnsafe("StorageHasherV10", [hasher]);
+  return registry.createTypeUnsafe("StorageHasherV10", [hasher2]);
 }
 function createStorageType(registry, entryType) {
   if (entryType.isMap) {
@@ -47614,7 +48866,7 @@ function decodeU8a8(registry, u8a) {
 }
 var Metadata = class extends MetadataVersioned {
   constructor(registry, value) {
-    super(registry, isU8a5(value) || isString4(value) ? decodeU8a8(registry, u8aToU8a5(value)) : value);
+    super(registry, isU8a6(value) || isString4(value) ? decodeU8a8(registry, u8aToU8a6(value)) : value);
   }
 };
 
@@ -47625,7 +48877,7 @@ function decorateConstants(registry, { pallets }, _version) {
     const { constants, name } = pallets[i];
     if (!constants.isEmpty) {
       lazyMethod4(result, stringCamelCase2(name), () => lazyMethods3({}, constants, (constant) => {
-        const codec = registry.createTypeUnsafe(registry.createLookupType(constant.type), [hexToU8a5(constant.value.toHex())]);
+        const codec = registry.createTypeUnsafe(registry.createLookupType(constant.type), [hexToU8a6(constant.value.toHex())]);
         codec.meta = constant;
         return codec;
       }, objectNameToCamel));
@@ -47646,7 +48898,7 @@ function decorateErrors(registry, { lookup, pallets }, version2) {
       const sectionIndex = version2 >= 12 ? index.toNumber() : i;
       lazyMethod4(result, stringCamelCase2(name), () => lazyVariants(lookup, errors.unwrap(), objectNameToString, (variant) => ({
         // We sprinkle in isCodec & isU8a to ensure we are dealing with the correct objects
-        is: (errorMod) => isCodec(errorMod) && isCodec(errorMod.index) && errorMod.index.eq(sectionIndex) && (isU8a5(errorMod.error) ? errorMod.error[0] === variant.index.toNumber() : isCodec(errorMod.error) && errorMod.error.eq(variant.index)),
+        is: (errorMod) => isCodec(errorMod) && isCodec(errorMod.index) && errorMod.index.eq(sectionIndex) && (isU8a6(errorMod.error) ? errorMod.error[0] === variant.index.toNumber() : isCodec(errorMod.error) && errorMod.error.eq(variant.index)),
         meta: registry.createTypeUnsafe("ErrorMetadataLatest", [variantToMeta(lookup, variant)])
       })));
     }
@@ -47666,7 +48918,7 @@ function decorateEvents(registry, { lookup, pallets }, version2) {
     const sectionIndex = version2 >= 12 ? index.toNumber() : i;
     lazyMethod4(result, stringCamelCase2(name), () => lazyVariants(lookup, events2.unwrap(), objectNameToString, (variant) => ({
       // We sprinkle in isCodec & isU8a to ensure we are dealing with the correct objects
-      is: (eventRecord) => isCodec(eventRecord) && isU8a5(eventRecord.index) && sectionIndex === eventRecord.index[0] && variant.index.eq(eventRecord.index[1]),
+      is: (eventRecord) => isCodec(eventRecord) && isU8a6(eventRecord.index) && sectionIndex === eventRecord.index[0] && variant.index.eq(eventRecord.index[1]),
       meta: registry.createTypeUnsafe("EventMetadataLatest", [variantToMeta(lookup, variant)])
     })));
   }
@@ -47682,19 +48934,19 @@ var HASHERS = {
   ),
   Blake2_128Concat: (data) => (
     // eslint-disable-line camelcase
-    u8aConcat4(blake2AsU8a(data, 128), u8aToU8a5(data))
+    u8aConcat5(blake2AsU8a(data, 128), u8aToU8a6(data))
   ),
   Blake2_256: (data) => (
     // eslint-disable-line camelcase
     blake2AsU8a(data, 256)
   ),
-  Identity: (data) => u8aToU8a5(data),
+  Identity: (data) => u8aToU8a6(data),
   Twox128: (data) => xxhashAsU8a(data, 128),
   Twox256: (data) => xxhashAsU8a(data, 256),
-  Twox64Concat: (data) => u8aConcat4(xxhashAsU8a(data, 64), u8aToU8a5(data))
+  Twox64Concat: (data) => u8aConcat5(xxhashAsU8a(data, 64), u8aToU8a6(data))
 };
-function getHasher(hasher) {
-  return HASHERS[hasher.type] || DEFAULT_FN;
+function getHasher(hasher2) {
+  return HASHERS[hasher2.type] || DEFAULT_FN;
 }
 
 // node_modules/@polkadot/types/metadata/decorate/storage/createFunction.js
@@ -47743,7 +48995,7 @@ function createKeyInspect(registry, itemFn, args) {
 }
 function createKeyRaw(registry, itemFn, args) {
   const [prefix2, extra] = createKeyRawParts(registry, itemFn, args);
-  return u8aConcat4(...prefix2, ...extra);
+  return u8aConcat5(...prefix2, ...extra);
 }
 function createKey(registry, itemFn, args) {
   assertArgs(itemFn, args);
@@ -47753,7 +49005,7 @@ function createStorageInspect(registry, itemFn, options) {
   const { meta: { type } } = itemFn;
   return (...args) => {
     if (type.isPlain) {
-      return options.skipHashing ? { inner: [], name: "wellKnown", outer: [u8aToU8a5(options.key)] } : createKeyInspect(registry, itemFn, NO_RAW_ARGS);
+      return options.skipHashing ? { inner: [], name: "wellKnown", outer: [u8aToU8a6(options.key)] } : createKeyInspect(registry, itemFn, NO_RAW_ARGS);
     }
     const { hashers, key } = type.asMap;
     return hashers.length === 1 ? createKeyInspect(registry, itemFn, { args, hashers, keys: [key] }) : createKeyInspect(registry, itemFn, { args, hashers, keys: registry.lookup.getSiType(key).def.asTuple });
@@ -47765,7 +49017,7 @@ function createStorageFn(registry, itemFn, options) {
   return (...args) => {
     if (type.isPlain) {
       if (!cacheKey) {
-        cacheKey = options.skipHashing ? compactAddLength(u8aToU8a5(options.key)) : createKey(registry, itemFn, NO_RAW_ARGS);
+        cacheKey = options.skipHashing ? compactAddLength(u8aToU8a6(options.key)) : createKey(registry, itemFn, NO_RAW_ARGS);
       }
       return cacheKey;
     }
@@ -48158,9 +49410,9 @@ var TypeRegistry = class {
   }
   // finds an error
   findMetaError(errorIndex) {
-    const [section2, method] = isU8a5(errorIndex) ? [errorIndex[0], errorIndex[1]] : [
+    const [section2, method] = isU8a6(errorIndex) ? [errorIndex[0], errorIndex[1]] : [
       errorIndex.index.toNumber(),
-      isU8a5(errorIndex.error) ? errorIndex.error[0] : errorIndex.error.toNumber()
+      isU8a6(errorIndex.error) ? errorIndex.error[0] : errorIndex.error.toNumber()
     ];
     return assertReturn3(this.__internal__metadataErrors[`${section2}`] && this.__internal__metadataErrors[`${section2}`][`${method}`], () => `findMetaError: Unable to find Error with index [${section2}, ${method}]/[${errorIndex.toString()}]`);
   }
@@ -48253,10 +49505,10 @@ var TypeRegistry = class {
   }
   // eslint-disable-next-line no-dupe-class-members
   register(arg1, arg2) {
-    if (isFunction6(arg1)) {
+    if (isFunction7(arg1)) {
       this.__internal__classes.set(arg1.name, arg1);
     } else if (isString4(arg1)) {
-      if (!isFunction6(arg2)) {
+      if (!isFunction7(arg2)) {
         throw new Error(`Expected class definition passed to '${arg1}' registration`);
       } else if (arg1 === arg2.toString()) {
         throw new Error(`Unable to register circular ${arg1} === ${arg1}`);
@@ -48270,7 +49522,7 @@ var TypeRegistry = class {
     const entries = Object.entries(obj);
     for (let e = 0, count = entries.length; e < count; e++) {
       const [name, type] = entries[e];
-      if (isFunction6(type)) {
+      if (isFunction7(type)) {
         this.__internal__classes.set(name, type);
       } else {
         const def = isString4(type) ? type : stringify3(type);
@@ -48290,8 +49542,8 @@ var TypeRegistry = class {
       this.__internal__chainProperties = properties;
     }
   }
-  setHasher(hasher) {
-    this.__internal__hasher = hasher || blake2AsU8a;
+  setHasher(hasher2) {
+    this.__internal__hasher = hasher2 || blake2AsU8a;
   }
   setKnownTypes(knownTypes2) {
     this.__internal__knownTypes = knownTypes2;
@@ -48450,7 +49702,7 @@ var RpcCore = class {
    * @param  {ProviderInterface} provider An API provider using any of the supported providers (HTTP, SC or WebSocket)
    */
   constructor(instanceId, registry, { isPedantic = true, provider, rpcCacheCapacity, userRpc = {} }) {
-    if (!provider || !isFunction5(provider.send)) {
+    if (!provider || !isFunction6(provider.send)) {
       throw new Error("Expected Provider to API create");
     }
     this.__internal__instanceId = instanceId;
@@ -48547,7 +49799,7 @@ var RpcCore = class {
     const callWithRegistry = async (isScale, values) => {
       const blockId = hashIndex === -1 ? null : values[hashIndex];
       const blockHash = blockId && def.params[hashIndex].type === "BlockNumber" ? await this.__internal__getBlockHash?.(blockId) : blockId;
-      const { registry } = isScale && blockHash && this.__internal__getBlockRegistry ? await this.__internal__getBlockRegistry(u8aToU8a4(blockHash)) : { registry: this.__internal__registryDefault };
+      const { registry } = isScale && blockHash && this.__internal__getBlockRegistry ? await this.__internal__getBlockRegistry(u8aToU8a5(blockHash)) : { registry: this.__internal__registryDefault };
       const params = this._formatParams(registry, null, def, values);
       const result = await this.provider.send(rpcName, params.map((p) => p.toJSON()), !!blockHash);
       return this._formatResult(isScale, registry, blockHash, method, def, params, result);
@@ -48669,7 +49921,7 @@ var RpcCore = class {
   }
   _formatStorageData(registry, blockHash, key, value) {
     const isEmpty = isNull3(value);
-    const input = isEmpty ? null : isTreatAsHex(key) ? value : u8aToU8a4(value);
+    const input = isEmpty ? null : isTreatAsHex(key) ? value : u8aToU8a5(value);
     return this._newType(registry, blockHash, key, input, isEmpty);
   }
   _formatStorageSet(registry, blockHash, keys2, changes) {
@@ -48694,7 +49946,7 @@ var RpcCore = class {
     }
     const value = isNotFound ? null : found[1];
     const isEmpty = isNull3(value);
-    const input = isEmpty || isTreatAsHex(key) ? value : u8aToU8a4(value);
+    const input = isEmpty || isTreatAsHex(key) ? value : u8aToU8a5(value);
     const codec = this._newType(registry, blockHash, key, input, isEmpty, entryIndex);
     this._setToCache(hexKey, codec);
     return codec;
@@ -48708,7 +49960,7 @@ var RpcCore = class {
     const entryNum = entryIndex === -1 ? "" : ` entry ${entryIndex}:`;
     try {
       return registry.createTypeUnsafe(type, [
-        isEmpty ? meta.fallback ? type.includes("Linkage<") ? u8aConcat3(hexToU8a4(meta.fallback.toHex()), new Uint8Array(2)) : hexToU8a4(meta.fallback.toHex()) : void 0 : meta.modifier.isOptional ? registry.createTypeUnsafe(type, [input], { blockHash, isPedantic: this.__internal__isPedantic }) : input
+        isEmpty ? meta.fallback ? type.includes("Linkage<") ? u8aConcat4(hexToU8a5(meta.fallback.toHex()), new Uint8Array(2)) : hexToU8a5(meta.fallback.toHex()) : void 0 : meta.modifier.isOptional ? registry.createTypeUnsafe(type, [input], { blockHash, isPedantic: this.__internal__isPedantic }) : input
       ], { blockHash, isFallback: isEmpty && !!meta.fallback, isOptional: meta.modifier.isOptional, isPedantic: this.__internal__isPedantic && !meta.modifier.isOptional });
     } catch (error) {
       throw new Error(`Unable to decode storage ${key.section || "unknown"}.${key.method || "unknown"}:${entryNum}: ${error.message}`);
@@ -48840,14 +50092,14 @@ var base58Decode2 = /* @__PURE__ */ createDecode2(config3, base58Validate2);
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util-crypto/blake2/asU8a.js
 function blake2AsU8a2(data, bitLength = 256, key, onlyJs) {
   const byteLength = Math.ceil(bitLength / 8);
-  const u8a = u8aToU8a3(data);
-  return !hasBigInt3 || !onlyJs && isReady() ? blake2b(u8a, u8aToU8a3(key), byteLength) : key ? blake2b3(u8a, { dkLen: byteLength, key }) : blake2b3(u8a, { dkLen: byteLength });
+  const u8a = u8aToU8a4(data);
+  return !hasBigInt4 || !onlyJs && isReady() ? blake2b(u8a, u8aToU8a4(key), byteLength) : key ? blake2b3(u8a, { dkLen: byteLength, key }) : blake2b3(u8a, { dkLen: byteLength });
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util-crypto/address/sshash.js
 var SS58_PREFIX2 = stringToU8a4("SS58PRE");
 function sshash2(key) {
-  return blake2AsU8a2(u8aConcat2(SS58_PREFIX2, key), 512);
+  return blake2AsU8a2(u8aConcat3(SS58_PREFIX2, key), 512);
 }
 
 // node_modules/@polkadot/api-derive/node_modules/@polkadot/util-crypto/address/checksum.js
@@ -48875,8 +50127,8 @@ function decodeAddress2(encoded, ignoreChecksum, ss58Format = -1) {
   if (!encoded) {
     throw new Error("Invalid empty address passed");
   }
-  if (isU8a3(encoded) || isHex3(encoded)) {
-    return u8aToU8a3(encoded);
+  if (isU8a4(encoded) || isHex4(encoded)) {
+    return u8aToU8a4(encoded);
   }
   try {
     const decoded = base58Decode2(encoded);
@@ -48898,7 +50150,7 @@ function decodeAddress2(encoded, ignoreChecksum, ss58Format = -1) {
 // node_modules/@polkadot/api-derive/accounts/accountId.js
 function accountId(instanceId, api) {
   return memo(instanceId, (address) => {
-    const decoded = isU8a3(address) ? address : decodeAddress2((address || "").toString());
+    const decoded = isU8a4(address) ? address : decodeAddress2((address || "").toString());
     if (decoded.length > 8) {
       return of(api.registry.createType(decoded.length === 20 ? "AccountId20" : "AccountId", decoded));
     }
@@ -48935,7 +50187,7 @@ function _flags(instanceId, api) {
     return api.queryMulti(filtered).pipe(map2((values) => {
       let resultIndex = -1;
       for (let i = 0, count = calls.length; i < count; i++) {
-        if (isFunction4(calls[i])) {
+        if (isFunction5(calls[i])) {
           results[i] = values[++resultIndex];
         }
       }
@@ -48951,7 +50203,7 @@ function flags(instanceId, api) {
 function idAndIndex(instanceId, api) {
   return memo(instanceId, (address) => {
     try {
-      const decoded = isU8a3(address) ? address : decodeAddress2((address || "").toString());
+      const decoded = isU8a4(address) ? address : decodeAddress2((address || "").toString());
       if (decoded.length > 8) {
         const accountId2 = api.registry.createType(decoded.length === 20 ? "AccountId20" : "AccountId", decoded);
         return api.derive.accounts.idToIndex(accountId2).pipe(map2((accountIndex2) => [accountId2, accountIndex2]));
@@ -49042,7 +50294,7 @@ function hasIdentityMulti(instanceId, api) {
     let display;
     if (identityOfOpt && identityOfOpt.isSome) {
       const value = dataAsString(identityCompat(identityOfOpt).info.display);
-      if (value && !isHex3(value)) {
+      if (value && !isHex4(value)) {
         display = value;
       }
     }
@@ -49116,7 +50368,7 @@ function withSection(section2, fn) {
   return (instanceId, api) => memo(instanceId, fn(getInstance(api, section2), api, instanceId));
 }
 function callMethod(method, empty2) {
-  return (section2) => withSection(section2, (query2) => () => isFunction4(query2?.[method]) ? query2[method]() : of(empty2));
+  return (section2) => withSection(section2, (query2) => () => isFunction5(query2?.[method]) ? query2[method]() : of(empty2));
 }
 
 // node_modules/@polkadot/api-derive/collective/members.js
@@ -49124,7 +50376,7 @@ var members = /* @__PURE__ */ callMethod("members", []);
 
 // node_modules/@polkadot/api-derive/collective/prime.js
 function prime(section2) {
-  return withSection(section2, (query2) => () => isFunction4(query2?.prime) ? query2.prime().pipe(map2((o) => o.unwrapOr(null))) : of(null));
+  return withSection(section2, (query2) => () => isFunction5(query2?.prime) ? query2.prime().pipe(map2((o) => o.unwrapOr(null))) : of(null));
 }
 
 // node_modules/@polkadot/api-derive/collective/proposals.js
@@ -49136,7 +50388,7 @@ function parse(api, [hashes, proposals8, votes2]) {
   }));
 }
 function _proposalsFrom(api, query2, hashes) {
-  return (isFunction4(query2?.proposals) && hashes.length ? combineLatest([
+  return (isFunction5(query2?.proposals) && hashes.length ? combineLatest([
     of(hashes),
     // this should simply be api.query[section].proposalOf.multi<Option<Proposal>>(hashes),
     // however we have had cases on Edgeware where the indices have moved around after an
@@ -49146,13 +50398,13 @@ function _proposalsFrom(api, query2, hashes) {
   ]) : of([[], [], []])).pipe(map2((r) => parse(api, r)));
 }
 function hasProposals(section2) {
-  return withSection(section2, (query2) => () => of(isFunction4(query2?.proposals)));
+  return withSection(section2, (query2) => () => of(isFunction5(query2?.proposals)));
 }
 function proposals(section2) {
   return withSection(section2, (query2, api) => () => api.derive[section2].proposalHashes().pipe(switchMap((all3) => _proposalsFrom(api, query2, all3))));
 }
 function proposal(section2) {
-  return withSection(section2, (query2, api) => (hash) => isFunction4(query2?.proposals) ? firstObservable(_proposalsFrom(api, query2, [hash])) : of(null));
+  return withSection(section2, (query2, api) => (hash) => isFunction5(query2?.proposals) ? firstObservable(_proposalsFrom(api, query2, [hash])) : of(null));
 }
 var proposalCount = /* @__PURE__ */ callMethod("proposalCount", null);
 var proposalHashes = /* @__PURE__ */ callMethod("proposals", []);
@@ -49203,7 +50455,7 @@ function orderBags(ids, bags) {
 function _getIds(instanceId, api) {
   const query2 = getQueryInterface(api);
   return memo(instanceId, (_ids) => {
-    const ids = _ids.map((id) => bnToBn(id));
+    const ids = _ids.map((id) => bnToBn2(id));
     return ids.length ? query2.listBags.multi(ids).pipe(map2((bags) => orderBags(ids, bags))) : of([]);
   });
 }
@@ -49212,7 +50464,7 @@ function all(instanceId, api) {
   return memo(instanceId, () => query2.listBags.keys().pipe(switchMap((keys2) => api.derive.bagsList._getIds(keys2.map(({ args: [id] }) => id))), map2((list) => list.filter(({ bag }) => bag))));
 }
 function get(instanceId, api) {
-  return memo(instanceId, (id) => api.derive.bagsList._getIds([bnToBn(id)]).pipe(map2((bags) => bags[0])));
+  return memo(instanceId, (id) => api.derive.bagsList._getIds([bnToBn2(id)]).pipe(map2((bags) => bags[0])));
 }
 
 // node_modules/@polkadot/api-derive/bagsList/getExpanded.js
@@ -49262,7 +50514,7 @@ function calcLocked(api, bestNumber2, locks2) {
   if (Array.isArray(locks2)) {
     lockedBreakdown = locks2.filter(({ until }) => !until || bestNumber2 && until.gt(bestNumber2));
     allLocked = lockedBreakdown.some(({ amount }) => amount && amount.isMax());
-    vestingLocked = api.registry.createType("Balance", lockedBreakdown.filter(({ id }) => id.eq(VESTING_ID)).reduce((result, { amount }) => result.iadd(amount), new import_bn12.default(0)));
+    vestingLocked = api.registry.createType("Balance", lockedBreakdown.filter(({ id }) => id.eq(VESTING_ID)).reduce((result, { amount }) => result.iadd(amount), new import_bn15.default(0)));
     const notAll = lockedBreakdown.filter(({ amount }) => amount && !amount.isMax());
     if (notAll.length) {
       lockedBalance = api.registry.createType("Balance", bnMax(...notAll.map(({ amount }) => amount)));
@@ -49277,12 +50529,12 @@ function calcShared(api, bestNumber2, data, locks2) {
     const { frameSystemAccountInfo, freeBalance, reservedBalance } = data;
     const noFrozenReserved = frameSystemAccountInfo.frozen.isZero() && reservedBalance.isZero();
     const ED = api.consts.balances.existentialDeposit;
-    const maybeED = noFrozenReserved ? new import_bn12.default(0) : ED;
+    const maybeED = noFrozenReserved ? new import_bn15.default(0) : ED;
     const frozenReserveDif = frameSystemAccountInfo.frozen.sub(reservedBalance);
     transferable = api.registry.createType("Balance", allLocked ? 0 : freeBalance.sub(bnMax(maybeED, frozenReserveDif)));
   }
   return objectSpread3({}, data, {
-    availableBalance: api.registry.createType("Balance", allLocked ? 0 : bnMax(new import_bn12.default(0), data?.freeBalance ? data.freeBalance.sub(lockedBalance) : new import_bn12.default(0))),
+    availableBalance: api.registry.createType("Balance", allLocked ? 0 : bnMax(new import_bn15.default(0), data?.freeBalance ? data.freeBalance.sub(lockedBalance) : new import_bn15.default(0))),
     lockedBalance,
     lockedBreakdown,
     transferable,
@@ -49293,8 +50545,8 @@ function calcVesting(bestNumber2, shared, _vesting) {
   const vesting = _vesting || [];
   const isVesting = !shared.vestingLocked.isZero();
   const vestedBalances = vesting.map(({ locked, perBlock, startingBlock }) => bestNumber2.gt(startingBlock) ? bnMin(locked, perBlock.mul(bestNumber2.sub(startingBlock))) : BN_ZERO2);
-  const vestedBalance = vestedBalances.reduce((all3, value) => all3.iadd(value), new import_bn12.default(0));
-  const vestingTotal = vesting.reduce((all3, { locked }) => all3.iadd(locked), new import_bn12.default(0));
+  const vestedBalance = vestedBalances.reduce((all3, value) => all3.iadd(value), new import_bn15.default(0));
+  const vestingTotal = vesting.reduce((all3, { locked }) => all3.iadd(locked), new import_bn15.default(0));
   return {
     isVesting,
     vestedBalance,
@@ -49365,7 +50617,7 @@ function all2(instanceId, api) {
   const balanceInstances = api.registry.getModuleInstances(api.runtimeVersion.specName, "balances");
   return memo(instanceId, (address) => combineLatest([
     api.derive.balances.account(address),
-    isFunction4(api.query.system?.account) || isFunction4(api.query.balances?.account) ? queryCurrent(api, address, balanceInstances) : queryOld(api, address)
+    isFunction5(api.query.system?.account) || isFunction5(api.query.balances?.account) ? queryCurrent(api, address, balanceInstances) : queryOld(api, address)
   ]).pipe(switchMap(([account3, locks2]) => combineLatest([
     of(account3),
     of(locks2),
@@ -49424,16 +50676,16 @@ function queryNonceOnly(api, accountId2) {
     [[zeroBalance(api), zeroBalance(api), zeroBalance(api), zeroBalance(api)]],
     { isFrameAccountData: false }
   ];
-  return isFunction4(api.query.system.account) ? api.query.system.account(accountId2).pipe(map2(({ nonce }) => fill(nonce))) : isFunction4(api.query.system["accountNonce"]) ? api.query.system["accountNonce"](accountId2).pipe(map2((nonce) => fill(nonce))) : of(fill(api.registry.createType("Index")));
+  return isFunction5(api.query.system.account) ? api.query.system.account(accountId2).pipe(map2(({ nonce }) => fill(nonce))) : isFunction5(api.query.system["accountNonce"]) ? api.query.system["accountNonce"](accountId2).pipe(map2((nonce) => fill(nonce))) : of(fill(api.registry.createType("Index")));
 }
 function queryBalancesAccount(api, accountId2, modules = ["balances"]) {
-  const balances = modules.map((m) => api.derive[m]?.customAccount || api.query[m]?.account).filter((q) => isFunction4(q));
+  const balances = modules.map((m) => api.derive[m]?.customAccount || api.query[m]?.account).filter((q) => isFunction5(q));
   const extract = (nonce, data) => [
     nonce,
     data.map(({ feeFrozen, free, miscFrozen, reserved }) => [free, reserved, feeFrozen, miscFrozen]),
     { isFrameAccountData: false }
   ];
-  return balances.length ? isFunction4(api.query.system.account) ? combineLatest([
+  return balances.length ? isFunction5(api.query.system.account) ? combineLatest([
     api.query.system.account(accountId2),
     ...balances.map((c) => c(accountId2))
   ]).pipe(map2(([{ nonce }, ...balances2]) => extract(nonce, balances2))) : combineLatest([
@@ -49475,7 +50727,7 @@ function account(instanceId, api) {
   const nonDefaultBalances = balanceInstances && balanceInstances[0] !== "balances";
   return memo(instanceId, (address) => api.derive.accounts.accountId(address).pipe(switchMap((accountId2) => accountId2 ? combineLatest([
     of(accountId2),
-    nonDefaultBalances ? queryBalancesAccount(api, accountId2, balanceInstances) : isFunction4(api.query.system?.account) ? querySystemAccount(api, accountId2) : isFunction4(api.query.balances?.account) ? queryBalancesAccount(api, accountId2) : isFunction4(api.query.balances?.["freeBalance"]) ? queryBalancesFree(api, accountId2) : queryNonceOnly(api, accountId2)
+    nonDefaultBalances ? queryBalancesAccount(api, accountId2, balanceInstances) : isFunction5(api.query.system?.account) ? querySystemAccount(api, accountId2) : isFunction5(api.query.balances?.account) ? queryBalancesAccount(api, accountId2) : isFunction5(api.query.balances?.["freeBalance"]) ? queryBalancesFree(api, accountId2) : queryNonceOnly(api, accountId2)
   ]) : of([api.registry.createType("AccountId"), [
     api.registry.createType("Index"),
     [[zeroBalance(api), zeroBalance(api), zeroBalance(api), zeroBalance(api)]],
@@ -49879,7 +51131,7 @@ __export(crowdloan_exports, {
 
 // node_modules/@polkadot/api-derive/crowdloan/childKey.js
 function createChildKey(info6) {
-  return u8aToHex3(u8aConcat2(":child_storage:default:", blake2AsU8a2(u8aConcat2("crowdloan", (info6.fundIndex || info6.trieIndex).toU8a()))));
+  return u8aToHex3(u8aConcat3(":child_storage:default:", blake2AsU8a2(u8aConcat3("crowdloan", (info6.fundIndex || info6.trieIndex).toU8a()))));
 }
 function childKey(instanceId, api) {
   return memo(instanceId, (paraId) => api.query["crowdloan"]["funds"](paraId).pipe(map2((optInfo) => optInfo.isSome ? createChildKey(optInfo.unwrap()) : null)));
@@ -49935,7 +51187,7 @@ function _getKeysPaged(api, childKey2) {
   );
 }
 function _getAll(api, paraId, childKey2) {
-  return _eventTriggerAll(api, paraId).pipe(switchMap(() => isFunction4(api.rpc.childstate.getKeysPaged) ? _getKeysPaged(api, childKey2) : api.rpc.childstate.getKeys(childKey2, "0x")), map2((keys2) => keys2.map((k) => k.toHex())));
+  return _eventTriggerAll(api, paraId).pipe(switchMap(() => isFunction5(api.rpc.childstate.getKeysPaged) ? _getKeysPaged(api, childKey2) : api.rpc.childstate.getKeys(childKey2, "0x")), map2((keys2) => keys2.map((k) => k.toHex())));
 }
 function _contributions(api, paraId, childKey2) {
   return combineLatest([
@@ -50056,7 +51308,7 @@ function calcVotesPrev(votesFor) {
     state.voteCount++;
     state.votedTotal.iadd(counted);
     return state;
-  }, { allAye: [], allNay: [], voteCount: 0, voteCountAye: 0, voteCountNay: 0, votedAye: new import_bn12.default(0), votedNay: new import_bn12.default(0), votedTotal: new import_bn12.default(0) });
+  }, { allAye: [], allNay: [], voteCount: 0, voteCountAye: 0, voteCountNay: 0, votedAye: new import_bn15.default(0), votedNay: new import_bn15.default(0), votedTotal: new import_bn15.default(0) });
 }
 function calcVotesCurrent(tally, votes2) {
   const allAye = [];
@@ -50094,7 +51346,7 @@ function getStatus(info6) {
   return isOldInfo(unwrapped) ? unwrapped : unwrapped.isOngoing ? unwrapped.asOngoing : null;
 }
 function getImageHashBounded(hash) {
-  return hash.isLegacy ? hash.asLegacy.hash_.toHex() : hash.isLookup ? hash.asLookup.hash_.toHex() : hash.isInline ? hash.asInline.hash.toHex() : isString3(hash) ? isHex3(hash) ? hash : stringToHex(hash) : isU8a3(hash) ? u8aToHex3(hash) : hash.toHex();
+  return hash.isLegacy ? hash.asLegacy.hash_.toHex() : hash.isLookup ? hash.asLookup.hash_.toHex() : hash.isInline ? hash.asInline.hash.toHex() : isString3(hash) ? isHex4(hash) ? hash : stringToHex(hash) : isU8a4(hash) ? u8aToHex3(hash) : hash.toHex();
 }
 function getImageHash(status) {
   return getImageHashBounded(status.proposal || status.proposalHash);
@@ -50153,7 +51405,7 @@ function queryScheduler(api) {
   }), map2(([infos, images]) => infos.map((info6, index) => objectSpread3({ image: images[index] }, info6))));
 }
 function dispatchQueue(instanceId, api) {
-  return memo(instanceId, () => isFunction4(api.query.scheduler?.agenda) ? queryScheduler(api) : api.query.democracy["dispatchQueue"] ? queryQueue(api) : of([]));
+  return memo(instanceId, () => isFunction5(api.query.scheduler?.agenda) ? queryScheduler(api) : api.query.democracy["dispatchQueue"] ? queryQueue(api) : of([]));
 }
 
 // node_modules/@polkadot/api-derive/democracy/locks.js
@@ -50271,13 +51523,13 @@ function getImages(api, bounded) {
   }));
 }
 function preimages(instanceId, api) {
-  return memo(instanceId, (hashes) => hashes.length ? isFunction4(api.query.democracy["preimages"]) ? getDemocracyImages(api, hashes) : isFunction4(api.query.preimage.preimageFor) ? getImages(api, hashes) : of([]) : of([]));
+  return memo(instanceId, (hashes) => hashes.length ? isFunction5(api.query.democracy["preimages"]) ? getDemocracyImages(api, hashes) : isFunction5(api.query.preimage.preimageFor) ? getImages(api, hashes) : of([]) : of([]));
 }
 var preimage = /* @__PURE__ */ firstMemo((api, hash) => api.derive.democracy.preimages([hash]));
 
 // node_modules/@polkadot/api-derive/democracy/proposals.js
 function isNewDepositors(depositors) {
-  return isFunction4(depositors[1].mul);
+  return isFunction5(depositors[1].mul);
 }
 function parse2([proposals8, images, optDepositors]) {
   return proposals8.filter(([, , proposer], index) => !!optDepositors[index]?.isSome && !proposer.isEmpty).map(([index, hash, proposer], proposalIndex) => {
@@ -50291,7 +51543,7 @@ function parse2([proposals8, images, optDepositors]) {
   });
 }
 function proposals4(instanceId, api) {
-  return memo(instanceId, () => isFunction4(api.query.democracy?.publicProps) ? api.query.democracy.publicProps().pipe(switchMap((proposals8) => proposals8.length ? combineLatest([
+  return memo(instanceId, () => isFunction5(api.query.democracy?.publicProps) ? api.query.democracy.publicProps().pipe(switchMap((proposals8) => proposals8.length ? combineLatest([
     of(proposals8),
     api.derive.democracy.preimages(proposals8.map(([, hash]) => hash)),
     api.query.democracy.depositOf.multi(proposals8.map(([index]) => index))
@@ -50377,7 +51629,7 @@ function votesCurr(api, referendumId) {
 function _referendumVotes(instanceId, api) {
   return memo(instanceId, (referendum) => combineLatest([
     api.derive.democracy.sqrtElectorate(),
-    isFunction4(api.query.democracy.votingOf) ? votesCurr(api, referendum.index) : votesPrev(api, referendum.index)
+    isFunction5(api.query.democracy.votingOf) ? votesCurr(api, referendum.index) : votesPrev(api, referendum.index)
   ]).pipe(map2(([sqrtElectorate2, votes2]) => calcVotes(sqrtElectorate2, referendum, votes2))));
 }
 function _referendumsVotes(instanceId, api) {
@@ -50900,7 +52152,7 @@ function groupByEra(list) {
 }
 function calculateUnlocking(api, stakingLedger, sessionInfo) {
   const results = Object.entries(groupByEra((stakingLedger?.unlocking || []).filter(({ era }) => era.unwrap().gt(sessionInfo.activeEra)))).map(([eraString, value]) => ({
-    remainingEras: new import_bn12.default(eraString).isub(sessionInfo.activeEra),
+    remainingEras: new import_bn15.default(eraString).isub(sessionInfo.activeEra),
     value: api.registry.createType("Balance", value)
   }));
   return results.length ? results : void 0;
@@ -50908,7 +52160,7 @@ function calculateUnlocking(api, stakingLedger, sessionInfo) {
 function redeemableSum(api, stakingLedger, sessionInfo) {
   return api.registry.createType("Balance", (stakingLedger?.unlocking || []).reduce((total, { era, value }) => {
     return era.unwrap().gt(sessionInfo.currentEra) ? total : total.iadd(value.unwrap());
-  }, new import_bn12.default(0)));
+  }, new import_bn15.default(0)));
 }
 function parseResult2(api, sessionInfo, keys2, query2) {
   return objectSpread3({}, keys2, query2, {
@@ -51705,9 +52957,9 @@ function events(instanceId, api) {
 
 // node_modules/@polkadot/api-derive/tx/constants.js
 var FALLBACK_MAX_HASH_COUNT = 250;
-var FALLBACK_PERIOD = new import_bn12.default(6 * 1e3);
-var MAX_FINALITY_LAG = new import_bn12.default(5);
-var MORTAL_PERIOD = new import_bn12.default(5 * 60 * 1e3);
+var FALLBACK_PERIOD = new import_bn15.default(6 * 1e3);
+var MAX_FINALITY_LAG = new import_bn15.default(5);
+var MORTAL_PERIOD = new import_bn15.default(5 * 60 * 1e3);
 
 // node_modules/@polkadot/api-derive/tx/signingInfo.js
 function latestNonce(api, address) {
@@ -52180,27 +53432,27 @@ function findError(registry, errorIndex) {
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/is/function.js
-function isFunction9(value) {
+function isFunction10(value) {
   return typeof value === "function";
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/hex/toU8a.js
-var CHR9 = "0123456789abcdef";
-var U815 = new Uint8Array(256);
-var U1615 = new Uint8Array(256 * 256);
-for (let i = 0, count = CHR9.length; i < count; i++) {
-  U815[CHR9[i].charCodeAt(0) | 0] = i | 0;
+var CHR10 = "0123456789abcdef";
+var U816 = new Uint8Array(256);
+var U1616 = new Uint8Array(256 * 256);
+for (let i = 0, count = CHR10.length; i < count; i++) {
+  U816[CHR10[i].charCodeAt(0) | 0] = i | 0;
   if (i > 9) {
-    U815[CHR9[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
+    U816[CHR10[i].toUpperCase().charCodeAt(0) | 0] = i | 0;
   }
 }
 for (let i = 0; i < 256; i++) {
   const s = i << 8;
   for (let j = 0; j < 256; j++) {
-    U1615[s | j] = U815[i] << 4 | U815[j];
+    U1616[s | j] = U816[i] << 4 | U816[j];
   }
 }
-function hexToU8a8(value, bitLength = -1) {
+function hexToU8a9(value, bitLength = -1) {
   if (!value) {
     return new Uint8Array();
   }
@@ -52210,67 +53462,67 @@ function hexToU8a8(value, bitLength = -1) {
   const result = new Uint8Array(endLength);
   const offset = endLength > decLength ? endLength - decLength : 0;
   for (let i = offset; i < endLength; i++, s += 2) {
-    result[i] = U1615[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
+    result[i] = U1616[value.charCodeAt(s) << 8 | value.charCodeAt(s + 1)];
   }
   return result;
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/bn/bn.js
-var import_bn44 = __toESM(require_bn(), 1);
+var import_bn47 = __toESM(require_bn(), 1);
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/is/hex.js
-var REGEX_HEX_PREFIXED8 = /^0x[\da-fA-F]+$/;
-var REGEX_HEX_NOPREFIX4 = /^[\da-fA-F]+$/;
-function isHex8(value, bitLength = -1, ignoreLength) {
-  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED8.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
+var REGEX_HEX_PREFIXED9 = /^0x[\da-fA-F]+$/;
+var REGEX_HEX_NOPREFIX5 = /^[\da-fA-F]+$/;
+function isHex9(value, bitLength = -1, ignoreLength) {
+  return typeof value === "string" && (value === "0x" || REGEX_HEX_PREFIXED9.test(value)) && (bitLength === -1 ? ignoreLength || value.length % 2 === 0 : value.length === 2 + Math.ceil(bitLength / 4));
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/is/object.js
-function isObject7(value) {
+function isObject8(value) {
   return !!value && typeof value === "object";
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/is/helpers.js
-function isOn4(...fns) {
-  return (value) => (isObject7(value) || isFunction9(value)) && fns.every((f) => isFunction9(value[f]));
+function isOn5(...fns) {
+  return (value) => (isObject8(value) || isFunction10(value)) && fns.every((f) => isFunction10(value[f]));
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/is/toBigInt.js
-var isToBigInt4 = /* @__PURE__ */ isOn4("toBigInt");
+var isToBigInt5 = /* @__PURE__ */ isOn5("toBigInt");
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/is/toBn.js
-var isToBn5 = /* @__PURE__ */ isOn4("toBn");
+var isToBn6 = /* @__PURE__ */ isOn5("toBn");
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/hex/stripPrefix.js
-function hexStripPrefix4(value) {
+function hexStripPrefix5(value) {
   if (!value || value === "0x") {
     return "";
-  } else if (REGEX_HEX_PREFIXED8.test(value)) {
+  } else if (REGEX_HEX_PREFIXED9.test(value)) {
     return value.substring(2);
-  } else if (REGEX_HEX_NOPREFIX4.test(value)) {
+  } else if (REGEX_HEX_NOPREFIX5.test(value)) {
     return value;
   }
   throw new Error(`Expected hex value to convert, found '${value}'`);
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/hex/toBn.js
-function hexToBn4(value, { isLe = false, isNegative = false } = {}) {
+function hexToBn5(value, { isLe = false, isNegative = false } = {}) {
   if (!value || value === "0x") {
-    return new import_bn44.default(0);
+    return new import_bn47.default(0);
   }
-  const stripped = hexStripPrefix4(value);
-  const bn = new import_bn44.default(stripped, 16, isLe ? "le" : "be");
+  const stripped = hexStripPrefix5(value);
+  const bn = new import_bn47.default(stripped, 16, isLe ? "le" : "be");
   return isNegative ? bn.fromTwos(stripped.length * 4) : bn;
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/is/bigInt.js
-function isBigInt7(value) {
+function isBigInt8(value) {
   return typeof value === "bigint";
 }
 
 // node_modules/@polkadot/types-known/node_modules/@polkadot/util/bn/toBn.js
-function bnToBn4(value) {
-  return value ? import_bn44.default.isBN(value) ? value : isHex8(value) ? hexToBn4(value.toString()) : isBigInt7(value) ? new import_bn44.default(value.toString()) : isToBn5(value) ? value.toBn() : isToBigInt4(value) ? new import_bn44.default(value.toBigInt().toString()) : new import_bn44.default(value) : new import_bn44.default(0);
+function bnToBn5(value) {
+  return value ? import_bn47.default.isBN(value) ? value : isHex9(value) ? hexToBn5(value.toString()) : isBigInt8(value) ? new import_bn47.default(value.toString()) : isToBn6(value) ? value.toBn() : isToBigInt5(value) ? new import_bn47.default(value.toBigInt().toString()) : new import_bn47.default(value) : new import_bn47.default(0);
 }
 
 // node_modules/@polkadot/types-known/chain/index.js
@@ -68158,12 +69410,12 @@ function mapRaw([network, versions]) {
     throw new Error(`Unable to find info for chain ${network}`);
   }
   return {
-    genesisHash: hexToU8a8(chain2.genesisHash[0]),
+    genesisHash: hexToU8a9(chain2.genesisHash[0]),
     network,
     versions: versions.map(([blockNumber, specVersion, apis]) => ({
       apis,
-      blockNumber: new import_bn44.default(blockNumber),
-      specVersion: new import_bn44.default(specVersion)
+      blockNumber: new import_bn47.default(blockNumber),
+      specVersion: new import_bn47.default(specVersion)
     }))
   };
 }
@@ -68183,7 +69435,7 @@ function getSpecExtensions({ knownTypes: knownTypes2 }, chainName, specName) {
   }));
 }
 function getSpecTypes({ knownTypes: knownTypes2 }, chainName, specName, specVersion) {
-  const _specVersion = bnToBn4(specVersion).toNumber();
+  const _specVersion = bnToBn5(specVersion).toNumber();
   return withNames(chainName, specName, (c, s) => ({
     // The order here is always, based on -
     //   - spec then chain
@@ -70249,6 +71501,549 @@ async function getTokenBalance(address, symbol) {
   return "0";
 }
 
+// node_modules/@polkadot/util-crypto/crypto.js
+function cryptoWaitReady2() {
+  return waitReady().then(() => {
+    if (!isReady()) {
+      throw new Error("Unable to initialize @polkadot/util-crypto");
+    }
+    return true;
+  }).catch(() => false);
+}
+
+// node_modules/@polkadot/util-crypto/base32/helpers.js
+function createDecode3({ coder, ipfs }, validate) {
+  return (value, ipfsCompat) => {
+    validate(value, ipfsCompat);
+    return coder.decode(ipfs && ipfsCompat ? value.substring(1) : value);
+  };
+}
+function createValidate3({ chars, ipfs, type, withPadding }) {
+  return (value, ipfsCompat) => {
+    if (typeof value !== "string") {
+      throw new Error(`Expected ${type} string input`);
+    } else if (ipfs && ipfsCompat && !value.startsWith(ipfs)) {
+      throw new Error(`Expected ipfs-compatible ${type} to start with '${ipfs}'`);
+    }
+    for (let i = ipfsCompat ? 1 : 0, count = value.length; i < count; i++) {
+      if (chars.includes(value[i])) {
+      } else if (withPadding && value[i] === "=") {
+        if (i === count - 1) {
+        } else if (value[i + 1] === "=") {
+        } else {
+          throw new Error(`Invalid ${type} padding sequence "${value[i]}${value[i + 1]}" at index ${i}`);
+        }
+      } else {
+        throw new Error(`Invalid ${type} character "${value[i]}" (0x${value.charCodeAt(i).toString(16)}) at index ${i}`);
+      }
+    }
+    return true;
+  };
+}
+
+// node_modules/@polkadot/util-crypto/base58/bs58.js
+var config4 = {
+  chars: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+  coder: base58,
+  ipfs: "z",
+  type: "base58"
+};
+var base58Validate3 = /* @__PURE__ */ createValidate3(config4);
+var base58Decode3 = /* @__PURE__ */ createDecode3(config4, base58Validate3);
+
+// node_modules/@polkadot/util-crypto/helpers.js
+function createDualHasher2(wa, js) {
+  return (value, bitLength = 256, onlyJs) => {
+    const u8a = u8aToU8a2(value);
+    return !hasBigInt2 || !onlyJs && isReady() ? wa[bitLength](u8a) : js[bitLength](u8a);
+  };
+}
+
+// node_modules/@polkadot/util-crypto/blake2/asU8a.js
+function blake2AsU8a4(data, bitLength = 256, key, onlyJs) {
+  const byteLength = Math.ceil(bitLength / 8);
+  const u8a = u8aToU8a2(data);
+  return !hasBigInt2 || !onlyJs && isReady() ? blake2b(u8a, u8aToU8a2(key), byteLength) : key ? blake2b3(u8a, { dkLen: byteLength, key }) : blake2b3(u8a, { dkLen: byteLength });
+}
+
+// node_modules/@polkadot/util-crypto/address/sshash.js
+var SS58_PREFIX3 = stringToU8a2("SS58PRE");
+function sshash3(key) {
+  return blake2AsU8a4(u8aConcat2(SS58_PREFIX3, key), 512);
+}
+
+// node_modules/@polkadot/util-crypto/address/checksum.js
+function checkAddressChecksum3(decoded) {
+  const ss58Length = decoded[0] & 64 ? 2 : 1;
+  const ss58Decoded = ss58Length === 1 ? decoded[0] : (decoded[0] & 63) << 2 | decoded[1] >> 6 | (decoded[1] & 63) << 8;
+  const isPublicKey = [34 + ss58Length, 35 + ss58Length].includes(decoded.length);
+  const length = decoded.length - (isPublicKey ? 2 : 1);
+  const hash = sshash3(decoded.subarray(0, length));
+  const isValid2 = (decoded[0] & 128) === 0 && ![46, 47].includes(decoded[0]) && (isPublicKey ? decoded[decoded.length - 2] === hash[0] && decoded[decoded.length - 1] === hash[1] : decoded[decoded.length - 1] === hash[0]);
+  return [isValid2, length, ss58Length, ss58Decoded];
+}
+
+// node_modules/@polkadot/util-crypto/node_modules/@polkadot/networks/defaults/genesis.js
+var knownGenesis2 = {
+  acala: [
+    "0xfc41b9bd8ef8fe53d58c7ea67c794c7ec9a73daf05e6d54b14ff6342c99ba64c"
+  ],
+  ajuna: [
+    "0xe358eb1d11b31255a286c12e44fe6780b7edb171d657905a97e39f71d9c6c3ee"
+  ],
+  "aleph-node": [
+    "0x70255b4d28de0fc4e1a193d7e175ad1ccef431598211c55538f1018651a0344e"
+  ],
+  astar: [
+    "0x9eb76c5184c4ab8679d2d5d819fdf90b9c001403e9e17da2e14b6d8aec4029c6"
+  ],
+  basilisk: [
+    "0xa85cfb9b9fd4d622a5b28289a02347af987d8f73fa3108450e2b4a11c1ce5755"
+  ],
+  bifrost: [
+    "0x262e1b2ad728475fd6fe88e62d34c200abe6fd693931ddad144059b1eb884e5b"
+  ],
+  "bifrost-kusama": [
+    "0x9f28c6a68e0fc9646eff64935684f6eeeece527e37bbe1f213d22caa1d9d6bed"
+  ],
+  bittensor: [
+    "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03"
+  ],
+  centrifuge: [
+    "0xb3db41421702df9a7fcac62b53ffeac85f7853cc4e689e0b93aeb3db18c09d82",
+    "0x67dddf2673b69e5f875f6f25277495834398eafd67f492e09f3f3345e003d1b5"
+  ],
+  cere: [
+    "0x81443836a9a24caaa23f1241897d1235717535711d1d3fe24eae4fdc942c092c"
+  ],
+  composable: [
+    "0xdaab8df776eb52ec604a5df5d388bb62a050a0aaec4556a64265b9d42755552d"
+  ],
+  darwinia: [
+    "0xe71578b37a7c799b0ab4ee87ffa6f059a6b98f71f06fb8c84a8d88013a548ad6"
+  ],
+  "dock-mainnet": [
+    "0x6bfe24dca2a3be10f22212678ac13a6446ec764103c0f3471c71609eac384aae",
+    "0xf73467c6544aa68df2ee546b135f955c46b90fa627e9b5d7935f41061bb8a5a9"
+  ],
+  edgeware: [
+    "0x742a2ca70c2fda6cee4f8df98d64c4c670a052d9568058982dad9d5a7a135c5b"
+  ],
+  enjin: [
+    "0xd8761d3c88f26dc12875c00d3165f7d67243d56fc85b4cf19937601a7916e5a9"
+  ],
+  equilibrium: [
+    "0x6f1a800de3daff7f5e037ddf66ab22ce03ab91874debeddb1086f5f7dbd48925"
+  ],
+  genshiro: [
+    "0x9b8cefc0eb5c568b527998bdd76c184e2b76ae561be76e4667072230217ea243"
+  ],
+  hydradx: [
+    "0xafdc188f45c71dacbaa0b62e16a91f726c7b8699a9748cdf715459de6b7f366d",
+    // HydraDX Parachain
+    "0xd2a620c27ec5cbc5621ff9a522689895074f7cca0d08e7134a7804e1a3ba86fc",
+    // Snakenet Gen3-1
+    "0x10af6e84234477d84dc572bac0789813b254aa490767ed06fb9591191d1073f9",
+    // Snakenet Gen3
+    "0x3d75507dd46301767e601265791da1d9cb47b6ebc94e87347b635e5bf58bd047",
+    // Snakenet Gen2
+    "0x0ed32bfcab4a83517fac88f2aa7cbc2f88d3ab93be9a12b6188a036bf8a943c2"
+    // Snakenet Gen1
+  ],
+  "interlay-parachain": [
+    "0xbf88efe70e9e0e916416e8bed61f2b45717f517d7f3523e33c7b001e5ffcbc72"
+  ],
+  karura: [
+    "0xbaf5aabe40646d11f0ee8abbdc64f4a4b7674925cba08e4a05ff9ebed6e2126b"
+  ],
+  khala: [
+    "0xd43540ba6d3eb4897c28a77d48cb5b729fea37603cbbfc7a86a73b72adb3be8d"
+  ],
+  kulupu: [
+    "0xf7a99d3cb92853d00d5275c971c132c074636256583fee53b3bbe60d7b8769ba"
+  ],
+  kusama: [
+    "0xb0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe",
+    // Kusama CC3,
+    "0xe3777fa922cafbff200cadeaea1a76bd7898ad5b89f7848999058b50e715f636",
+    // Kusama CC2
+    "0x3fd7b9eb6a00376e5be61f01abb429ffb0b104be05eaff4d458da48fcd425baf"
+    // Kusama CC1
+  ],
+  matrixchain: [
+    "0x3af4ff48ec76d2efc8476730f423ac07e25ad48f5f4c9dc39c778b164d808615"
+  ],
+  nodle: [
+    "0x97da7ede98d7bad4e36b4d734b6055425a3be036da2a332ea5a7037656427a21"
+  ],
+  origintrail: [
+    "0xe7e0962324a3b86c83404dbea483f25fb5dab4c224791c81b756cfc948006174"
+  ],
+  p3d: [
+    "0x6c5894837ad89b6d92b114a2fb3eafa8fe3d26a54848e3447015442cd6ef4e66"
+  ],
+  parallel: [
+    "0xe61a41c53f5dcd0beb09df93b34402aada44cb05117b71059cce40a2723a4e97"
+  ],
+  pendulum: [
+    "0x5d3c298622d5634ed019bf61ea4b71655030015bde9beb0d6a24743714462c86"
+  ],
+  phala: [
+    "0x1bb969d85965e4bb5a651abbedf21a54b6b31a21f66b5401cc3f1e286268d736"
+  ],
+  picasso: [
+    "0x6811a339673c9daa897944dcdac99c6e2939cc88245ed21951a0a3c9a2be75bc",
+    "0xe8e7f0f4c4f5a00720b4821dbfddefea7490bcf0b19009961cc46957984e2c1c"
+  ],
+  polkadex: [
+    "0x3920bcb4960a1eef5580cd5367ff3f430eef052774f78468852f7b9cb39f8a3c"
+  ],
+  polkadot: [
+    "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
+  ],
+  polymesh: [
+    "0x6fbd74e5e1d0a61d52ccfe9d4adaed16dd3a7caa37c6bc4d0c2fa12e8b2f4063"
+  ],
+  quartz: [
+    "0xcd4d732201ebe5d6b014edda071c4203e16867305332301dc8d092044b28e554"
+  ],
+  rococo: [
+    "0x6408de7737c59c238890533af25896a2c20608d8b380bb01029acb392781063e",
+    "0xaaf2cd1b74b5f726895921259421b534124726263982522174147046b8827897",
+    "0x037f5f3c8e67b314062025fc886fcd6238ea25a4a9b45dce8d246815c9ebe770",
+    "0xc196f81260cf1686172b47a79cf002120735d7cb0eb1474e8adce56618456fff",
+    "0xf6e9983c37baf68846fedafe21e56718790e39fb1c582abc408b81bc7b208f9a",
+    "0x5fce687da39305dfe682b117f0820b319348e8bb37eb16cf34acbf6a202de9d9",
+    "0xe7c3d5edde7db964317cd9b51a3a059d7cd99f81bdbce14990047354334c9779",
+    "0x1611e1dbf0405379b861e2e27daa90f480b2e6d3682414a80835a52e8cb8a215",
+    "0x343442f12fa715489a8714e79a7b264ea88c0d5b8c66b684a7788a516032f6b9",
+    "0x78bcd530c6b3a068bc17473cf5d2aff9c287102bed9af3ae3c41c33b9d6c6147",
+    "0x47381ee0697153d64404fc578392c8fd5cba9073391908f46c888498415647bd",
+    "0x19c0e4fa8ab75f5ac7865e0b8f74ff91eb9a100d336f423cd013a8befba40299"
+  ],
+  sora: [
+    "0x7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5"
+  ],
+  stafi: [
+    "0x290a4149f09ea0e402c74c1c7e96ae4239588577fe78932f94f5404c68243d80"
+  ],
+  statemine: [
+    "0x48239ef607d7928874027a43a67689209727dfb3d3dc5e5b03a39bdc2eda771a"
+  ],
+  statemint: [
+    "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f"
+  ],
+  subsocial: [
+    "0x0bd72c1c305172e1275278aaeb3f161e02eccb7a819e63f62d47bd53a28189f8"
+  ],
+  ternoa: [
+    "0x6859c81ca95ef624c9dfe4dc6e3381c33e5d6509e35e147092bfbc780f777c4e"
+  ],
+  unique: [
+    "0x84322d9cddbf35088f1e54e9a85c967a41a56a4f43445768125e61af166c7d31"
+  ],
+  vtb: [
+    "0x286bc8414c7000ce1d6ee6a834e29a54c1784814b76243eb77ed0b2c5573c60f",
+    "0x7483b89572fb2bd687c7b9a93b242d0b237f9aba463aba07ec24503931038aaa"
+  ],
+  westend: [
+    "0xe143f23803ac50e8f6f8e62695d1ce9e4e1d68aa36c1cd2cfd15340213f3423e"
+  ],
+  xxnetwork: [
+    "0x50dd5d206917bf10502c68fb4d18a59fc8aa31586f4e8856b493e43544aa82aa"
+  ],
+  zeitgeist: [
+    "0x1bf2a2ecb4a868de66ea8610f2ce7c8c43706561b6476031315f6640fe38e060"
+  ]
+};
+
+// node_modules/@polkadot/util-crypto/node_modules/@polkadot/networks/defaults/icons.js
+var knownIcon2 = {
+  centrifuge: "polkadot",
+  kusama: "polkadot",
+  polkadot: "polkadot",
+  sora: "polkadot",
+  statemine: "polkadot",
+  statemint: "polkadot",
+  westmint: "polkadot"
+};
+
+// node_modules/@polkadot/util-crypto/node_modules/@polkadot/networks/defaults/ledger.js
+var knownLedger2 = {
+  acala: 787,
+  ajuna: 354,
+  "aleph-node": 643,
+  astar: 810,
+  bifrost: 788,
+  "bifrost-kusama": 788,
+  centrifuge: 747,
+  composable: 354,
+  darwinia: 354,
+  "dock-mainnet": 594,
+  edgeware: 523,
+  enjin: 1155,
+  equilibrium: 99999997,
+  genshiro: 99999996,
+  hydradx: 354,
+  "interlay-parachain": 354,
+  karura: 686,
+  khala: 434,
+  kusama: 434,
+  matrixchain: 1155,
+  nodle: 1003,
+  origintrail: 354,
+  parallel: 354,
+  pendulum: 354,
+  phala: 354,
+  picasso: 434,
+  polkadex: 799,
+  polkadot: 354,
+  polymesh: 595,
+  quartz: 631,
+  sora: 617,
+  stafi: 907,
+  statemine: 434,
+  // common-good on Kusama, shares derivation
+  statemint: 354,
+  // common-good on Polkadot, shares derivation
+  ternoa: 995,
+  unique: 661,
+  vtb: 694,
+  xxnetwork: 1955,
+  zeitgeist: 354
+};
+
+// node_modules/@polkadot/util-crypto/node_modules/@polkadot/networks/defaults/testnets.js
+var knownTestnet2 = {
+  "": true,
+  // this is the default non-network entry
+  "cess-testnet": true,
+  "dock-testnet": true,
+  jupiter: true,
+  "mathchain-testnet": true,
+  p3dt: true,
+  subspace_testnet: true,
+  "zero-alphaville": true
+};
+
+// node_modules/@polkadot/util-crypto/node_modules/@polkadot/networks/interfaces.js
+var UNSORTED2 = [0, 2, 42];
+var TESTNETS2 = ["testnet"];
+function toExpanded2(o) {
+  const network = o.network || "";
+  const nameParts = network.replace(/_/g, "-").split("-");
+  const n = o;
+  n.slip44 = knownLedger2[network];
+  n.hasLedgerSupport = !!n.slip44;
+  n.genesisHash = knownGenesis2[network] || [];
+  n.icon = knownIcon2[network] || "substrate";
+  n.isTestnet = !!knownTestnet2[network] || TESTNETS2.includes(nameParts[nameParts.length - 1]);
+  n.isIgnored = n.isTestnet || !(o.standardAccount && o.decimals?.length && o.symbols?.length) && o.prefix !== 42;
+  return n;
+}
+function filterSelectable2({ genesisHash, prefix: prefix2 }) {
+  return !!genesisHash.length || prefix2 === 42;
+}
+function filterAvailable2(n) {
+  return !n.isIgnored && !!n.network;
+}
+function sortNetworks2(a, b) {
+  const isUnSortedA = UNSORTED2.includes(a.prefix);
+  const isUnSortedB = UNSORTED2.includes(b.prefix);
+  return isUnSortedA === isUnSortedB ? isUnSortedA ? 0 : a.displayName.localeCompare(b.displayName) : isUnSortedA ? -1 : 1;
+}
+var allNetworks2 = esm_default.map(toExpanded2);
+var availableNetworks2 = allNetworks2.filter(filterAvailable2).sort(sortNetworks2);
+var selectableNetworks2 = availableNetworks2.filter(filterSelectable2);
+
+// node_modules/@polkadot/util-crypto/address/defaults.js
+var defaults3 = {
+  allowedDecodedLengths: [1, 2, 4, 8, 32, 33],
+  // publicKey has prefix + 2 checksum bytes, short only prefix + 1 checksum byte
+  allowedEncodedLengths: [3, 4, 6, 10, 35, 36, 37, 38],
+  allowedPrefix: availableNetworks2.map(({ prefix: prefix2 }) => prefix2),
+  prefix: 42
+};
+
+// node_modules/@polkadot/util-crypto/address/decode.js
+function decodeAddress3(encoded, ignoreChecksum, ss58Format = -1) {
+  if (!encoded) {
+    throw new Error("Invalid empty address passed");
+  }
+  if (isU8a2(encoded) || isHex2(encoded)) {
+    return u8aToU8a2(encoded);
+  }
+  try {
+    const decoded = base58Decode3(encoded);
+    if (!defaults3.allowedEncodedLengths.includes(decoded.length)) {
+      throw new Error("Invalid decoded address length");
+    }
+    const [isValid2, endPos, ss58Length, ss58Decoded] = checkAddressChecksum3(decoded);
+    if (!isValid2 && !ignoreChecksum) {
+      throw new Error("Invalid decoded address checksum");
+    } else if (ss58Format !== -1 && ss58Format !== ss58Decoded) {
+      throw new Error(`Expected ss58Format ${ss58Format}, received ${ss58Decoded}`);
+    }
+    return decoded.slice(ss58Length, endPos);
+  } catch (error) {
+    throw new Error(`Decoding ${encoded}: ${error.message}`);
+  }
+}
+
+// node_modules/@polkadot/util-crypto/bn.js
+var BN_BE_256_OPTS2 = { bitLength: 256, isLe: false };
+
+// node_modules/@polkadot/util-crypto/ed25519/verify.js
+function ed25519Verify2(message, signature, publicKey, onlyJs) {
+  const messageU8a = u8aToU8a2(message);
+  const publicKeyU8a = u8aToU8a2(publicKey);
+  const signatureU8a = u8aToU8a2(signature);
+  if (publicKeyU8a.length !== 32) {
+    throw new Error(`Invalid publicKey, received ${publicKeyU8a.length}, expected 32`);
+  } else if (signatureU8a.length !== 64) {
+    throw new Error(`Invalid signature, received ${signatureU8a.length} bytes, expected 64`);
+  }
+  try {
+    return !hasBigInt2 || !onlyJs && isReady() ? ed25519Verify(signatureU8a, messageU8a, publicKeyU8a) : ed25519.verify(signatureU8a, messageU8a, publicKeyU8a);
+  } catch {
+    return false;
+  }
+}
+
+// node_modules/@polkadot/util-crypto/sr25519/verify.js
+function sr25519Verify2(message, signature, publicKey) {
+  const publicKeyU8a = u8aToU8a2(publicKey);
+  const signatureU8a = u8aToU8a2(signature);
+  if (publicKeyU8a.length !== 32) {
+    throw new Error(`Invalid publicKey, received ${publicKeyU8a.length} bytes, expected 32`);
+  } else if (signatureU8a.length !== 64) {
+    throw new Error(`Invalid signature, received ${signatureU8a.length} bytes, expected 64`);
+  }
+  return sr25519Verify(signatureU8a, u8aToU8a2(message), publicKeyU8a);
+}
+
+// node_modules/@polkadot/util-crypto/keccak/asU8a.js
+var keccakAsU8a2 = /* @__PURE__ */ createDualHasher2({ 256: keccak256, 512: keccak512 }, { 256: keccak_256, 512: keccak_512 });
+
+// node_modules/@polkadot/util-crypto/secp256k1/hasher.js
+function hasher(hashType, data, onlyJs) {
+  return hashType === "keccak" ? keccakAsU8a2(data, void 0, onlyJs) : blake2AsU8a4(data, void 0, void 0, onlyJs);
+}
+
+// node_modules/@polkadot/util-crypto/secp256k1/compress.js
+function secp256k1Compress2(publicKey, onlyJs) {
+  if (![33, 65].includes(publicKey.length)) {
+    throw new Error(`Invalid publicKey provided, received ${publicKey.length} bytes input`);
+  }
+  if (publicKey.length === 33) {
+    return publicKey;
+  }
+  return !hasBigInt2 || !onlyJs && isReady() ? secp256k1Compress(publicKey) : secp256k1.ProjectivePoint.fromHex(publicKey).toRawBytes(true);
+}
+
+// node_modules/@polkadot/util-crypto/secp256k1/expand.js
+function secp256k1Expand3(publicKey, onlyJs) {
+  if (![33, 65].includes(publicKey.length)) {
+    throw new Error(`Invalid publicKey provided, received ${publicKey.length} bytes input`);
+  }
+  if (publicKey.length === 65) {
+    return publicKey.subarray(1);
+  }
+  if (!hasBigInt2 || !onlyJs && isReady()) {
+    return secp256k1Expand(publicKey).subarray(1);
+  }
+  const { px, py } = secp256k1.ProjectivePoint.fromHex(publicKey);
+  return u8aConcat2(bnToU8a(px, BN_BE_256_OPTS2), bnToU8a(py, BN_BE_256_OPTS2));
+}
+
+// node_modules/@polkadot/util-crypto/secp256k1/recover.js
+function secp256k1Recover2(msgHash, signature, recovery, hashType = "blake2", onlyJs) {
+  const sig2 = u8aToU8a2(signature).subarray(0, 64);
+  const msg = u8aToU8a2(msgHash);
+  const publicKey = !hasBigInt2 || !onlyJs && isReady() ? secp256k1Recover(msg, sig2, recovery) : secp256k1.Signature.fromCompact(sig2).addRecoveryBit(recovery).recoverPublicKey(msg).toRawBytes();
+  if (!publicKey) {
+    throw new Error("Unable to recover publicKey from signature");
+  }
+  return hashType === "keccak" ? secp256k1Expand3(publicKey, onlyJs) : secp256k1Compress2(publicKey, onlyJs);
+}
+
+// node_modules/@polkadot/util-crypto/secp256k1/verify.js
+function secp256k1Verify(msgHash, signature, address, hashType = "blake2", onlyJs) {
+  const sig2 = u8aToU8a2(signature);
+  if (sig2.length !== 65) {
+    throw new Error(`Expected signature with 65 bytes, ${sig2.length} found instead`);
+  }
+  const publicKey = secp256k1Recover2(hasher(hashType, msgHash), sig2, sig2[64], hashType, onlyJs);
+  const signerAddr = hasher(hashType, publicKey, onlyJs);
+  const inputAddr = u8aToU8a2(address);
+  return u8aEq2(publicKey, inputAddr) || (hashType === "keccak" ? u8aEq2(signerAddr.slice(-20), inputAddr.slice(-20)) : u8aEq2(signerAddr, inputAddr));
+}
+
+// node_modules/@polkadot/util-crypto/signature/verify.js
+var secp256k1VerifyHasher = (hashType) => (message, signature, publicKey) => secp256k1Verify(message, signature, publicKey, hashType);
+var VERIFIERS_ECDSA = [
+  ["ecdsa", secp256k1VerifyHasher("blake2")],
+  ["ethereum", secp256k1VerifyHasher("keccak")]
+];
+var VERIFIERS = [
+  ["ed25519", ed25519Verify2],
+  ["sr25519", sr25519Verify2],
+  ...VERIFIERS_ECDSA
+];
+var CRYPTO_TYPES = ["ed25519", "sr25519", "ecdsa"];
+function verifyDetect(result, { message, publicKey, signature }, verifiers = VERIFIERS) {
+  result.isValid = verifiers.some(([crypto4, verify]) => {
+    try {
+      if (verify(message, signature, publicKey)) {
+        result.crypto = crypto4;
+        return true;
+      }
+    } catch {
+    }
+    return false;
+  });
+  return result;
+}
+function verifyMultisig(result, { message, publicKey, signature }) {
+  if (![0, 1, 2].includes(signature[0])) {
+    throw new Error(`Unknown crypto type, expected signature prefix [0..2], found ${signature[0]}`);
+  }
+  const type = CRYPTO_TYPES[signature[0]] || "none";
+  result.crypto = type;
+  try {
+    result.isValid = {
+      ecdsa: () => verifyDetect(result, { message, publicKey, signature: signature.subarray(1) }, VERIFIERS_ECDSA).isValid,
+      ed25519: () => ed25519Verify2(message, signature.subarray(1), publicKey),
+      none: () => {
+        throw Error("no verify for `none` crypto type");
+      },
+      sr25519: () => sr25519Verify2(message, signature.subarray(1), publicKey)
+    }[type]();
+  } catch {
+  }
+  return result;
+}
+function getVerifyFn(signature) {
+  return [0, 1, 2].includes(signature[0]) && [65, 66].includes(signature.length) ? verifyMultisig : verifyDetect;
+}
+function signatureVerify(message, signature, addressOrPublicKey) {
+  const signatureU8a = u8aToU8a2(signature);
+  if (![64, 65, 66].includes(signatureU8a.length)) {
+    throw new Error(`Invalid signature length, expected [64..66] bytes, found ${signatureU8a.length}`);
+  }
+  const publicKey = decodeAddress3(addressOrPublicKey);
+  const input = { message: u8aToU8a2(message), publicKey, signature: signatureU8a };
+  const result = { crypto: "none", isValid: false, isWrapped: u8aIsWrapped(input.message, true), publicKey };
+  const isWrappedBytes = u8aIsWrapped(input.message, false);
+  const verifyFn = getVerifyFn(signatureU8a);
+  verifyFn(result, input);
+  if (result.crypto !== "none" || result.isWrapped && !isWrappedBytes) {
+    return result;
+  }
+  input.message = isWrappedBytes ? u8aUnwrapBytes(input.message) : u8aWrapBytes(input.message);
+  return verifyFn(result, input);
+}
+
 // src/routes/wallet.ts
 var wallet = new Hono2();
 wallet.post("/connect", async (c) => {
@@ -70257,10 +72052,21 @@ wallet.post("/connect", async (c) => {
   const body = await c.req.json();
   const parsed = WalletConnectSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { wallet_address } = parsed.data;
-  const id = wallet_address;
-  await db.insert(users).values({ id, walletAddress: wallet_address }).onConflictDoNothing();
-  return c.json({ user_id: id });
+  const { wallet_address, signature, message } = parsed.data;
+  try {
+    await cryptoWaitReady2();
+    const result = signatureVerify(message, signature, wallet_address);
+    if (!result.isValid) {
+      return c.json({ error: "invalid signature" }, 400);
+    }
+  } catch (e) {
+    return c.json({ error: "signature verification failed" }, 400);
+  }
+  await db.insert(users).values({ id: wallet_address, walletAddress: wallet_address, lastActive: Date.now() }).onConflictDoUpdate({
+    target: users.id,
+    set: { lastActive: Date.now() }
+  });
+  return c.json({ user_id: wallet_address });
 });
 wallet.get("/balance", async (c) => {
   const url = new URL(c.req.url);
@@ -70350,5 +72156,11 @@ export {
   (*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
 
 @noble/curves/esm/secp256k1.js:
+  (*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
+
+@noble/curves/esm/abstract/edwards.js:
+  (*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
+
+@noble/curves/esm/ed25519.js:
   (*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) *)
 */
