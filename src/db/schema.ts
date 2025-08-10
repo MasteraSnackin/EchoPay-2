@@ -31,3 +31,12 @@ export const voiceSessions = sqliteTable('voice_sessions', {
   responseText: text('response_text'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
+
+export const loginChallenges = sqliteTable('login_challenges', {
+  id: text('id').primaryKey(),
+  walletAddress: text('wallet_address').notNull(),
+  nonce: text('nonce').notNull(),
+  message: text('message').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+});

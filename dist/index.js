@@ -14235,6 +14235,14 @@ var voiceSessions = sqliteTable("voice_sessions", {
   responseText: text("response_text"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(sql`(unixepoch() * 1000)`)
 });
+var loginChallenges = sqliteTable("login_challenges", {
+  id: text("id").primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  nonce: text("nonce").notNull(),
+  message: text("message").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull().default(sql`(unixepoch() * 1000)`),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull()
+});
 
 // src/utils/intent.ts
 var IntentItemSchema = external_exports.object({
@@ -72182,6 +72190,19 @@ async function getTokenBalance(address, symbol) {
 
 // src/routes/wallet.ts
 var wallet = new Hono2();
+wallet.post("/challenge", async (c) => {
+  const env = c.env;
+  const db = getDb(env);
+  const body = await c.req.json();
+  const walletAddress = String(body?.wallet_address || "").trim();
+  if (!walletAddress) return c.json({ error: "wallet_address required" }, 400);
+  const id = v4_default();
+  const nonce = v4_default();
+  const message = `VoiceDOT login nonce: ${nonce}`;
+  const expiresAt = Date.now() + 5 * 60 * 1e3;
+  await db.insert(loginChallenges).values({ id, walletAddress, nonce, message, expiresAt });
+  return c.json({ challenge_id: id, message, expires_at: expiresAt });
+});
 wallet.post("/connect", async (c) => {
   const env = c.env;
   const db = getDb(env);
@@ -72189,12 +72210,14 @@ wallet.post("/connect", async (c) => {
   const parsed = WalletConnectSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const { wallet_address, signature, message } = parsed.data;
+  const [challenge] = await db.select().from(loginChallenges).where(eq(loginChallenges.walletAddress, wallet_address));
+  if (!challenge) return c.json({ error: "no active challenge" }, 400);
+  if (challenge.message !== message) return c.json({ error: "message mismatch" }, 400);
+  if (Date.now() > challenge.expiresAt) return c.json({ error: "challenge expired" }, 400);
   try {
     await cryptoWaitReady2();
     const result = signatureVerify(message, signature, wallet_address);
-    if (!result.isValid) {
-      return c.json({ error: "invalid signature" }, 400);
-    }
+    if (!result.isValid) return c.json({ error: "invalid signature" }, 400);
   } catch (e) {
     return c.json({ error: "signature verification failed" }, 400);
   }
@@ -72202,6 +72225,7 @@ wallet.post("/connect", async (c) => {
     target: users.id,
     set: { lastActive: Date.now() }
   });
+  await db.delete(loginChallenges).where(eq(loginChallenges.id, challenge.id));
   return c.json({ user_id: wallet_address });
 });
 wallet.get("/balance", async (c) => {
