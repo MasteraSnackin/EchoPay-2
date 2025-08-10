@@ -19,3 +19,13 @@ export function getTokenInfo(symbol: string): TokenInfo | undefined {
   const s = symbol.toUpperCase() as SupportedToken;
   return TOKENS[s];
 }
+
+export function getChainNativeSymbol(chain: ChainName): SupportedToken {
+  if (chain === 'moonbeam') return 'GLMR';
+  return 'DOT';
+}
+
+export function getChainNativeTokenInfo(chain: ChainName): TokenInfo {
+  const sym = getChainNativeSymbol(chain);
+  return TOKENS[sym];
+}

@@ -14701,6 +14701,16 @@ function getTokenInfo(symbol) {
   return TOKENS[s];
 }
 __name(getTokenInfo, "getTokenInfo");
+function getChainNativeSymbol(chain2) {
+  if (chain2 === "moonbeam") return "GLMR";
+  return "DOT";
+}
+__name(getChainNativeSymbol, "getChainNativeSymbol");
+function getChainNativeTokenInfo(chain2) {
+  const sym = getChainNativeSymbol(chain2);
+  return TOKENS[sym];
+}
+__name(getChainNativeTokenInfo, "getChainNativeTokenInfo");
 var SYSTEM_PROMPT = `You are a transaction intent parser for a voice-controlled Polkadot payments system.
 Return ONLY JSON matching this schema:
 {
@@ -14779,126 +14789,6 @@ function normalizeChain(chain2, token) {
   return c || "polkadot";
 }
 __name(normalizeChain, "normalizeChain");
-var voice = new Hono2();
-voice.post("/process", async (c) => {
-  const env = c.env;
-  const body = await c.req.json();
-  const parsed = VoiceProcessSchema.safeParse(body);
-  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { audio_data, user_id, format } = parsed.data;
-  const db = getDb(env);
-  await db.insert(users).values({ id: user_id, walletAddress: user_id }).onConflictDoNothing();
-  const transcription = await speechToText(env, audio_data, format);
-  let intent;
-  if (env.PERPLEXITY_API_KEY) {
-    try {
-      intent = await parseIntentWithPerplexity(env, transcription);
-    } catch (e) {
-      intent = simpleFallbackIntent(transcription);
-    }
-  } else {
-    intent = simpleFallbackIntent(transcription);
-  }
-  const txIds = [];
-  for (const item of intent.items) {
-    const txId = v4_default();
-    txIds.push(txId);
-    await db.insert(transactions).values({
-      id: txId,
-      userId: user_id,
-      voiceCommand: transcription,
-      parsedIntent: JSON.stringify(item),
-      recipientAddress: item.recipient,
-      amount: item.amount,
-      tokenSymbol: item.token,
-      status: "pending"
-    });
-  }
-  const first2 = intent.items[0];
-  const confirmText = intent.items.length > 1 ? `You requested a batch of ${intent.items.length} transfers. First: send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}. Say confirm to proceed or cancel to abort.` : `You asked to send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}. Say confirm to proceed or cancel to abort.`;
-  const confirmAudio = await textToSpeech(env, confirmText);
-  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
-  const sessionId = v4_default();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
-  return c.json({
-    transaction_ids: txIds,
-    session_id: sessionId,
-    intent,
-    confirmation: {
-      audio_base64: encrypted.ciphertext,
-      iv: encrypted.iv,
-      format: "mp3"
-    }
-  });
-});
-voice.post("/confirm", async (c) => {
-  const env = c.env;
-  const body = await c.req.json();
-  const parsed = VoiceConfirmSchema.safeParse(body);
-  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { audio_data, user_id } = parsed.data;
-  const ids = parsed.data.transaction_ids ?? (parsed.data.transaction_id ? [parsed.data.transaction_id] : []);
-  const db = getDb(env);
-  const found = ids.length ? await db.select().from(transactions).where(inArray(transactions.id, ids)) : [];
-  if (!found.length) return c.json({ error: "transaction(s) not found" }, 404);
-  if (found.some((t) => t.status !== "pending")) return c.json({ error: "one or more transactions not pending" }, 400);
-  const transcription = await speechToText(env, audio_data, "webm");
-  const lower = transcription.trim().toLowerCase();
-  let decision = "failed";
-  let message = "Cancelled";
-  if (lower.includes("confirm") || lower.includes("yes")) {
-    decision = "confirmed";
-    message = "Confirmed";
-    await db.update(transactions).set({ status: "confirmed" }).where(inArray(transactions.id, ids));
-  } else if (lower.includes("cancel") || lower.includes("no")) {
-    decision = "failed";
-    message = "Cancelled";
-    await db.update(transactions).set({ status: "failed" }).where(inArray(transactions.id, ids));
-  }
-  const responseAudio = await textToSpeech(env, `Transaction ${message}.`);
-  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, responseAudio);
-  const sessionId = v4_default();
-  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.` });
-  return c.json({
-    status: decision,
-    transaction_ids: ids,
-    response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" }
-  });
-});
-function simpleFallbackIntent(text2) {
-  const words = text2.split(/\s+/);
-  const amountIdx = words.findIndex((w) => /^(send|transfer)$/i.test(w));
-  let amount = "0";
-  let token = "DOT";
-  let recipient = "";
-  if (amountIdx >= 0 && words[amountIdx + 1]) amount = words[amountIdx + 1];
-  const tokenIdx = amountIdx + 2;
-  if (words[tokenIdx]) token = words[tokenIdx].toUpperCase();
-  const toIdx = words.findIndex((w) => /^to$/i.test(w));
-  if (toIdx >= 0 && words[toIdx + 1]) recipient = words[toIdx + 1];
-  return {
-    type: "single",
-    language: "en",
-    items: [
-      {
-        action: "transfer",
-        amount,
-        token,
-        recipient,
-        origin_chain: "polkadot",
-        destination_chain: "polkadot"
-      }
-    ],
-    schedule: null,
-    condition: null
-  };
-}
-__name(simpleFallbackIntent, "simpleFallbackIntent");
-function shortAddr(addr) {
-  if (!addr) return "";
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-}
-__name(shortAddr, "shortAddr");
 function evaluateThis(fn) {
   return fn("return this");
 }
@@ -70269,12 +70159,6 @@ async function getApiForChain(chain2, overrideEndpoint) {
   return apiCache.get(endpoint);
 }
 __name(getApiForChain, "getApiForChain");
-async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
-  const api = await getApiForChain(chain2);
-  const hash = await api.rpc.author.submitExtrinsic(`0x${signedExtrinsicHex}`);
-  return hash.toString();
-}
-__name(submitExtrinsic, "submitExtrinsic");
 async function buildXcmTransferExtrinsic(req) {
   const api = await getApiForChain(req.origin);
   const dest = { V3: { parents: 1, interior: { X1: { Parachain: 1e3 } } } };
@@ -70305,6 +70189,144 @@ function decimalToUnits(amount, decimals) {
   return units.replace(/^0+/, "") || "0";
 }
 __name(decimalToUnits, "decimalToUnits");
+function unitsToDecimal(units, decimals) {
+  const u = units.replace(/^0+/, "") || "0";
+  if (decimals === 0) return u;
+  const pad = u.padStart(decimals + 1, "0");
+  const intPart = pad.slice(0, -decimals);
+  const fracPart = pad.slice(-decimals).replace(/0+$/, "");
+  return fracPart ? `${intPart}.${fracPart}` : intPart;
+}
+__name(unitsToDecimal, "unitsToDecimal");
+var voice = new Hono2();
+voice.post("/process", async (c) => {
+  const env = c.env;
+  const body = await c.req.json();
+  const parsed = VoiceProcessSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const { audio_data, user_id, format } = parsed.data;
+  const db = getDb(env);
+  await db.insert(users).values({ id: user_id, walletAddress: user_id }).onConflictDoNothing();
+  const transcription = await speechToText(env, audio_data, format);
+  let intent;
+  if (env.PERPLEXITY_API_KEY) {
+    try {
+      intent = await parseIntentWithPerplexity(env, transcription);
+    } catch (e) {
+      intent = simpleFallbackIntent(transcription);
+    }
+  } else {
+    intent = simpleFallbackIntent(transcription);
+  }
+  const txIds = [];
+  for (const item of intent.items) {
+    const txId = v4_default();
+    txIds.push(txId);
+    await db.insert(transactions).values({
+      id: txId,
+      userId: user_id,
+      voiceCommand: transcription,
+      parsedIntent: JSON.stringify(item),
+      recipientAddress: item.recipient,
+      amount: item.amount,
+      tokenSymbol: item.token,
+      status: "pending"
+    });
+  }
+  const first2 = intent.items[0];
+  const isXcm = first2.origin_chain !== first2.destination_chain;
+  let feeHint = "";
+  if (isXcm && first2.token.toUpperCase() === getChainNativeTokenInfo(first2.origin_chain).symbol) {
+    try {
+      const nativeInfo = getChainNativeTokenInfo(first2.origin_chain);
+      const fee = await estimateXcmFee({
+        origin: first2.origin_chain,
+        destination: first2.destination_chain,
+        asset: { symbol: nativeInfo.symbol },
+        amount: decimalToUnits(first2.amount, nativeInfo.decimals),
+        sender: user_id,
+        recipient: first2.recipient
+      });
+      const feeHuman = unitsToDecimal(fee, nativeInfo.decimals);
+      feeHint = ` Estimated XCM fee about ${feeHuman} ${nativeInfo.symbol}.`;
+    } catch {
+    }
+  }
+  const confirmText = intent.items.length > 1 ? `You requested a batch of ${intent.items.length} transfers. First: send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.` : `You asked to send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.`;
+  const confirmAudio = await textToSpeech(env, confirmText);
+  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
+  const sessionId = v4_default();
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
+  return c.json({
+    transaction_ids: txIds,
+    session_id: sessionId,
+    intent,
+    confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" }
+  });
+});
+voice.post("/confirm", async (c) => {
+  const env = c.env;
+  const body = await c.req.json();
+  const parsed = VoiceConfirmSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const { audio_data, user_id } = parsed.data;
+  const ids = parsed.data.transaction_ids ?? (parsed.data.transaction_id ? [parsed.data.transaction_id] : []);
+  const db = getDb(env);
+  const found = ids.length ? await db.select().from(transactions).where(inArray(transactions.id, ids)) : [];
+  if (!found.length) return c.json({ error: "transaction(s) not found" }, 404);
+  if (found.some((t) => t.status !== "pending")) return c.json({ error: "one or more transactions not pending" }, 400);
+  const transcription = await speechToText(env, audio_data, "webm");
+  const lower = transcription.trim().toLowerCase();
+  let decision = "failed";
+  let message = "Cancelled";
+  if (lower.includes("confirm") || lower.includes("yes")) {
+    decision = "confirmed";
+    message = "Confirmed";
+    await db.update(transactions).set({ status: "confirmed" }).where(inArray(transactions.id, ids));
+  } else if (lower.includes("cancel") || lower.includes("no")) {
+    decision = "failed";
+    message = "Cancelled";
+    await db.update(transactions).set({ status: "failed" }).where(inArray(transactions.id, ids));
+  }
+  const responseAudio = await textToSpeech(env, `Transaction ${message}.`);
+  const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, responseAudio);
+  const sessionId = v4_default();
+  await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: `Transaction ${message}.` });
+  return c.json({ status: decision, transaction_ids: ids, response: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
+});
+function simpleFallbackIntent(text2) {
+  const words = text2.split(/\s+/);
+  const amountIdx = words.findIndex((w) => /^(send|transfer)$/i.test(w));
+  let amount = "0";
+  let token = "DOT";
+  let recipient = "";
+  if (amountIdx >= 0 && words[amountIdx + 1]) amount = words[amountIdx + 1];
+  const tokenIdx = amountIdx + 2;
+  if (words[tokenIdx]) token = words[tokenIdx].toUpperCase();
+  const toIdx = words.findIndex((w) => /^to$/i.test(w));
+  if (toIdx >= 0 && words[toIdx + 1]) recipient = words[toIdx + 1];
+  return {
+    type: "single",
+    language: "en",
+    items: [
+      { action: "transfer", amount, token, recipient, origin_chain: "polkadot", destination_chain: "polkadot" }
+    ],
+    schedule: null,
+    condition: null
+  };
+}
+__name(simpleFallbackIntent, "simpleFallbackIntent");
+function shortAddr(addr) {
+  if (!addr) return "";
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+}
+__name(shortAddr, "shortAddr");
+async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
+  const api = await getApiForChain(chain2);
+  const hash = await api.rpc.author.submitExtrinsic(`0x${signedExtrinsicHex}`);
+  return hash.toString();
+}
+__name(submitExtrinsic, "submitExtrinsic");
 async function buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman) {
   const info6 = getTokenInfo(tokenSymbol);
   if (!info6) throw new Error(`Unsupported token ${tokenSymbol}`);
