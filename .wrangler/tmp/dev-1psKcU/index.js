@@ -70387,6 +70387,9 @@ tx.post("/execute", async (c) => {
   const [row] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
   if (!row) return c.json({ error: "transaction not found" }, 404);
   if (row.status !== "confirmed") return c.json({ error: "transaction not confirmed" }, 400);
+  if (token && token.toUpperCase() !== (row.tokenSymbol || "").toUpperCase()) {
+    return c.json({ error: "token does not match prepared transaction" }, 400);
+  }
   try {
     const parsedIntent = JSON.parse(row.parsedIntent || "{}");
     const origin = parsedIntent.origin_chain;
@@ -70408,6 +70411,17 @@ tx.post("/execute", async (c) => {
           return c.json({ error: "invalid slippage_bps" }, 400);
         }
       }
+      const updatedIntent = {
+        ...parsedIntent,
+        constraints: {
+          ...parsedIntent.constraints || {},
+          min_receive: min_receive ?? parsedIntent.constraints?.min_receive,
+          slippage_bps: slippage_bps ?? parsedIntent.constraints?.slippage_bps,
+          token: token || row.tokenSymbol,
+          chain: chain2 || origin
+        }
+      };
+      await db.update(transactions).set({ parsedIntent: JSON.stringify(updatedIntent) }).where(eq(transactions.id, transaction_id));
     }
   } catch {
   }
