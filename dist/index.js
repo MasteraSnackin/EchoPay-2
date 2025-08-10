@@ -72957,6 +72957,40 @@ var cors = (options) => {
   };
 };
 
+// src/do/rateLimiter.ts
+var RateLimiterDO = class {
+  state;
+  constructor(state) {
+    this.state = state;
+  }
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === "/allow") {
+      const key = url.searchParams.get("key") || "unknown";
+      const tokensPerInterval = Number(url.searchParams.get("tpi") || "1");
+      const intervalMs = Number(url.searchParams.get("interval") || "1000");
+      const burst = Number(url.searchParams.get("burst") || "5");
+      const now = Date.now();
+      const stateRaw = await this.state.storage.get(key);
+      const bucket = stateRaw || { tokens: burst, lastRefill: now };
+      const elapsed = now - bucket.lastRefill;
+      if (elapsed > 0) {
+        const refill = elapsed / intervalMs * tokensPerInterval;
+        bucket.tokens = Math.min(burst, bucket.tokens + refill);
+        bucket.lastRefill = now;
+      }
+      let allowed = false;
+      if (bucket.tokens >= 1) {
+        bucket.tokens -= 1;
+        allowed = true;
+      }
+      await this.state.storage.put(key, bucket, { allowConcurrency: true });
+      return new Response(JSON.stringify({ allowed }), { status: allowed ? 200 : 429, headers: { "content-type": "application/json" } });
+    }
+    return new Response("Not found", { status: 404 });
+  }
+};
+
 // src/index.ts
 var app = new Hono2();
 app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"], allowHeaders: ["Content-Type", "Authorization"] }));
@@ -72969,6 +73003,7 @@ app.route("/", docs);
 app.route("/", demo);
 var src_default = app;
 export {
+  RateLimiterDO,
   src_default as default
 };
 /*! Bundled license information:

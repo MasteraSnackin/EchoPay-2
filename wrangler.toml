@@ -23,6 +23,16 @@ bucket_name = "voicedot-audio"
 binding = "RLIMIT"
 id = "voicedot-rlimit"
 
+[durable_objects]
+bindings = [
+  { name = "RLIMIT_DO", class_name = "RateLimiterDO" }
+]
+
+[[migrations]]
+durable_objects = [
+  { name = "RateLimiterDO" }
+]
+
 [env.staging]
 name = "voicedot-api-staging"
 
@@ -44,3 +54,8 @@ bucket_name = "voicedot-audio-staging"
 [[env.staging.kv_namespaces]]
 binding = "RLIMIT"
 id = "voicedot-rlimit-staging"
+
+[env.staging.durable_objects]
+bindings = [
+  { name = "RLIMIT_DO", class_name = "RateLimiterDO" }
+]

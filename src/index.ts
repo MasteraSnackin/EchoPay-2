@@ -8,6 +8,7 @@ import { prices } from './routes/prices';
 import { docs } from './routes/docs';
 import { demo } from './routes/demo';
 import { cors } from 'hono/cors';
+import { RateLimiterDO } from './do/rateLimiter';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -22,3 +23,4 @@ app.route('/', docs);
 app.route('/', demo);
 
 export default app;
+export { RateLimiterDO };
