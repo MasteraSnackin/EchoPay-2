@@ -71166,15 +71166,43 @@ async function getApiForChain(chain2, overrideEndpoint, env) {
 }
 
 // src/integrations/xcm.ts
-async function buildXcmTransferExtrinsic(req) {
+async function buildDotTeleport(req) {
   const api = await getApiForChain(req.origin);
-  const dest = { V3: { parents: 1, interior: { X1: { Parachain: 1e3 } } } };
+  const isRelayToHub = req.origin === "polkadot" && req.destination === "asset-hub-polkadot";
+  const isHubToRelay = req.origin === "asset-hub-polkadot" && req.destination === "polkadot";
+  if (!isRelayToHub && !isHubToRelay) throw new Error("DOT teleport supported only between polkadot and asset-hub-polkadot");
+  const dest = isRelayToHub ? { V3: { parents: 0, interior: { X1: { Parachain: 1e3 } } } } : { V3: { parents: 1, interior: { X1: { AccountId32: { id: req.recipient, network: null } } } } };
+  const destFinal = isRelayToHub ? dest : { V3: { parents: 1, interior: { Here: null } } };
+  const beneficiary = { V3: { parents: 0, interior: { X1: { AccountId32: { id: req.recipient, network: null } } } } };
+  const assets = { V3: [{ id: { Concrete: isRelayToHub ? { parents: 0, interior: { Here: null } } : { parents: 0, interior: { Here: null } } }, fun: { Fungible: req.amount } }] };
+  const feeAssetItem = 0;
+  const weightLimit = "Unlimited";
+  return api.tx.xcmPallet.limitedTeleportAssets(destFinal, beneficiary, assets, feeAssetItem, weightLimit);
+}
+async function buildUsdtReserveTransferFromAssetHubToMoonbeam(req) {
+  if (!(req.origin === "asset-hub-polkadot" && req.destination === "moonbeam")) throw new Error("USDT transfer supported only Asset Hub -> Moonbeam in this builder");
+  const api = await getApiForChain(req.origin);
+  const dest = { V3: { parents: 1, interior: { X1: { Parachain: 2004 } } } };
+  const beneficiary = { V3: { parents: 0, interior: { X1: { AccountId32: { id: req.recipient, network: null } } } } };
+  const assets = { V3: [{ id: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: req.asset.assetId ?? 1984 }] } } }, fun: { Fungible: req.amount } }] };
+  const feeAssetItem = 0;
+  const weightLimit = "Unlimited";
+  return api.tx.xcmPallet.limitedReserveTransferAssets(dest, beneficiary, assets, feeAssetItem, weightLimit);
+}
+async function buildXcmTransferExtrinsic(req) {
+  if (req.asset.symbol === "DOT") {
+    return buildDotTeleport(req);
+  }
+  if (req.asset.symbol === "USDT" && req.origin === "asset-hub-polkadot" && req.destination === "moonbeam") {
+    return buildUsdtReserveTransferFromAssetHubToMoonbeam(req);
+  }
+  const api = await getApiForChain(req.origin);
+  const dest = { V3: { parents: req.origin === "polkadot" ? 0 : 1, interior: { X1: { Parachain: req.destination === "asset-hub-polkadot" ? 1e3 : 2004 } } } };
   const beneficiary = { V3: { parents: 0, interior: { X1: { AccountId32: { id: req.recipient, network: null } } } } };
   const assets = { V3: [{ id: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: req.asset.assetId ?? 0 }] } } }, fun: { Fungible: req.amount } }] };
   const feeAssetItem = 0;
   const weightLimit = "Unlimited";
-  const extrinsic = api.tx.xcmPallet.limitedReserveTransferAssets(dest, beneficiary, assets, feeAssetItem, weightLimit);
-  return extrinsic;
+  return api.tx.xcmPallet.limitedReserveTransferAssets(dest, beneficiary, assets, feeAssetItem, weightLimit);
 }
 async function estimateXcmFee(req) {
   const extrinsic = await buildXcmTransferExtrinsic(req);
