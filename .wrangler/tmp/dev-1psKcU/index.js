@@ -14508,7 +14508,10 @@ var VoiceConfirmSchema = external_exports.object({
 var ExecuteTxSchema = external_exports.object({
   transaction_id: external_exports.string().uuid(),
   signed_extrinsic: external_exports.string().regex(/^[0-9a-fA-F]+$/),
-  chain: external_exports.enum(["polkadot", "asset-hub-polkadot", "moonbeam"]).optional()
+  chain: external_exports.enum(["polkadot", "asset-hub-polkadot", "moonbeam"]).optional(),
+  token: external_exports.string().optional(),
+  min_receive: external_exports.string().optional(),
+  slippage_bps: external_exports.number().int().min(0).max(1e4).optional()
 });
 var WalletConnectSchema = external_exports.object({
   wallet_address: external_exports.string().min(1),
@@ -70198,6 +70201,35 @@ function unitsToDecimal(units, decimals) {
   return fracPart ? `${intPart}.${fracPart}` : intPart;
 }
 __name(unitsToDecimal, "unitsToDecimal");
+async function buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman) {
+  const info6 = getTokenInfo(tokenSymbol);
+  if (!info6) throw new Error(`Unsupported token ${tokenSymbol}`);
+  const api = await getApiForChain(chain2);
+  const amountUnits = decimalToUnits(amountHuman, info6.decimals);
+  if (info6.isNative) {
+    return api.tx.balances.transferKeepAlive(recipient, amountUnits);
+  }
+  throw new Error("Token is not native on this chain");
+}
+__name(buildNativeTransfer, "buildNativeTransfer");
+async function estimateNativeFee(chain2, tokenSymbol, senderAddress, recipient, amountHuman) {
+  const extrinsic = await buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman);
+  try {
+    const info6 = await extrinsic.paymentInfo(senderAddress || recipient);
+    return String(info6.partialFee?.toString?.() ?? "0");
+  } catch {
+    return "0";
+  }
+}
+__name(estimateNativeFee, "estimateNativeFee");
+async function buildAssetHubUsdtTransfer(recipient, amountHuman) {
+  const info6 = getTokenInfo("USDT");
+  const api = await getApiForChain("asset-hub-polkadot");
+  const amountUnits = decimalToUnits(amountHuman, info6.decimals);
+  const assetId = info6.assetId;
+  return api.tx.assets.transfer(assetId, recipient, amountUnits);
+}
+__name(buildAssetHubUsdtTransfer, "buildAssetHubUsdtTransfer");
 var voice = new Hono2();
 voice.post("/process", async (c) => {
   const env = c.env;
@@ -70235,34 +70267,33 @@ voice.post("/process", async (c) => {
   }
   const first2 = intent.items[0];
   const isXcm = first2.origin_chain !== first2.destination_chain;
+  const originNative = getChainNativeTokenInfo(first2.origin_chain);
   let feeHint = "";
-  if (isXcm && first2.token.toUpperCase() === getChainNativeTokenInfo(first2.origin_chain).symbol) {
-    try {
-      const nativeInfo = getChainNativeTokenInfo(first2.origin_chain);
+  try {
+    if (isXcm) {
       const fee = await estimateXcmFee({
         origin: first2.origin_chain,
         destination: first2.destination_chain,
-        asset: { symbol: nativeInfo.symbol },
-        amount: decimalToUnits(first2.amount, nativeInfo.decimals),
+        asset: { symbol: originNative.symbol },
+        amount: decimalToUnits(first2.amount, originNative.decimals),
         sender: user_id,
         recipient: first2.recipient
       });
-      const feeHuman = unitsToDecimal(fee, nativeInfo.decimals);
-      feeHint = ` Estimated XCM fee about ${feeHuman} ${nativeInfo.symbol}.`;
-    } catch {
+      const feeHuman = unitsToDecimal(fee, originNative.decimals);
+      feeHint = ` Estimated XCM fee about ${feeHuman} ${originNative.symbol} on ${first2.origin_chain}.`;
+    } else {
+      const fee = await estimateNativeFee(first2.origin_chain, originNative.symbol, user_id, first2.recipient, first2.amount);
+      const feeHuman = unitsToDecimal(fee, originNative.decimals);
+      feeHint = ` Estimated fee about ${feeHuman} ${originNative.symbol} on ${first2.origin_chain}.`;
     }
+  } catch {
   }
   const confirmText = intent.items.length > 1 ? `You requested a batch of ${intent.items.length} transfers. First: send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.` : `You asked to send ${first2.amount} ${first2.token} on ${first2.origin_chain} to ${shortAddr(first2.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.`;
   const confirmAudio = await textToSpeech(env, confirmText);
   const encrypted = await encryptAesGcm(env.ENCRYPTION_KEY, confirmAudio);
   const sessionId = v4_default();
   await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
-  return c.json({
-    transaction_ids: txIds,
-    session_id: sessionId,
-    intent,
-    confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" }
-  });
+  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: "mp3" } });
 });
 voice.post("/confirm", async (c) => {
   const env = c.env;
@@ -70308,9 +70339,7 @@ function simpleFallbackIntent(text2) {
   return {
     type: "single",
     language: "en",
-    items: [
-      { action: "transfer", amount, token, recipient, origin_chain: "polkadot", destination_chain: "polkadot" }
-    ],
+    items: [{ action: "transfer", amount, token, recipient, origin_chain: "polkadot", destination_chain: "polkadot" }],
     schedule: null,
     condition: null
   };
@@ -70327,35 +70356,6 @@ async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
   return hash.toString();
 }
 __name(submitExtrinsic, "submitExtrinsic");
-async function buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman) {
-  const info6 = getTokenInfo(tokenSymbol);
-  if (!info6) throw new Error(`Unsupported token ${tokenSymbol}`);
-  const api = await getApiForChain(chain2);
-  const amountUnits = decimalToUnits(amountHuman, info6.decimals);
-  if (info6.isNative) {
-    return api.tx.balances.transferKeepAlive(recipient, amountUnits);
-  }
-  throw new Error("Token is not native on this chain");
-}
-__name(buildNativeTransfer, "buildNativeTransfer");
-async function estimateNativeFee(chain2, tokenSymbol, senderAddress, recipient, amountHuman) {
-  const extrinsic = await buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman);
-  try {
-    const info6 = await extrinsic.paymentInfo(senderAddress || recipient);
-    return String(info6.partialFee?.toString?.() ?? "0");
-  } catch {
-    return "0";
-  }
-}
-__name(estimateNativeFee, "estimateNativeFee");
-async function buildAssetHubUsdtTransfer(recipient, amountHuman) {
-  const info6 = getTokenInfo("USDT");
-  const api = await getApiForChain("asset-hub-polkadot");
-  const amountUnits = decimalToUnits(amountHuman, info6.decimals);
-  const assetId = info6.assetId;
-  return api.tx.assets.transfer(assetId, recipient, amountUnits);
-}
-__name(buildAssetHubUsdtTransfer, "buildAssetHubUsdtTransfer");
 var tx = new Hono2();
 tx.get("/", async (c) => {
   const env = c.env;
@@ -70383,10 +70383,34 @@ tx.post("/execute", async (c) => {
   const body = await c.req.json();
   const parsed = ExecuteTxSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { transaction_id, signed_extrinsic, chain: chain2 } = parsed.data;
+  const { transaction_id, signed_extrinsic, chain: chain2, token, min_receive, slippage_bps } = parsed.data;
   const [row] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
   if (!row) return c.json({ error: "transaction not found" }, 404);
   if (row.status !== "confirmed") return c.json({ error: "transaction not confirmed" }, 400);
+  try {
+    const parsedIntent = JSON.parse(row.parsedIntent || "{}");
+    const origin = parsedIntent.origin_chain;
+    const destination = parsedIntent.destination_chain;
+    const isXcm = origin && destination && origin !== destination;
+    if (isXcm) {
+      if (min_receive) {
+        const info6 = getTokenInfo(token || row.tokenSymbol);
+        if (info6) {
+          const minUnits = decimalToUnits(min_receive, info6.decimals);
+          const amtUnits = decimalToUnits(parsedIntent.amount, info6.decimals);
+          if (BigInt(minUnits) > BigInt(amtUnits)) {
+            return c.json({ error: "min_receive exceeds transfer amount" }, 400);
+          }
+        }
+      }
+      if (slippage_bps != null) {
+        if (slippage_bps < 0 || slippage_bps > 1e4) {
+          return c.json({ error: "invalid slippage_bps" }, 400);
+        }
+      }
+    }
+  } catch {
+  }
   const hash = await submitExtrinsic(env, signed_extrinsic, chain2 || "polkadot");
   await db.update(transactions).set({ transactionHash: hash, status: "submitted", confirmedAt: Date.now() }).where(eq(transactions.id, transaction_id));
   return c.json({ transaction_hash: hash });

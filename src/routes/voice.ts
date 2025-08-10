@@ -11,6 +11,7 @@ import { Intent } from '../utils/intent';
 import { estimateXcmFee } from '../integrations/xcm';
 import { getChainNativeTokenInfo } from '../integrations/tokens';
 import { decimalToUnits, unitsToDecimal } from '../utils/units';
+import { estimateNativeFee } from '../integrations/transfers';
 
 export const voice = new Hono<{ Bindings: Env }>();
 
@@ -55,22 +56,26 @@ voice.post('/process', async (c) => {
 
   const first = intent.items[0];
   const isXcm = first.origin_chain !== first.destination_chain;
+  const originNative = getChainNativeTokenInfo(first.origin_chain as any);
   let feeHint = '';
-  if (isXcm && first.token.toUpperCase() === getChainNativeTokenInfo(first.origin_chain as any).symbol) {
-    try {
-      const nativeInfo = getChainNativeTokenInfo(first.origin_chain as any);
+  try {
+    if (isXcm) {
       const fee = await estimateXcmFee({
         origin: first.origin_chain as any,
         destination: first.destination_chain as any,
-        asset: { symbol: nativeInfo.symbol as any },
-        amount: decimalToUnits(first.amount, nativeInfo.decimals),
+        asset: { symbol: originNative.symbol as any },
+        amount: decimalToUnits(first.amount, originNative.decimals),
         sender: user_id,
         recipient: first.recipient,
       });
-      const feeHuman = unitsToDecimal(fee, nativeInfo.decimals);
-      feeHint = ` Estimated XCM fee about ${feeHuman} ${nativeInfo.symbol}.`;
-    } catch {}
-  }
+      const feeHuman = unitsToDecimal(fee, originNative.decimals);
+      feeHint = ` Estimated XCM fee about ${feeHuman} ${originNative.symbol} on ${first.origin_chain}.`;
+    } else {
+      const fee = await estimateNativeFee(first.origin_chain as any, originNative.symbol, user_id, first.recipient, first.amount);
+      const feeHuman = unitsToDecimal(fee, originNative.decimals);
+      feeHint = ` Estimated fee about ${feeHuman} ${originNative.symbol} on ${first.origin_chain}.`;
+    }
+  } catch {}
 
   const confirmText = intent.items.length > 1
     ? `You requested a batch of ${intent.items.length} transfers. First: send ${first.amount} ${first.token} on ${first.origin_chain} to ${shortAddr(first.recipient)}.${feeHint} Say confirm to proceed or cancel to abort.`
@@ -81,12 +86,7 @@ voice.post('/process', async (c) => {
   const sessionId = uuidv4();
   await db.insert(voiceSessions).values({ id: sessionId, userId: user_id, transcription, responseText: confirmText });
 
-  return c.json({
-    transaction_ids: txIds,
-    session_id: sessionId,
-    intent,
-    confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: 'mp3' },
-  });
+  return c.json({ transaction_ids: txIds, session_id: sessionId, intent, confirmation: { audio_base64: encrypted.ciphertext, iv: encrypted.iv, format: 'mp3' } });
 });
 
 voice.post('/confirm', async (c) => {
@@ -139,9 +139,7 @@ function simpleFallbackIntent(text: string): Intent {
   return {
     type: 'single',
     language: 'en',
-    items: [
-      { action: 'transfer', amount, token, recipient, origin_chain: 'polkadot', destination_chain: 'polkadot' },
-    ],
+    items: [ { action: 'transfer', amount, token, recipient, origin_chain: 'polkadot', destination_chain: 'polkadot' } ],
     schedule: null,
     condition: null,
   };

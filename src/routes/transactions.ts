@@ -40,11 +40,37 @@ tx.post('/execute', async (c) => {
   const body = await c.req.json();
   const parsed = ExecuteTxSchema.safeParse(body);
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
-  const { transaction_id, signed_extrinsic, chain } = parsed.data;
+  const { transaction_id, signed_extrinsic, chain, token, min_receive, slippage_bps } = parsed.data as any;
 
   const [row] = await db.select().from(transactions).where(eq(transactions.id, transaction_id));
   if (!row) return c.json({ error: 'transaction not found' }, 404);
   if (row.status !== 'confirmed') return c.json({ error: 'transaction not confirmed' }, 400);
+
+  // Server-side validation for cross-chain safety
+  try {
+    const parsedIntent = JSON.parse(row.parsedIntent || '{}');
+    const origin = parsedIntent.origin_chain;
+    const destination = parsedIntent.destination_chain;
+    const isXcm = origin && destination && origin !== destination;
+    if (isXcm) {
+      if (min_receive) {
+        // Verify requested min_receive is not trivially higher than amount
+        const info = getTokenInfo((token || row.tokenSymbol) as string);
+        if (info) {
+          const minUnits = decimalToUnits(min_receive, info.decimals);
+          const amtUnits = decimalToUnits(parsedIntent.amount, info.decimals);
+          if (BigInt(minUnits) > BigInt(amtUnits)) {
+            return c.json({ error: 'min_receive exceeds transfer amount' }, 400);
+          }
+        }
+      }
+      if (slippage_bps != null) {
+        if (slippage_bps < 0 || slippage_bps > 10000) {
+          return c.json({ error: 'invalid slippage_bps' }, 400);
+        }
+      }
+    }
+  } catch {}
 
   const hash = await submitExtrinsic(env, signed_extrinsic, (chain as any) || 'polkadot');
   await db
