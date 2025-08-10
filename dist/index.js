@@ -71902,13 +71902,26 @@ var KvRateLimiter = class {
     return allowed;
   }
 };
+async function allowWithDO(doStub, key, tpi = 1, intervalMs = 1e3, burst = 5) {
+  if (!doStub) return void 0;
+  const id = doStub.idFromName("global");
+  const stub = doStub.get(id);
+  const url = `https://do/allow?key=${encodeURIComponent(key)}&tpi=${tpi}&interval=${intervalMs}&burst=${burst}`;
+  const res = await stub.fetch(url, { method: "GET" });
+  if (res.status === 200) return true;
+  if (res.status === 429) return false;
+  return void 0;
+}
 
 // src/routes/voice.ts
 var voice = new Hono2();
 var MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024;
 var ALLOWED_FORMATS = /* @__PURE__ */ new Set(["mp3", "wav", "webm"]);
 var memLimiter = new RateLimiter(1, 1e3, 5);
-function limiterAllow(c, key) {
+async function limiterAllow(c, key) {
+  const doNs = c.env.RLIMIT_DO;
+  const withDo = await allowWithDO(doNs, key, 1, 1e3, 5);
+  if (withDo !== void 0) return withDo;
   const kv = c.env.RLIMIT;
   if (kv) {
     const kvLimiter = new KvRateLimiter(kv, 1, 1e3, 5);

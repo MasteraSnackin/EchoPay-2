@@ -57,3 +57,14 @@ export class KvRateLimiter {
     return allowed;
   }
 }
+
+export async function allowWithDO(doStub: DurableObjectNamespace | undefined, key: string, tpi = 1, intervalMs = 1000, burst = 5): Promise<boolean | undefined> {
+  if (!doStub) return undefined;
+  const id = doStub.idFromName('global');
+  const stub = doStub.get(id);
+  const url = `https://do/allow?key=${encodeURIComponent(key)}&tpi=${tpi}&interval=${intervalMs}&burst=${burst}`;
+  const res = await stub.fetch(url, { method: 'GET' });
+  if (res.status === 200) return true;
+  if (res.status === 429) return false;
+  return undefined;
+}

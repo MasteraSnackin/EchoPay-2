@@ -13,16 +13,19 @@ import { getChainNativeTokenInfo } from '../integrations/tokens';
 import { decimalToUnits, unitsToDecimal } from '../utils/units';
 import { estimateNativeFee } from '../integrations/transfers';
 import { isValidSs58Address } from '../utils/address';
-import { RateLimiter, getClientKey, KvRateLimiter } from '../utils/rateLimit';
+import { RateLimiter, getClientKey, KvRateLimiter, allowWithDO } from '../utils/rateLimit';
 
-export const voice = new Hono<{ Bindings: Env & { RLIMIT?: KVNamespace } }>();
+export const voice = new Hono<{ Bindings: Env & { RLIMIT?: KVNamespace; RLIMIT_DO?: DurableObjectNamespace } }>();
 
 const MAX_AUDIO_BASE64_SIZE = 5 * 1024 * 1024; // ~5MB base64
 const ALLOWED_FORMATS = new Set(['mp3', 'wav', 'webm']);
 
 const memLimiter = new RateLimiter(1, 1000, 5); // 1 token/sec, burst 5
 
-function limiterAllow(c: any, key: string): Promise<boolean> | boolean {
+async function limiterAllow(c: any, key: string): Promise<boolean> {
+  const doNs: DurableObjectNamespace | undefined = c.env.RLIMIT_DO as any;
+  const withDo = await allowWithDO(doNs, key, 1, 1000, 5);
+  if (withDo !== undefined) return withDo;
   const kv: KVNamespace | undefined = c.env.RLIMIT as any;
   if (kv) {
     const kvLimiter = new KvRateLimiter(kv, 1, 1000, 5);
