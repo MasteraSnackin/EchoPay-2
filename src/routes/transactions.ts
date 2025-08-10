@@ -4,6 +4,7 @@ import { ExecuteTxSchema } from '../utils/validators';
 import { transactions } from '../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { submitExtrinsic } from '../integrations/papi';
+import { buildXcmTransferExtrinsic } from '../integrations/xcm';
 
 export const tx = new Hono<{ Bindings: Env }>();
 
@@ -49,4 +50,27 @@ tx.post('/execute', async (c) => {
     .where(eq(transactions.id, transaction_id));
 
   return c.json({ transaction_hash: hash });
+});
+
+tx.post('/xcm/build', async (c) => {
+  const body = await c.req.json();
+  // Expect: { origin, destination, symbol, amount, sender, recipient }
+  const { origin, destination, symbol, amount, sender, recipient } = body || {};
+  if (!origin || !destination || !symbol || !amount || !sender || !recipient) {
+    return c.json({ error: 'missing fields' }, 400);
+  }
+  try {
+    const extrinsic = await buildXcmTransferExtrinsic({
+      origin,
+      destination,
+      asset: { symbol, assetId: symbol === 'USDT' ? 1984 : undefined },
+      amount,
+      sender,
+      recipient,
+    });
+    const hex = extrinsic.method.toHex();
+    return c.json({ call_hex: hex });
+  } catch (e: any) {
+    return c.json({ error: String(e) }, 500);
+  }
 });

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { Env, getDb } from '../db/client';
 import { WalletBalanceSchema, WalletConnectSchema } from '../utils/validators';
 import { users } from '../db/schema';
-import { getBalance } from '../integrations/papi';
+import { getTokenBalance } from '../integrations/balances';
 
 export const wallet = new Hono<{ Bindings: Env }>();
 
@@ -21,7 +21,6 @@ wallet.post('/connect', async (c) => {
 });
 
 wallet.get('/balance', async (c) => {
-  const env = c.env;
   const url = new URL(c.req.url);
   const parsed = WalletBalanceSchema.safeParse({
     wallet_address: url.searchParams.get('wallet_address') ?? '',
@@ -33,10 +32,13 @@ wallet.get('/balance', async (c) => {
   const symbols = (token_symbols || 'DOT').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean);
 
   const balances: Record<string, string> = {};
-  if (symbols.includes('DOT')) {
-    balances.DOT = await getBalance(env, wallet_address, 'polkadot');
+  for (const sym of symbols) {
+    try {
+      balances[sym] = await getTokenBalance(wallet_address, sym as any);
+    } catch {
+      balances[sym] = '0';
+    }
   }
-  // TODO: USDT on Asset Hub, GLMR on Moonbeam, etc.
 
   return c.json({ balances });
 });
