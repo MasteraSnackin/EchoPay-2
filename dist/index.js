@@ -69940,6 +69940,46 @@ async function buildXcmTransferExtrinsic(req) {
   return extrinsic;
 }
 
+// src/integrations/tokens.ts
+var TOKENS = {
+  DOT: { symbol: "DOT", chain: "polkadot", isNative: true },
+  USDT: { symbol: "USDT", chain: "asset-hub-polkadot", isNative: false, assetId: 1984 },
+  GLMR: { symbol: "GLMR", chain: "moonbeam", isNative: true }
+};
+function getTokenInfo(symbol) {
+  const s = symbol.toUpperCase();
+  return TOKENS[s];
+}
+
+// src/utils/units.ts
+function decimalToUnits(amount, decimals) {
+  const [intPart, fracPartRaw = ""] = amount.trim().split(".");
+  const fracPart = fracPartRaw.slice(0, decimals);
+  const paddedFrac = fracPart.padEnd(decimals, "0");
+  const normalized = (intPart || "0").replace(/^0+/, "") || "0";
+  const units = normalized + paddedFrac;
+  return units.replace(/^0+/, "") || "0";
+}
+
+// src/integrations/transfers.ts
+async function buildNativeTransfer(chain2, tokenSymbol, recipient, amountHuman) {
+  const info6 = getTokenInfo(tokenSymbol);
+  if (!info6) throw new Error(`Unsupported token ${tokenSymbol}`);
+  const api = await getApiForChain(chain2);
+  const amountUnits = decimalToUnits(amountHuman, info6.decimals);
+  if (info6.isNative) {
+    return api.tx.balances.transferKeepAlive(recipient, amountUnits);
+  }
+  throw new Error("Token is not native on this chain");
+}
+async function buildAssetHubUsdtTransfer(recipient, amountHuman) {
+  const info6 = getTokenInfo("USDT");
+  const api = await getApiForChain("asset-hub-polkadot");
+  const amountUnits = decimalToUnits(amountHuman, info6.decimals);
+  const assetId = info6.assetId;
+  return api.tx.assets.transfer(assetId, recipient, amountUnits);
+}
+
 // src/routes/transactions.ts
 var tx = new Hono2();
 tx.get("/", async (c) => {
@@ -69997,17 +70037,40 @@ tx.post("/xcm/build", async (c) => {
     return c.json({ error: String(e) }, 500);
   }
 });
-
-// src/integrations/tokens.ts
-var TOKENS = {
-  DOT: { symbol: "DOT", chain: "polkadot", isNative: true },
-  USDT: { symbol: "USDT", chain: "asset-hub-polkadot", isNative: false, assetId: 1984 },
-  GLMR: { symbol: "GLMR", chain: "moonbeam", isNative: true }
-};
-function getTokenInfo(symbol) {
-  const s = symbol.toUpperCase();
-  return TOKENS[s];
-}
+tx.post("/build", async (c) => {
+  const body = await c.req.json();
+  const { token, amount, recipient, origin_chain, destination_chain } = body || {};
+  if (!token || !amount || !recipient || !origin_chain || !destination_chain) {
+    return c.json({ error: "missing fields" }, 400);
+  }
+  const info6 = getTokenInfo(token);
+  if (!info6) return c.json({ error: "unsupported token" }, 400);
+  try {
+    let hex8;
+    if (origin_chain === destination_chain) {
+      const extrinsic = await buildNativeTransfer(origin_chain, token, recipient, amount);
+      hex8 = extrinsic.method.toHex();
+    } else {
+      if (token.toUpperCase() === "USDT") {
+        const extrinsic = await buildAssetHubUsdtTransfer(recipient, amount);
+        hex8 = extrinsic.method.toHex();
+      } else {
+        const extrinsic = await buildXcmTransferExtrinsic({
+          origin: origin_chain,
+          destination: destination_chain,
+          asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === "USDT" ? 1984 : void 0 },
+          amount,
+          sender: "0x",
+          recipient
+        });
+        hex8 = extrinsic.method.toHex();
+      }
+    }
+    return c.json({ call_hex: hex8 });
+  } catch (e) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
 
 // src/integrations/balances.ts
 async function getTokenBalance(address, symbol) {
@@ -70075,12 +70138,57 @@ health.get("/status/polkadot", async (c) => {
   }
 });
 
+// src/integrations/prices.ts
+var COINGECKO_IDS = {
+  DOT: "polkadot",
+  USDT: "tether",
+  GLMR: "moonbeam"
+};
+async function fetchUsdPrices(symbols) {
+  const ids = symbols.map((s) => COINGECKO_IDS[s.toUpperCase()]).filter(Boolean);
+  if (!ids.length) return {};
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids.join(","))}&vs_currencies=usd`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Price API error: ${res.status}`);
+  const data = await res.json();
+  const out = {};
+  for (const sym of symbols) {
+    const id = COINGECKO_IDS[sym.toUpperCase()];
+    if (id && data[id]?.usd != null) out[sym.toUpperCase()] = Number(data[id].usd);
+  }
+  return out;
+}
+function convertAmount(amount, fromPriceUsd, toPriceUsd) {
+  if (!fromPriceUsd || !toPriceUsd) return 0;
+  const usd = amount * fromPriceUsd;
+  return usd / toPriceUsd;
+}
+
+// src/routes/prices.ts
+var prices = new Hono2();
+prices.get("/prices", async (c) => {
+  const url = new URL(c.req.url);
+  const symbols = (url.searchParams.get("symbols") || "DOT,USDT,GLMR").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
+  const data = await fetchUsdPrices(symbols);
+  return c.json({ prices_usd: data });
+});
+prices.get("/prices/convert", async (c) => {
+  const url = new URL(c.req.url);
+  const amount = Number(url.searchParams.get("amount") || "0");
+  const from2 = (url.searchParams.get("from") || "DOT").toUpperCase();
+  const to = (url.searchParams.get("to") || "USDT").toUpperCase();
+  const p = await fetchUsdPrices([from2, to]);
+  const converted = convertAmount(amount, p[from2] || 0, p[to] || 0);
+  return c.json({ amount, from: from2, to, converted });
+});
+
 // src/index.ts
 var app = new Hono2();
 app.route("/voice", voice);
 app.route("/transactions", tx);
 app.route("/wallet", wallet);
 app.route("/", health);
+app.route("/", prices);
 var src_default = app;
 export {
   src_default as default

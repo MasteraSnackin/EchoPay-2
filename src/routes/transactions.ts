@@ -5,6 +5,8 @@ import { transactions } from '../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { submitExtrinsic } from '../integrations/papi';
 import { buildXcmTransferExtrinsic } from '../integrations/xcm';
+import { buildAssetHubUsdtTransfer, buildNativeTransfer } from '../integrations/transfers';
+import { getTokenInfo } from '../integrations/tokens';
 
 export const tx = new Hono<{ Bindings: Env }>();
 
@@ -69,6 +71,42 @@ tx.post('/xcm/build', async (c) => {
       recipient,
     });
     const hex = extrinsic.method.toHex();
+    return c.json({ call_hex: hex });
+  } catch (e: any) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
+
+tx.post('/build', async (c) => {
+  const body = await c.req.json();
+  // Expect: { token, amount, recipient, origin_chain, destination_chain }
+  const { token, amount, recipient, origin_chain, destination_chain } = body || {};
+  if (!token || !amount || !recipient || !origin_chain || !destination_chain) {
+    return c.json({ error: 'missing fields' }, 400);
+  }
+  const info = getTokenInfo(token);
+  if (!info) return c.json({ error: 'unsupported token' }, 400);
+  try {
+    let hex: string;
+    if (origin_chain === destination_chain) {
+      const extrinsic = await buildNativeTransfer(origin_chain, token, recipient, amount);
+      hex = extrinsic.method.toHex();
+    } else {
+      if (token.toUpperCase() === 'USDT') {
+        const extrinsic = await buildAssetHubUsdtTransfer(recipient, amount);
+        hex = extrinsic.method.toHex();
+      } else {
+        const extrinsic = await buildXcmTransferExtrinsic({
+          origin: origin_chain,
+          destination: destination_chain,
+          asset: { symbol: token.toUpperCase(), assetId: token.toUpperCase() === 'USDT' ? 1984 : undefined },
+          amount,
+          sender: '0x',
+          recipient,
+        });
+        hex = extrinsic.method.toHex();
+      }
+    }
     return c.json({ call_hex: hex });
   } catch (e: any) {
     return c.json({ error: String(e) }, 500);
