@@ -69922,15 +69922,22 @@ async function getApiForChain(chain2, overrideEndpoint) {
 }
 
 // src/integrations/papi.ts
-async function getBalance2(env, address, chain2 = "polkadot") {
-  const api = await getApiForChain(chain2);
-  const { data } = await api.query.system.account(address);
-  return data.free.toString();
-}
 async function submitExtrinsic(env, signedExtrinsicHex, chain2 = "polkadot") {
   const api = await getApiForChain(chain2);
   const hash = await api.rpc.author.submitExtrinsic(`0x${signedExtrinsicHex}`);
   return hash.toString();
+}
+
+// src/integrations/xcm.ts
+async function buildXcmTransferExtrinsic(req) {
+  const api = await getApiForChain(req.origin);
+  const dest = { V3: { parents: 1, interior: { X1: { Parachain: 1e3 } } } };
+  const beneficiary = { V3: { parents: 0, interior: { X1: { AccountId32: { id: req.recipient, network: null } } } } };
+  const assets = { V3: [{ id: { Concrete: { parents: 0, interior: { X2: [{ PalletInstance: 50 }, { GeneralIndex: req.asset.assetId ?? 0 }] } } }, fun: { Fungible: req.amount } }] };
+  const feeAssetItem = 0;
+  const weightLimit = "Unlimited";
+  const extrinsic = api.tx.xcmPallet.limitedReserveTransferAssets(dest, beneficiary, assets, feeAssetItem, weightLimit);
+  return extrinsic;
 }
 
 // src/routes/transactions.ts
@@ -69969,6 +69976,56 @@ tx.post("/execute", async (c) => {
   await db.update(transactions).set({ transactionHash: hash, status: "submitted", confirmedAt: Date.now() }).where(eq(transactions.id, transaction_id));
   return c.json({ transaction_hash: hash });
 });
+tx.post("/xcm/build", async (c) => {
+  const body = await c.req.json();
+  const { origin, destination, symbol, amount, sender, recipient } = body || {};
+  if (!origin || !destination || !symbol || !amount || !sender || !recipient) {
+    return c.json({ error: "missing fields" }, 400);
+  }
+  try {
+    const extrinsic = await buildXcmTransferExtrinsic({
+      origin,
+      destination,
+      asset: { symbol, assetId: symbol === "USDT" ? 1984 : void 0 },
+      amount,
+      sender,
+      recipient
+    });
+    const hex8 = extrinsic.method.toHex();
+    return c.json({ call_hex: hex8 });
+  } catch (e) {
+    return c.json({ error: String(e) }, 500);
+  }
+});
+
+// src/integrations/tokens.ts
+var TOKENS = {
+  DOT: { symbol: "DOT", chain: "polkadot", isNative: true },
+  USDT: { symbol: "USDT", chain: "asset-hub-polkadot", isNative: false, assetId: 1984 },
+  GLMR: { symbol: "GLMR", chain: "moonbeam", isNative: true }
+};
+function getTokenInfo(symbol) {
+  const s = symbol.toUpperCase();
+  return TOKENS[s];
+}
+
+// src/integrations/balances.ts
+async function getTokenBalance(address, symbol) {
+  const info6 = getTokenInfo(symbol);
+  const api = await getApiForChain(info6.chain);
+  if (symbol === "DOT" || symbol === "GLMR") {
+    const { data } = await api.query.system.account(address);
+    return data.free.toString();
+  }
+  if (symbol === "USDT") {
+    const assetId = info6.assetId;
+    const account3 = await api.query.assets.account(assetId, address);
+    const json = account3.toJSON();
+    const balance = json?.balance ?? "0";
+    return String(balance);
+  }
+  return "0";
+}
 
 // src/routes/wallet.ts
 var wallet = new Hono2();
@@ -69984,7 +70041,6 @@ wallet.post("/connect", async (c) => {
   return c.json({ user_id: id });
 });
 wallet.get("/balance", async (c) => {
-  const env = c.env;
   const url = new URL(c.req.url);
   const parsed = WalletBalanceSchema.safeParse({
     wallet_address: url.searchParams.get("wallet_address") ?? "",
@@ -69994,8 +70050,12 @@ wallet.get("/balance", async (c) => {
   const { wallet_address, token_symbols } = parsed.data;
   const symbols = (token_symbols || "DOT").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
   const balances = {};
-  if (symbols.includes("DOT")) {
-    balances.DOT = await getBalance2(env, wallet_address, "polkadot");
+  for (const sym of symbols) {
+    try {
+      balances[sym] = await getTokenBalance(wallet_address, sym);
+    } catch {
+      balances[sym] = "0";
+    }
   }
   return c.json({ balances });
 });
