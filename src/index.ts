@@ -5,6 +5,8 @@ import { tx } from './routes/transactions';
 import { wallet } from './routes/wallet';
 import { health } from './routes/health';
 import { prices } from './routes/prices';
+import { docs } from './routes/docs';
+import { demo } from './routes/demo';
 import { cors } from 'hono/cors';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -16,5 +18,7 @@ app.route('/transactions', tx);
 app.route('/wallet', wallet);
 app.route('/', health);
 app.route('/', prices);
+app.route('/', docs);
+app.route('/', demo);
 
 export default app;

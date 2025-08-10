@@ -44153,11 +44153,11 @@ var RESERVED = [
   "registry"
 ];
 var PATH_RM_INDEX_1 = ["generic", "misc", "pallet", "traits", "types"];
-function sanitizeDocs(docs) {
-  const count = docs.length;
+function sanitizeDocs(docs2) {
+  const count = docs2.length;
   const result = new Array(count);
   for (let i = 0; i < count; i++) {
-    result[i] = docs[i].toString();
+    result[i] = docs2[i].toString();
   }
   return result;
 }
@@ -44699,7 +44699,7 @@ var PortableRegistry = class extends Struct {
     const count = fields.length;
     const sub = new Array(count);
     for (let i = 0; i < count; i++) {
-      const { docs, name, type, typeName } = fields[i];
+      const { docs: docs2, name, type, typeName } = fields[i];
       const typeDef = this.__internal__createSiDef(type);
       if (name.isNone) {
         sub[i] = typeDef;
@@ -44709,7 +44709,7 @@ var PortableRegistry = class extends Struct {
           alias2.set(nameField, nameOrig);
         }
         sub[i] = objectSpread5({
-          docs: sanitizeDocs(docs),
+          docs: sanitizeDocs(docs2),
           name: nameField
         }, typeDef, typeName.isSome ? { typeName: sanitize(typeName.unwrap()) } : null);
       }
@@ -44951,8 +44951,8 @@ function getUniqTypes(registry, meta, throwError) {
 }
 
 // node_modules/@polkadot/types/metadata/util/toCallsOnly.js
-function trimDocs(docs) {
-  const strings = docs.map((d) => d.toString().trim());
+function trimDocs(docs2) {
+  const strings = docs2.map((d) => d.toString().trim());
   const firstEmpty = strings.findIndex((d) => !d.length);
   return firstEmpty === -1 ? strings : strings.slice(0, firstEmpty);
 }
@@ -48588,10 +48588,10 @@ function setTypeOverride(sectionTypes, types2) {
   });
 }
 function convertCalls(specs, registry, modName, calls, sectionTypes) {
-  const variants = calls.map(({ args, docs, name }, index) => {
+  const variants = calls.map(({ args, docs: docs2, name }, index) => {
     setTypeOverride(sectionTypes, args.map(({ type }) => type));
     return registry.createTypeUnsafe("SiVariant", [{
-      docs,
+      docs: docs2,
       fields: args.map(({ name: name2, type }) => registry.createTypeUnsafe("SiField", [{ name: name2, type: compatType(specs, type) }])),
       index,
       name
@@ -48602,10 +48602,10 @@ function convertCalls(specs, registry, modName, calls, sectionTypes) {
   }]);
 }
 function convertConstants(specs, registry, constants, sectionTypes) {
-  return constants.map(({ docs, name, type, value }) => {
+  return constants.map(({ docs: docs2, name, type, value }) => {
     setTypeOverride(sectionTypes, [type]);
     return registry.createTypeUnsafe("PalletConstantMetadataV14", [{
-      docs,
+      docs: docs2,
       name,
       type: compatType(specs, type),
       value
@@ -48613,8 +48613,8 @@ function convertConstants(specs, registry, constants, sectionTypes) {
   });
 }
 function convertErrors(specs, registry, modName, errors, _sectionTypes) {
-  const variants = errors.map(({ docs, name }, index) => registry.createTypeUnsafe("SiVariant", [{
-    docs,
+  const variants = errors.map(({ docs: docs2, name }, index) => registry.createTypeUnsafe("SiVariant", [{
+    docs: docs2,
     fields: [],
     index,
     name
@@ -48624,10 +48624,10 @@ function convertErrors(specs, registry, modName, errors, _sectionTypes) {
   }]);
 }
 function convertEvents(specs, registry, modName, events2, sectionTypes) {
-  const variants = events2.map(({ args, docs, name }, index) => {
+  const variants = events2.map(({ args, docs: docs2, name }, index) => {
     setTypeOverride(sectionTypes, args);
     return registry.createTypeUnsafe("SiVariant", [{
-      docs,
+      docs: docs2,
       fields: args.map((t) => registry.createTypeUnsafe("SiField", [{ type: compatType(specs, t) }])),
       index,
       name
@@ -48649,7 +48649,7 @@ function createMapEntry(specs, registry, sectionTypes, { hashers, isLinked, isOp
 }
 function convertStorage(specs, registry, { items, prefix: prefix2 }, sectionTypes) {
   return registry.createTypeUnsafe("PalletStorageMetadataV14", [{
-    items: items.map(({ docs, fallback, modifier, name, type }) => {
+    items: items.map(({ docs: docs2, fallback, modifier, name, type }) => {
       let entryType;
       if (type.isPlain) {
         const plain = type.asPlain;
@@ -48686,7 +48686,7 @@ function convertStorage(specs, registry, { items, prefix: prefix2 }, sectionType
         });
       }
       return registry.createTypeUnsafe("StorageEntryMetadataV14", [{
-        docs,
+        docs: docs2,
         fallback,
         modifier,
         name,
@@ -49086,9 +49086,9 @@ function createWithMeta(registry, itemFn, options) {
   storageFn.toJSON = () => objectSpread5({ storage: { method, prefix: prefix2, section: section2 } }, meta.toJSON());
   return storageFn;
 }
-function extendHeadMeta(registry, { meta: { docs, name, type }, section: section2 }, { method }, iterFn) {
+function extendHeadMeta(registry, { meta: { docs: docs2, name, type }, section: section2 }, { method }, iterFn) {
   const meta = registry.createTypeUnsafe("StorageEntryMetadataLatest", [{
-    docs,
+    docs: docs2,
     fallback: registry.createTypeUnsafe("Bytes", []),
     modifier: registry.createTypeUnsafe("StorageEntryModifierLatest", [1]),
     // required
@@ -49153,10 +49153,10 @@ function findSiType(registry, type) {
   }
   return portable;
 }
-function createRuntimeFunction({ method, prefix: prefix2, section: section2 }, key, { docs, type }) {
+function createRuntimeFunction({ method, prefix: prefix2, section: section2 }, key, { docs: docs2, type }) {
   return (registry) => createFunction(registry, {
     meta: registry.createTypeUnsafe("StorageEntryMetadataLatest", [{
-      docs: registry.createTypeUnsafe("Vec<Text>", [[docs]]),
+      docs: registry.createTypeUnsafe("Vec<Text>", [[docs2]]),
       modifier: registry.createTypeUnsafe("StorageEntryModifierLatest", ["Required"]),
       name: registry.createTypeUnsafe("Text", [method]),
       toJSON: () => key,
@@ -49280,9 +49280,9 @@ function injectErrors(_, { lookup, pallets }, version2, result) {
     const { errors, index, name } = pallets[i];
     if (errors.isSome) {
       const sectionName = stringCamelCase2(name);
-      lazyMethod4(result, version2 >= 12 ? index.toNumber() : i, () => lazyVariants(lookup, errors.unwrap(), getVariantStringIdx, ({ docs, fields, index: index2, name: name2 }) => ({
+      lazyMethod4(result, version2 >= 12 ? index.toNumber() : i, () => lazyVariants(lookup, errors.unwrap(), getVariantStringIdx, ({ docs: docs2, fields, index: index2, name: name2 }) => ({
         args: getFieldArgs(lookup, fields),
-        docs: docs.map(valueToString),
+        docs: docs2.map(valueToString),
         fields,
         index: index2.toNumber(),
         method: name2.toString(),
@@ -70059,9 +70059,9 @@ var Decorate = class extends Events {
   _getMethods(registry, methods) {
     const result = {};
     methods.forEach((m) => {
-      const { docs, inputs, name, output } = m;
+      const { docs: docs2, inputs, name, output } = m;
       result[name.toString()] = {
-        description: docs.map((d) => d.toString()).join(),
+        description: docs2.map((d) => d.toString()).join(),
         params: inputs.map(({ name: name2, type }) => {
           return { name: name2.toString(), type: registry.lookup.getName(type) || registry.lookup.getTypeDef(type).type };
         }),
@@ -72214,6 +72214,360 @@ prices.get("/prices/convert", async (c) => {
   return c.json({ amount, from: from2, to, converted });
 });
 
+// src/routes/docs.ts
+var docs = new Hono2();
+var openapiYaml = `openapi: 3.0.3
+info:
+  title: VoiceDOT API
+  version: 0.1.0
+servers:
+  - url: /
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200': { description: OK }
+  /status/polkadot:
+    get:
+      summary: Polkadot network status
+      responses:
+        '200': { description: OK }
+  /voice/process:
+    post:
+      summary: Process voice input
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                audio_data: { type: string }
+                user_id: { type: string }
+                format: { type: string, enum: [mp3, wav, webm] }
+              required: [audio_data, user_id]
+      responses:
+        '200': { description: Intent and confirmation audio }
+  /voice/confirm:
+    post:
+      summary: Confirm or cancel via voice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                audio_data: { type: string }
+                user_id: { type: string }
+                transaction_id: { type: string, format: uuid }
+                transaction_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '200': { description: Confirmation result }
+  /transactions:
+    get:
+      summary: List transactions
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer }
+        - in: query
+          name: offset
+          schema: { type: integer }
+      responses:
+        '200': { description: List }
+  /transactions/{id}:
+    get:
+      summary: Get transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Item }
+  /transactions/execute:
+    post:
+      summary: Execute a signed transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transaction_id: { type: string, format: uuid }
+                signed_extrinsic: { type: string }
+                chain: { type: string }
+                token: { type: string }
+                min_receive: { type: string }
+                slippage_bps: { type: integer }
+              required: [transaction_id, signed_extrinsic]
+      responses:
+        '200': { description: Submitted }
+  /transactions/build:
+    post:
+      summary: Build transfer call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token: { type: string }
+                amount: { type: string }
+                recipient: { type: string }
+                origin_chain: { type: string }
+                destination_chain: { type: string }
+                min_receive: { type: string }
+                slippage_bps: { type: integer }
+              required: [token, amount, recipient, origin_chain, destination_chain]
+      responses:
+        '200': { description: Call hex and fee }
+  /transactions/xcm/build:
+    post:
+      summary: Build XCM transfer call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                origin: { type: string }
+                destination: { type: string }
+                symbol: { type: string }
+                amount: { type: string }
+                sender: { type: string }
+                recipient: { type: string }
+              required: [origin, destination, symbol, amount, sender, recipient]
+      responses:
+        '200': { description: Call hex }
+  /transactions/xcm/estimate:
+    get:
+      summary: Estimate XCM fee
+      parameters:
+        - in: query
+          name: origin
+          required: true
+          schema: { type: string }
+        - in: query
+          name: destination
+          required: true
+          schema: { type: string }
+        - in: query
+          name: symbol
+          required: true
+          schema: { type: string }
+        - in: query
+          name: amount
+          required: true
+          schema: { type: string }
+        - in: query
+          name: recipient
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Fee }
+  /wallet/connect:
+    post:
+      summary: Connect wallet with signature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet_address: { type: string }
+                signature: { type: string }
+                message: { type: string }
+              required: [wallet_address, signature, message]
+      responses:
+        '200': { description: Connected }
+  /wallet/balance:
+    get:
+      summary: Get balances
+      parameters:
+        - in: query
+          name: wallet_address
+          required: true
+          schema: { type: string }
+        - in: query
+          name: token_symbols
+          schema: { type: string }
+      responses:
+        '200': { description: Balances }
+  /prices:
+    get:
+      summary: Get USD prices
+      responses:
+        '200': { description: Prices }
+  /prices/convert:
+    get:
+      summary: Convert between tokens via USD
+      parameters:
+        - in: query
+          name: amount
+          required: true
+          schema: { type: number }
+        - in: query
+          name: from
+          required: true
+          schema: { type: string }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Converted }
+`;
+docs.get("/openapi.yaml", (c) => c.text(openapiYaml, 200, { "Content-Type": "text/yaml; charset=utf-8" }));
+docs.get("/docs", (c) => c.html(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>VoiceDOT API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>body{margin:0;} #swagger-ui{max-width: 1100px; margin: 0 auto;}</style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"><\/script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: '/openapi.yaml',
+      dom_id: '#swagger-ui'
+    })
+  <\/script>
+</body>
+</html>`));
+
+// src/routes/demo.ts
+var demo = new Hono2();
+demo.get("/demo", (c) => c.html(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceDOT Demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 12px; }
+    button { padding: 8px 12px; margin-right: 8px; }
+    textarea, input { width: 100%; margin: 8px 0; }
+    .row { margin: 12px 0; }
+    audio { width: 100%; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>VoiceDOT Demo</h1>
+  <div class="row">
+    <label>Wallet Address</label>
+    <input id="wallet" placeholder="polkadot address" />
+  </div>
+  <div class="row">
+    <button id="rec">Start Recording</button>
+    <button id="stop" disabled>Stop</button>
+  </div>
+  <div class="row">
+    <button id="send" disabled>Send to /voice/process</button>
+    <button id="confirm" disabled>Send to /voice/confirm</button>
+  </div>
+  <div class="row">
+    <label>Log</label>
+    <textarea id="log" rows="10"></textarea>
+  </div>
+  <audio id="player" controls></audio>
+
+<script>
+let mediaRecorder, chunks = [];
+let lastTransactionIds = [];
+
+function log(msg) {
+  const el = document.getElementById('log');
+  el.value += msg + '
+';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function getBlobBase64(blob) {
+  const buf = await blob.arrayBuffer();
+  let bin = '';
+  const bytes = new Uint8Array(buf);
+  for (let i=0; i<bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+document.getElementById('rec').onclick = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+  chunks = [];
+  mediaRecorder.ondataavailable = e => chunks.push(e.data);
+  mediaRecorder.onstop = () => {
+    document.getElementById('send').disabled = false;
+    document.getElementById('confirm').disabled = false;
+  };
+  mediaRecorder.start();
+  document.getElementById('rec').disabled = true;
+  document.getElementById('stop').disabled = false;
+  log('Recording...');
+};
+
+document.getElementById('stop').onclick = () => {
+  mediaRecorder.stop();
+  document.getElementById('rec').disabled = false;
+  document.getElementById('stop').disabled = true;
+  log('Stopped');
+};
+
+document.getElementById('send').onclick = async () => {
+  const wallet = document.getElementById('wallet').value.trim();
+  const blob = new Blob(chunks, { type: 'audio/webm' });
+  const base64 = await getBlobBase64(blob);
+  const res = await fetch('/voice/process', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ audio_data: base64, user_id: wallet || 'demo', format: 'webm' })
+  });
+  const data = await res.json();
+  log(JSON.stringify(data, null, 2));
+  lastTransactionIds = data.transaction_ids || (data.transaction_id ? [data.transaction_id] : []);
+  if (data.confirmation?.audio_base64) {
+    const src = 'data:audio/mp3;base64,' + data.confirmation.audio_base64;
+    document.getElementById('player').src = src;
+    document.getElementById('player').play();
+  }
+};
+
+document.getElementById('confirm').onclick = async () => {
+  const wallet = document.getElementById('wallet').value.trim();
+  const blob = new Blob(chunks, { type: 'audio/webm' });
+  const base64 = await getBlobBase64(blob);
+  const res = await fetch('/voice/confirm', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ audio_data: base64, user_id: wallet || 'demo', transaction_ids: lastTransactionIds })
+  });
+  const data = await res.json();
+  log(JSON.stringify(data, null, 2));
+  if (data.response?.audio_base64) {
+    const src = 'data:audio/mp3;base64,' + data.response.audio_base64;
+    document.getElementById('player').src = src;
+    document.getElementById('player').play();
+  }
+};
+<\/script>
+</body>
+</html>`));
+
 // node_modules/hono/dist/middleware/cors/index.js
 var cors = (options) => {
   const defaults4 = {
@@ -72299,6 +72653,8 @@ app.route("/transactions", tx);
 app.route("/wallet", wallet);
 app.route("/", health);
 app.route("/", prices);
+app.route("/", docs);
+app.route("/", demo);
 var src_default = app;
 export {
   src_default as default
