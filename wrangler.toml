@@ -1,0 +1,46 @@
+name = "voicedot-api"
+main = "dist/index.js"
+compatibility_date = "2024-08-25"
+workers_dev = true
+
+[vars]
+# Defaults (production mainnet)
+POLKADOT_RPC_ENDPOINT = "wss://rpc.polkadot.io"
+ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+PERPLEXITY_MODEL = "sonar-small-online"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "voicedot-db"
+database_id = "voicedot-db"
+migrations_dir = "drizzle"
+
+[[r2_buckets]]
+binding = "AUDIO"
+bucket_name = "voicedot-audio"
+
+[[kv_namespaces]]
+binding = "RLIMIT"
+id = "voicedot-rlimit"
+
+[env.staging]
+name = "voicedot-api-staging"
+
+[env.staging.vars]
+POLKADOT_RPC_ENDPOINT = "wss://westend-rpc.polkadot.io"
+ASSETHUB_RPC_ENDPOINT = "wss://westend-asset-hub-rpc.polkadot.io"
+MOONBEAM_RPC_ENDPOINT = "wss://wss.api.moonbase.moonbeam.network"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "voicedot-db-staging"
+database_id = "voicedot-db-staging"
+migrations_dir = "drizzle"
+
+[[env.staging.r2_buckets]]
+binding = "AUDIO"
+bucket_name = "voicedot-audio-staging"
+
+[[env.staging.kv_namespaces]]
+binding = "RLIMIT"
+id = "voicedot-rlimit-staging"

@@ -1,0 +1,47 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "<<<<<<< HEAD # EchoPay-2 EchoPay is a voice-activated Ethereum transaction application that interacts with the Moonbase Alpha network (a test network for the Moonbeam blockchain). It allows users to send transactions and check balances using voice commands. 1. Security Improvements Private Key Handling:  Input Validation:  2. Improving the Command Parsing Enhance NLP Accuracy:  Command Confirmation:  3. Error Handling and Feedback User Feedback:  Detailed Error Messages:  4. Enhance Web3 Integration Network Switch Prompt: Gas Estimation:  5. Code Optimization and Best Practices Async/Await in Loops:  Separate Concerns:  6. UI/UX Improvements Progress Indicators: Responsive Design:  7. Extending Functionality Additional Commands: Consider adding more voice commands, such as checking the transaction history, setting up recurring payments, or interacting with smart contracts beyond simple token transfers. Multi-language Support: Depending on your target audience, you might want to implement support for multiple languages in voice commands. ======= # EchoPay: Voice-Activated Cross-Chain Payment System (Proof of Concept)",
+  "main": "hardhat.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "dev:staging": "wrangler dev --env staging",
+    "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/index.js --platform=browser",
+    "migrate": "drizzle-kit generate && wrangler d1 migrations apply voicedot-db --local",
+    "migrate:staging": "drizzle-kit generate && wrangler d1 migrations apply voicedot-db-staging --env staging --remote",
+    "push": "wrangler d1 migrations apply voicedot-db",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:staging": "npm run build && wrangler deploy --env staging"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasteraSnackin/EchoPay-2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MasteraSnackin/EchoPay-2/issues"
+  },
+  "homepage": "https://github.com/MasteraSnackin/EchoPay-2#readme",
+  "type": "module",
+  "dependencies": {
+    "@polkadot/api": "^14.2.1",
+    "@polkadot/util": "^12.6.2",
+    "@polkadot/util-crypto": "^12.6.2",
+    "drizzle-orm": "^0.44.4",
+    "hono": "^4.6.6",
+    "uuid": "^9.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240729",
+    "drizzle-kit": "^0.31.4",
+    "esbuild": "^0.21.5",
+    "typescript": "^5.5.4",
+    "wrangler": "^4.28.1"
+  }
+}
