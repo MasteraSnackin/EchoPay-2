@@ -8,10 +8,13 @@
   },
   "scripts": {
     "dev": "wrangler dev --local",
+    "dev:staging": "wrangler dev --env staging",
     "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/index.js --platform=browser",
     "migrate": "drizzle-kit generate && wrangler d1 migrations apply voicedot-db --local",
+    "migrate:staging": "drizzle-kit generate && wrangler d1 migrations apply voicedot-db-staging --env staging --remote",
     "push": "wrangler d1 migrations apply voicedot-db",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:staging": "npm run build && wrangler deploy --env staging"
   },
   "repository": {
     "type": "git",
