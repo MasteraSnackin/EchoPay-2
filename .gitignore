@@ -1,16 +1,11 @@
-# User-specific files
-*.mp4
-changes.txt
-
-# Temporary/Unwanted directories
-temp-frontend/
-
-# OS-specific
+node_modules/
+dist/
+.wrangler/
+.wrangler/state/
+wrangler.toml.local
 .DS_Store
-Thumbs.db
-
-# Log files
+.env
+.env.*
+.vscode/
+.idea/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
