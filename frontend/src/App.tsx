@@ -669,7 +669,7 @@ function App() {
                   <p>Connected as: {selectedAccount.meta.name} ({selectedAccount.address})</p>
                   <p>
                     Balance: {isBalanceLoading
-                      ? <span className="loading-spinner"></span>
+                      ? <><span>Refreshing</span><span className="inline-spinner" /></>
                       : (accountBalance || 'N/A')
                     }
                     {walletError && !isBalanceLoading && <span style={{ color: 'orange', marginLeft: '10px' }}>(Error fetching balance)</span>}
@@ -677,7 +677,7 @@ function App() {
                   <button onClick={refreshBalance} disabled={!selectedAccount || isBalanceLoading}>
                     {isBalanceLoading ? 'Refreshing...' : 'Refresh Balance'}
                   </button>
-                  <p style={{ marginTop: '10px' }}>Cache Hit: {balanceCacheHit ? 'Yes' : 'No'}</p>
+                  <p style={{ marginTop: '10px' }}>Balance Cache Hit: {balanceCacheHit ? 'Yes' : 'No'}</p>
                   <button onClick={handleDisconnectWallet} style={{marginTop: '10px'}}>
                     Disconnect Wallet
                   </button>
@@ -831,8 +831,9 @@ function App() {
             <p><strong>To</strong>: {recognizedContact?.name} ({recognizedContact?.address})</p>
             <p><strong>Amount</strong>: {parsedCommand.amount} {parsedCommand.token}</p>
             <p>
-              <strong>Estimated Fee</strong>: {isEstimatingFee ? 'Estimating...' : (estimateError ? `Error: ${estimateError}` : (estimatedFee || 'N/A'))}
+              <strong>Estimated Fee</strong>: {isEstimatingFee ? <>Estimating<span className="inline-spinner" /></> : (estimateError ? `Error: ${estimateError}` : (estimatedFee || 'N/A'))}
             </p>
+            <p style={{ marginTop: 0 }}>You can refresh fee estimation below.</p>
             {!hasSufficientBalance && (
               <p style={{ color: 'salmon' }}>Insufficient funds for amount + estimated fee.</p>
             )}
@@ -842,9 +843,8 @@ function App() {
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button disabled={isSubmitting || !hasSufficientBalance} onClick={() => { setIsConfirmOpen(false); executeOnChainTransfer(); }}>Confirm</button>
               <button disabled={isSubmitting} onClick={() => setIsConfirmOpen(false)}>Cancel</button>
-              <button disabled={isSubmitting || isEstimatingFee} onClick={refreshFee}>
-                Re-estimate
-              </button>
+              <button disabled={isSubmitting || isEstimatingFee} onClick={refreshFee}>Re-estimate</button>
+              <button disabled={isSubmitting} onClick={() => invalidate()}>Clear Cache</button>
             </div>
             {lastTxHash && <p style={{ marginTop: '10px' }}>Last Tx: {lastTxHash}</p>}
           </div>

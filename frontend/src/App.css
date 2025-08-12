@@ -258,3 +258,15 @@ p strong { /* Make strong text stand out more */
 .suggestions-item:hover {
   background-color: rgba(255,255,255,0.06);
 }
+
+.inline-spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+  vertical-align: text-bottom;
+  margin-left: 6px;
+}
