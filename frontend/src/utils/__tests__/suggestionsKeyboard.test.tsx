@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent, screen, act } from '@testing-library/react';
 import React from 'react';
 
 function Suggestions({ items }: { items: string[] }) {
@@ -63,15 +63,12 @@ describe('suggestions keyboard behavior', () => {
     render(<Suggestions items={[ 'Alice', 'Bob', 'Charlie' ]} />);
 
     const input = screen.getByPlaceholderText('Type') as HTMLInputElement;
-    input.focus();
-    fireEvent.change(input, { target: { value: 'a' } });
+    await act(async () => { input.focus(); });
+    await act(async () => { fireEvent.change(input, { target: { value: 'a' } }); });
 
-    // Down → active 0
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    // Down → active 1 (wraps only if 2+ items match)
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    // Enter to select
-    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => { fireEvent.keyDown(input, { key: 'ArrowDown' }); });
+    await act(async () => { fireEvent.keyDown(input, { key: 'ArrowDown' }); });
+    await act(async () => { fireEvent.keyDown(input, { key: 'Enter' }); });
 
     expect(input.value.toLowerCase()).toContain('a'); // Selected some item containing 'a'
   });
