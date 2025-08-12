@@ -61,9 +61,9 @@ const testCommands = [
   {
     command: "Transférer 150 à David",
     expectedType: "payment",
-    requiresConfirmation: false,
+    requiresConfirmation: true,
     language: "fr",
-    description: "French transfer command"
+    description: "French transfer command (high value)"
   },
   {
     command: "Vérifier mon solde",
@@ -80,7 +80,7 @@ const testCommands = [
     description: "French transaction history"
   },
   {
-    command: "Ajouter le contact Sarah",
+    command: "Ajouter le contact Isabelle",
     expectedType: "add_contact",
     requiresConfirmation: false,
     language: "fr",
@@ -115,12 +115,13 @@ async function testCommandProcessing(command, expectedType, requiresConfirmation
     const commandResult = await commandResponse.json();
     console.log(`   ✅ Command processed: ${commandResult.status}`);
     
-    // Check language detection
-    if (commandResult.detectedLanguage === language) {
-      console.log(`   ✅ Language detected correctly: ${commandResult.detectedLanguage}`);
-    } else {
-      console.log(`   ⚠️  Language detection: expected ${language}, got ${commandResult.detectedLanguage}`);
-    }
+            // Check language detection
+        const detectedLang = commandResult.detectedLanguage || (commandResult.parsedCommand && commandResult.parsedCommand.detectedLanguage);
+        if (detectedLang === language) {
+          console.log(`   ✅ Language detected correctly: ${detectedLang}`);
+        } else {
+          console.log(`   ⚠️  Language detection: expected ${language}, got ${detectedLang}`);
+        }
 
     if (requiresConfirmation) {
       // Step 2: Verify confirmation is required
@@ -250,11 +251,13 @@ async function testFrenchLanguageEnhancement() {
 
       if (response.ok) {
         const result = await response.json();
-        if (result.detectedLanguage === 'fr') {
-          console.log(`   ✅ "${command}" → ${result.detectedLanguage} (${result.type})`);
+        // Check for detectedLanguage in both the root and parsedCommand
+        const detectedLang = result.detectedLanguage || (result.parsedCommand && result.parsedCommand.detectedLanguage);
+        if (detectedLang === 'fr') {
+          console.log(`   ✅ "${command}" → ${detectedLang} (${result.parsedCommand?.type || result.type || 'unknown'})`);
           passed++;
         } else {
-          console.log(`   ❌ "${command}" → ${result.detectedLanguage} (expected fr)`);
+          console.log(`   ❌ "${command}" → ${detectedLang} (expected fr)`);
         }
       } else {
         console.log(`   ❌ "${command}" → HTTP ${response.status}`);
