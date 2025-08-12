@@ -728,13 +728,43 @@ app.get('/api/wallet/extension-status', async (req, res) => {
 // Wallet verification for Worker (signature check)
 app.post('/api/wallet/verify', async (req, res) => {
   try {
-    const { wallet_address, signature, message } = req.body;
-    if (!wallet_address || !signature || !message) {
+    const { wallet_address, signature, message, message_hex } = req.body;
+    if (!wallet_address || !signature || (!message && !message_hex)) {
       return res.status(400).json({ status: 'error', message: 'Missing fields' });
     }
-    const verify = signatureVerify(message, signature, wallet_address);
+    const toVerify = message_hex || message;
+    const verify = signatureVerify(toVerify, signature, wallet_address);
     if (!verify.isValid) return res.status(400).json({ status: 'error', message: 'Invalid signature' });
     res.json({ status: 'success', message: 'Signature valid' });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// Create a transaction record
+app.post('/api/wallet/transaction', async (req, res) => {
+  try {
+    const { from_address, to_address, amount, currency, type, metadata } = req.body;
+    if (!from_address || !to_address || !amount) {
+      return res.status(400).json({ status: 'error', message: 'from_address, to_address and amount are required' });
+    }
+    const tx = {
+      id: transactionId++,
+      type: type || 'transfer',
+      amount: Number(amount),
+      recipient: metadata?.recipient_name || to_address,
+      recipientAddress: to_address,
+      currency: currency || 'DOT',
+      status: 'created',
+      confidence: metadata?.confidence,
+      timestamp: new Date().toISOString(),
+      txHash: 'pending',
+      processingMethods: metadata?.methods || ['voice'],
+      fromAddress: from_address,
+      metadata: metadata || {}
+    };
+    transactions.push(tx);
+    res.json({ status: 'success', id: tx.id, transaction: tx });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
   }

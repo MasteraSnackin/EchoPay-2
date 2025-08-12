@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { validator } from '@hono/zod-validator';
 import { getDb } from '../utils/db';
-import { transactions } from '../db/schema';
+import { transactions, voiceSessions } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { elevenLabsSTT } from '../utils/elevenlabs';
 import { nanoid } from 'nanoid';
@@ -10,8 +10,10 @@ import { nanoid } from 'nanoid';
 const router = new Hono<{ Bindings: { DB: D1Database; ELEVENLABS_API_KEY: string; ELEVENLABS_VOICE_ID: string; ENCRYPTION_KEY: string } }>();
 
 const processSchema = z.object({
-  audio_data: z.string(),
+  audio_data: z.string().optional(),
+  text: z.string().optional(),
   user_id: z.string(),
+  wallet_address: z.string().optional(),
   format: z.enum(['mp3', 'wav', 'webm']).default('mp3')
 });
 
@@ -38,15 +40,33 @@ router.post('/process', validator('json', processSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb(c.env);
 
-  const transcription = await elevenLabsSTT(c.env.ELEVENLABS_API_KEY, body.audio_data, body.format);
+  let transcription = body.text?.trim() || '';
+  if (!transcription && body.audio_data) {
+    transcription = await elevenLabsSTT(c.env.ELEVENLABS_API_KEY, body.audio_data, body.format);
+  }
+  if (!transcription) {
+    return c.json({ status: 'error', message: 'No text or audio provided' }, 400);
+  }
 
-  // TODO: Parse transcription (NLP) properly. Static parse for now.
-  const parsedIntent = {
-    type: 'payment',
-    amount: '5',
-    token: 'DOT',
-    recipient: '14abcDEF...'
-  };
+  // TODO: Replace with proper NLP parsing
+  const parsedIntent = (() => {
+    const lower = transcription.toLowerCase();
+    const match = lower.match(/pay\s+(\d+(?:\.\d+)?)\s*(dot|wnd|dev)?\s+to\s+([a-z0-9]+)/);
+    if (match) {
+      return {
+        type: 'payment',
+        amount: match[1],
+        token: (match[2] || 'DOT').toUpperCase(),
+        recipient: match[3]
+      };
+    }
+    return {
+      type: 'unknown',
+      amount: null,
+      token: null,
+      recipient: null
+    } as any;
+  })();
 
   const sessionId = nanoid();
   const now = Date.now();
@@ -60,6 +80,10 @@ router.post('/process', validator('json', processSchema), async (c) => {
     responseText: null,
     createdAt: now
   });
+
+  if (parsedIntent.type !== 'payment') {
+    return c.json({ status: 'error', message: 'Command not recognized', transcription });
+  }
 
   const txId = nanoid();
   await db.insert(transactions).values({
@@ -80,14 +104,17 @@ router.post('/process', validator('json', processSchema), async (c) => {
     if (c.env.ELEVENLABS_VOICE_ID) {
       responseAudioUrl = await elevenLabsTTS(c.env.ELEVENLABS_API_KEY, c.env.ELEVENLABS_VOICE_ID, responseText);
     }
-  } catch (e) {
-    // ignore TTS failure and continue with text only
-  }
+  } catch {}
 
   return c.json({
     status: 'confirmation_required',
     transaction_id: txId,
-    parsed_intent: parsedIntent,
+    transaction_type: 'transfer',
+    amount: parsedIntent.amount,
+    recipient: parsedIntent.recipient,
+    currency: parsedIntent.token,
+    confidence: 0.9,
+    methods: ['voice', 'nlp'],
     response_text: responseText,
     response_audio_url: responseAudioUrl
   });
