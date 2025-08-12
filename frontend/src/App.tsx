@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
-import type { AccountInfo } from '@polkadot/types/interfaces';
+
 import { formatBalance } from '@polkadot/util';
 import './App.css';
 import ContactList, { mockContacts, Contact } from './ContactList';
@@ -13,6 +13,7 @@ import Identicon from '@polkadot/react-identicon';
 import { isAddress } from '@polkadot/util-crypto';
 import { isValidSs58WithPrefix, normalizeToPrefix } from './utils/ss58';
 import { useApi } from './chain/ApiProvider';
+import { useChain } from './chain/useChain';
 
 // Westend SS58 prefix
 const WESTEND_PREFIX = 42;
@@ -30,6 +31,7 @@ if (recognition) {
 
 function App() {
   const { api, ready, decimals: chainDecimalsCtx, token: chainTokenCtx, existentialDeposit } = useApi();
+  const { getBalancePlanck, estimateTransferFeePlanck, invalidate } = useChain();
 
   // Wallet State
   const [extensionsLoaded, setExtensionsLoaded] = useState<boolean>(false);
@@ -42,6 +44,8 @@ function App() {
   // Chain metadata and numeric balances (planck)
   const [chainDecimals, setChainDecimals] = useState<number | null>(null);
   const [accountBalancePlanck, setAccountBalancePlanck] = useState<bigint | null>(null);
+  const [balanceCacheHit, setBalanceCacheHit] = useState<boolean>(false);
+  // const [feeCacheHit, setFeeCacheHit] = useState<boolean>(false); // reserved for future display
 
   // Voice Command State
   const [responseMessage, setResponseMessage] = useState<string>('');
@@ -177,45 +181,43 @@ function App() {
     setTypedRecipient(parsedCommand.recipientName || '');
   }, [parsedCommand]);
 
-  // --- Fetch Account Balance ---
+  // --- Fetch Account Balance (cached) ---
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!selectedAccount || !api || !ready) {
+      if (!selectedAccount || !ready) {
         setAccountBalance('');
         setAccountBalancePlanck(null);
+        setBalanceCacheHit(false);
         return;
       }
 
       setIsBalanceLoading(true);
-      setAccountBalance(''); // Clear previous balance
-      setWalletError(''); // Clear previous errors
+      setAccountBalance('');
+      setWalletError('');
 
       try {
-        // Query account info and cast to the correct type
-        const accountInfo = await api.query.system.account(selectedAccount.address) as unknown as AccountInfo;
-        const freeBalance = (accountInfo as any).data.free; // BN
-        setAccountBalancePlanck(BigInt(freeBalance.toString()));
-
-        // Format and set balance
-        setAccountBalance(formatBalance(freeBalance, { withUnit: true, withSi: false }));
-
+        const { value, cacheHit } = await getBalancePlanck(selectedAccount.address);
+        setAccountBalancePlanck(value);
+        setAccountBalance(formatBalance(value.toString(), { withUnit: true, withSi: false }));
+        setBalanceCacheHit(cacheHit);
       } catch (error) {
         console.error("Error fetching balance:", error);
         setWalletError(`Error fetching balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        setAccountBalance(''); // Clear balance on error
+        setAccountBalance('');
         setAccountBalancePlanck(null);
+        setBalanceCacheHit(false);
       } finally {
         setIsBalanceLoading(false);
       }
     };
 
     fetchBalance();
-  }, [selectedAccount, api, ready]);
+  }, [selectedAccount, ready, getBalancePlanck]);
 
-  // --- Estimate fee when confirmation opens ---
+  // --- Estimate fee when confirmation opens (cached) ---
   useEffect(() => {
     const estimate = async () => {
-      if (!isConfirmOpen || !parsedCommand || !recognizedContact || !selectedAccount || !api || chainDecimals == null) return;
+      if (!isConfirmOpen || !parsedCommand || !recognizedContact || !selectedAccount || chainDecimals == null) return;
       setIsEstimatingFee(true);
       setEstimateError('');
       setEstimatedFee('');
@@ -224,13 +226,10 @@ function App() {
 
       try {
         const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, chainDecimals);
-        const tx = api.tx.balances.transferKeepAlive(recognizedContact.address, amountPlanck);
-
-        const info = await tx.paymentInfo(selectedAccount.address);
-        const partialFee = info.partialFee?.toString?.() || info.partialFee.toString();
-        setEstimatedFee(formatBalance(partialFee, { withUnit: true, withSi: false }));
-        setEstimatedFeePlanck(BigInt(partialFee));
-      } catch (error) {
+        const { value: fee } = await estimateTransferFeePlanck(selectedAccount.address, recognizedContact.address, amountPlanck);
+        setEstimatedFee(formatBalance(fee.toString(), { withUnit: true, withSi: false }));
+        setEstimatedFeePlanck(fee);
+              } catch (error) {
         console.error('Fee estimation error', error);
         setEstimateError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
@@ -239,7 +238,7 @@ function App() {
     };
 
     estimate();
-  }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount, api, chainDecimals, existentialDeposit]);
+  }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount, chainDecimals, existentialDeposit, estimateTransferFeePlanck]);
 
   // --- Preflight checks whenever inputs/estimates change ---
   useEffect(() => {
@@ -524,7 +523,7 @@ function App() {
     const result = validateTyped();
     if (!result) return;
 
-    if (!api || chainDecimals == null || !selectedAccount) {
+    if (chainDecimals == null || !selectedAccount) {
       setTypedErrors('Network not ready or no account selected.');
       return;
     }
@@ -533,13 +532,10 @@ function App() {
       const amountNumeric = Number(typedAmount.replace(/,/g, '.'));
       const amountPlanck = toPlanckFromDecimal(amountNumeric, chainDecimals);
       const recipientAddress = result.contact!.address;
-      const tx = api.tx.balances.transferKeepAlive(recipientAddress, amountPlanck);
-      const info = await tx.paymentInfo(selectedAccount.address);
-      const partialFee = info.partialFee?.toString?.() || info.partialFee.toString();
-      const feePlanck = BigInt(partialFee);
+      const { value: fee } = await estimateTransferFeePlanck(selectedAccount.address, recipientAddress, amountPlanck);
 
       const balance = accountBalancePlanck ?? BigInt(0);
-      const required = amountPlanck + feePlanck;
+      const required = amountPlanck + fee;
       if (balance < required) {
         setTypedErrors('Insufficient balance for amount + estimated fee.');
         return;
@@ -549,11 +545,9 @@ function App() {
         const remaining = balance - required;
         if (remaining < ed) {
           setTypedErrors('Warning: Remaining balance may fall below existential deposit (reaping risk).');
-          // Allow continue or require explicit? For now we allow continue; remove return to allow
         }
       }
 
-      // Seed confirm with parsed + estimated fee available
       const provisional: ParsedCommand = {
         action: 'pay',
         amount: amountNumeric,
@@ -563,8 +557,8 @@ function App() {
       };
       setParsedCommand(provisional);
       setRecognizedContact(result.contact);
-      setEstimatedFee(formatBalance(partialFee, { withUnit: true, withSi: false }));
-      setEstimatedFeePlanck(feePlanck);
+      setEstimatedFee(formatBalance(fee.toString(), { withUnit: true, withSi: false }));
+      setEstimatedFeePlanck(fee);
       setIsConfirmOpen(true);
 
     } catch (error) {
@@ -609,6 +603,23 @@ function App() {
     // If contact address exists and is an address, ensure it conforms to Westend prefix for display
     const normalized = normalizeToPrefix(match.address, WESTEND_PREFIX) || match.address;
     return { contact: { ...match, address: normalized } };
+  };
+
+  // UI refresh handlers
+  const refreshBalance = () => {
+    if (selectedAccount) {
+      invalidate(new RegExp(`^${selectedAccount.address}$`));
+      setBalanceCacheHit(false);
+      // trigger effect
+      setAccountBalance(prev => prev);
+    }
+  };
+  const refreshFee = () => {
+    if (selectedAccount && parsedCommand && recognizedContact && chainDecimals != null) {
+      const key = `${selectedAccount.address}:${recognizedContact.address}:${toPlanckFromDecimal(parsedCommand.amount, chainDecimals).toString()}`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      invalidate(new RegExp(key));
+      setIsConfirmOpen(true); // trigger re-estimate effect
+    }
   };
 
   return (
@@ -663,6 +674,10 @@ function App() {
                     }
                     {walletError && !isBalanceLoading && <span style={{ color: 'orange', marginLeft: '10px' }}>(Error fetching balance)</span>}
                   </p>
+                  <button onClick={refreshBalance} disabled={!selectedAccount || isBalanceLoading}>
+                    {isBalanceLoading ? 'Refreshing...' : 'Refresh Balance'}
+                  </button>
+                  <p style={{ marginTop: '10px' }}>Cache Hit: {balanceCacheHit ? 'Yes' : 'No'}</p>
                   <button onClick={handleDisconnectWallet} style={{marginTop: '10px'}}>
                     Disconnect Wallet
                   </button>
@@ -827,7 +842,7 @@ function App() {
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button disabled={isSubmitting || !hasSufficientBalance} onClick={() => { setIsConfirmOpen(false); executeOnChainTransfer(); }}>Confirm</button>
               <button disabled={isSubmitting} onClick={() => setIsConfirmOpen(false)}>Cancel</button>
-              <button disabled={isSubmitting || isEstimatingFee} onClick={() => setIsConfirmOpen(true)}>
+              <button disabled={isSubmitting || isEstimatingFee} onClick={refreshFee}>
                 Re-estimate
               </button>
             </div>

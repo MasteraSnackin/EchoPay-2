@@ -6,15 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Proxy API requests to the backend server
       '/api': {
-        target: 'http://localhost:3001', // Your backend server address
+        target: 'http://localhost:3001',
         changeOrigin: true,
-        // Optional: rewrite path if needed, but here we keep /api prefix
-        // rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
+  // @ts-expect-error: vitest config is available at runtime, not typed here
   test: {
     environment: 'jsdom',
     globals: true,

@@ -17,17 +17,17 @@ export function useChain() {
 
   const isReady = !!api && ready && decimals != null;
 
-  const getBalancePlanck = useCallback(async (address: string, ttlMs: number = DEFAULT_TTL_MS): Promise<bigint> => {
+  const getBalancePlanck = useCallback(async (address: string, ttlMs: number = DEFAULT_TTL_MS): Promise<{ value: bigint; cacheHit: boolean }> => {
     if (!api) throw new Error('API not ready');
     const now = Date.now();
     const cached = balanceCache.current.get(address);
     if (cached && now - cached.ts < ttlMs) {
-      return cached.value;
+      return { value: cached.value, cacheHit: true };
     }
     const account: any = await api.query.system.account(address);
     const free = BigInt(account.data.free.toString());
     balanceCache.current.set(address, { value: free, ts: now });
-    return free;
+    return { value: free, cacheHit: false };
   }, [api]);
 
   const estimateTransferFeePlanck = useCallback(async (
@@ -35,19 +35,19 @@ export function useChain() {
     toAddress: string,
     amountPlanck: bigint,
     ttlMs: number = DEFAULT_TTL_MS
-  ): Promise<bigint> => {
+  ): Promise<{ value: bigint; cacheHit: boolean }> => {
     if (!api) throw new Error('API not ready');
     const key = `${fromAddress}:${toAddress}:${amountPlanck.toString()}`;
     const now = Date.now();
     const cached = feeCache.current.get(key);
     if (cached && now - cached.ts < ttlMs) {
-      return cached.value;
+      return { value: cached.value, cacheHit: true };
     }
     const tx = api.tx.balances.transferKeepAlive(toAddress, amountPlanck);
     const info = await tx.paymentInfo(fromAddress);
     const fee = BigInt((info.partialFee as any).toString());
     feeCache.current.set(key, { value: fee, ts: now });
-    return fee;
+    return { value: fee, cacheHit: false };
   }, [api]);
 
   const invalidate = useCallback((pattern?: RegExp) => {
