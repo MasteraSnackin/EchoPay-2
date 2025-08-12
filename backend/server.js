@@ -1,11 +1,21 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const MultiLanguageProcessor = require('./multiLanguageProcessor');
 const CommandConfirmation = require('./commandConfirmation');
 const SecureWalletIntegration = require('./secureWalletIntegration');
 const { signatureVerify } = require('@polkadot/util-crypto');
 const { ApiPromise } = require('@polkadot/api');
 const { WsProvider } = require('@polkadot/api/node/providers');
+const { 
+  apiLimiter, 
+  authLimiter, 
+  voiceLimiter, 
+  corsOptions, 
+  validateInput, 
+  requestLogger, 
+  healthCheck 
+} = require('./middleware/security');
 
 const app = express();
 const port = 3001;
@@ -15,9 +25,20 @@ const multiLangProcessor = new MultiLanguageProcessor();
 const commandConfirmation = new CommandConfirmation();
 const secureWallet = new SecureWalletIntegration();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Security and monitoring middleware
+app.use(helmet());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(requestLogger);
+app.use(healthCheck);
+
+// Rate limiting
+app.use('/api/', apiLimiter);
+app.use('/api/wallet/', authLimiter);
+app.use('/api/voice/', voiceLimiter);
+
+// Input validation
+app.use(validateInput);
 
 // Mock database for transactions and contacts
 let transactions = [];
@@ -818,36 +839,42 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Initialize secure wallet on startup
-initializeSecureWallet();
+// Export the app for production use
+module.exports = { app };
 
-app.listen(port, () => {
-  console.log(`EchoPay Multi-Language AI-powered backend with blockchain integration listening at http://localhost:${port}`);
-  console.log('Available endpoints:');
-  console.log('  POST /api/process-command           - Process voice commands with multi-language AI');
-  console.log('  POST /api/confirm-command           - Confirm pending commands');
-  console.log('  GET  /api/confirmations             - Get pending confirmations');
-  console.log('  GET  /api/confirmation-stats        - Get confirmation statistics');
-  console.log('  GET  /api/languages                 - Get supported languages');
-  console.log('  POST /api/wallet/connect            - Connect to wallet (extension/subwallet/talisman)');
-  console.log('  GET  /api/wallet/accounts           - Get available accounts');
-  console.log('  POST /api/wallet/select-account     - Select account for transactions');
-  console.log('  GET  /api/wallet/balance/:addr      - Get account balance');
-  console.log('  POST /api/wallet/estimate-fees      - Estimate transaction fees');
-  console.log('  GET  /api/wallet/health             - Get wallet health status');
-  console.log('  POST /api/wallet/switch-network     - Switch blockchain network');
-  console.log('  GET  /api/wallet/extensions         - Get available wallet extensions');
-  console.log('  GET  /api/wallet/extensions/:name/check - Check specific extension availability');
-  console.log('  GET  /api/wallet/extension-status   - Get extension connection status');
-  console.log('  POST /api/wallet/verify             - Worker signature verification');
-  console.log('  POST /api/wallet/broadcast          - Worker signed extrinsic broadcast (stub)');
-  console.log('  GET  /api/transactions              - Get transaction history');
-  console.log('  GET  /api/contacts                  - Get contact list');
-  console.log('  GET  /api/recurring-payments        - Get recurring payments');
-  console.log('  GET  /api/ai-stats                  - Get AI processing statistics');
-  console.log('  GET  /api/health                    - Health check');
-  console.log('');
-  console.log('Multi-Language AI Command Processor, Confirmation System, and Blockchain Integration initialized!');
-  console.log(`Supported Languages: ${multiLangProcessor.getSupportedLanguages().map(l => l.name).join(', ')}`);
-  console.log(`Available Networks: ${secureWallet.getAvailableNetworks().map(n => n.name).join(', ')}`);
-});
+// Only start the server if this file is run directly
+if (require.main === module) {
+  // Initialize secure wallet on startup
+  initializeSecureWallet();
+
+  app.listen(port, () => {
+    console.log(`EchoPay Multi-Language AI-powered backend with blockchain integration listening at http://localhost:${port}`);
+    console.log('Available endpoints:');
+    console.log('  POST /api/process-command           - Process voice commands with multi-language AI');
+    console.log('  POST /api/confirm-command           - Confirm pending commands');
+    console.log('  GET  /api/confirmations             - Get pending confirmations');
+    console.log('  GET  /api/confirmation-stats        - Get confirmation statistics');
+    console.log('  GET  /api/languages                 - Get supported languages');
+    console.log('  POST /api/wallet/connect            - Connect to wallet (extension/subwallet/talisman)');
+    console.log('  GET  /api/wallet/accounts           - Get available accounts');
+    console.log('  POST /api/wallet/select-account     - Select account for transactions');
+    console.log('  GET  /api/wallet/balance/:addr      - Get account balance');
+    console.log('  POST /api/wallet/estimate-fees      - Estimate transaction fees');
+    console.log('  GET  /api/wallet/health             - Get wallet health status');
+    console.log('  POST /api/wallet/switch-network     - Switch blockchain network');
+    console.log('  GET  /api/wallet/extensions         - Get available wallet extensions');
+    console.log('  GET  /api/wallet/extensions/:name/check - Check specific extension availability');
+    console.log('  GET  /api/wallet/extension-status   - Get extension connection status');
+    console.log('  POST /api/wallet/verify             - Worker signature verification');
+    console.log('  POST /api/wallet/broadcast          - Worker signed extrinsic broadcast (stub)');
+    console.log('  GET  /api/transactions              - Get transaction history');
+    console.log('  GET  /api/contacts                  - Get contact list');
+    console.log('  GET  /api/recurring-payments        - Get recurring payments');
+    console.log('  GET  /api/ai-stats                  - Get AI processing statistics');
+    console.log('  GET  /api/health                    - Health check');
+    console.log('');
+    console.log('Multi-Language AI Command Processor, Confirmation System, and Blockchain Integration initialized!');
+    console.log(`Supported Languages: ${multiLangProcessor.getSupportedLanguages().map(l => l.name).join(', ')}`);
+    console.log(`Available Networks: ${secureWallet.getAvailableNetworks().map(n => n.name).join(', ')}`);
+  });
+}
