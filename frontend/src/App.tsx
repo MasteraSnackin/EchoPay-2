@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
+import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import type { AccountInfo } from '@polkadot/types/interfaces'; // Import AccountInfo type
+import type { AccountInfo } from '@polkadot/types/interfaces';
 import { formatBalance } from '@polkadot/util';
 import './App.css';
-import ContactList, { mockContacts, Contact } from './ContactList'; // Import the new component AND mock data/type
+import ContactList, { mockContacts, Contact } from './ContactList';
 import { parseCommandText, type ParsedCommand } from './utils/parseCommand';
+import { toPlanckFromDecimal } from './utils/amount';
 
 // Check if the browser supports the Web Speech API
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -35,6 +36,12 @@ function App() {
   const [recognizedContact, setRecognizedContact] = useState<Contact | null>(null); // State for matched contact
   const [parsedCommand, setParsedCommand] = useState<ParsedCommand | null>(null);
   const recognitionRef = useRef(recognition); // Use ref to avoid issues with state closure in callbacks
+
+  // Live transfer feature toggle and confirmation state
+  const [isLiveTransferEnabled, setIsLiveTransferEnabled] = useState<boolean>(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [lastTxHash, setLastTxHash] = useState<string>('');
 
   // Effect for Speech Recognition Setup
   useEffect(() => {
@@ -273,6 +280,74 @@ function App() {
     }
   };
 
+  // Execute on-chain transfer on Westend
+  const executeOnChainTransfer = async () => {
+    if (!isLiveTransferEnabled) {
+      setResponseMessage('Live transfer is disabled.');
+      return;
+    }
+    if (!selectedAccount) {
+      setResponseMessage('No account selected.');
+      return;
+    }
+    if (!parsedCommand || !recognizedContact) {
+      setResponseMessage('Missing parsed command or recipient.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setResponseMessage('Submitting transfer...');
+
+    let api: ApiPromise | null = null;
+    try {
+      const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
+      api = await ApiPromise.create({ provider: wsProvider });
+      await api.isReady;
+
+      const decimals = api.registry.chainDecimals[0];
+      const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, decimals);
+
+      const injector = await web3FromAddress(selectedAccount.address);
+      api.setSigner(injector.signer);
+
+      const tx = api.tx.balances.transferKeepAlive(recognizedContact.address, amountPlanck);
+
+      const unsub = await tx.signAndSend(selectedAccount.address, ({ status, dispatchError, txHash }) => {
+        if (dispatchError) {
+          if (dispatchError.isModule) {
+            const decoded = api!.registry.findMetaError(dispatchError.asModule);
+            const { section, name, docs } = decoded;
+            setResponseMessage(`On-chain error: ${section}.${name} - ${docs.join(' ')}`);
+          } else {
+            setResponseMessage(`On-chain error: ${dispatchError.toString()}`);
+          }
+          setIsSubmitting(false);
+          unsub();
+          return;
+        }
+
+        if (status.isInBlock) {
+          setResponseMessage(`Included in block. Tx: ${txHash?.toString()}`);
+          setLastTxHash(txHash?.toString() || '');
+        } else if (status.isFinalized) {
+          setResponseMessage(`Finalized. Tx: ${txHash?.toString()}`);
+          setIsSubmitting(false);
+          unsub();
+        } else {
+          setResponseMessage(`Status: ${status.type}`);
+        }
+      });
+    } catch (error) {
+      console.error('Transfer error', error);
+      setResponseMessage(`Transfer failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsSubmitting(false);
+    } finally {
+      if (api) {
+        try { await api.disconnect(); } catch {}
+      }
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="main-content">
@@ -281,6 +356,18 @@ function App() {
         {/* Wallet Section */}
         <div className="card">
           <h2>Wallet Connection</h2>
+          {/* Feature toggle */}
+          <div style={{ marginBottom: '10px' }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={isLiveTransferEnabled}
+                onChange={(e) => setIsLiveTransferEnabled(e.target.checked)}
+                style={{ marginRight: '8px' }}
+              />
+              Enable live on-chain transfer (Westend)
+            </label>
+          </div>
           {!extensionsLoaded && accounts.length === 0 && (
             <button onClick={handleConnectWallet}>Connect Wallet</button>
           )}
@@ -357,7 +444,33 @@ function App() {
               </button>
             </>
           )}
+
+          {parsedCommand && recognizedContact && (
+            <div style={{ marginTop: '10px' }}>
+              <button
+                disabled={!isLiveTransferEnabled || !selectedAccount || isSubmitting}
+                onClick={() => setIsConfirmOpen(true)}
+              >
+                Execute On-Chain Transfer
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Confirmation Section */}
+        {isConfirmOpen && parsedCommand && (
+          <div className="card" style={{ borderColor: '#4a90e2' }}>
+            <h2>Confirm Transfer</h2>
+            <p><strong>From</strong>: {selectedAccount?.meta?.name} ({selectedAccount?.address})</p>
+            <p><strong>To</strong>: {recognizedContact?.name} ({recognizedContact?.address})</p>
+            <p><strong>Amount</strong>: {parsedCommand.amount} {parsedCommand.token}</p>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+              <button disabled={isSubmitting} onClick={() => { setIsConfirmOpen(false); executeOnChainTransfer(); }}>Confirm</button>
+              <button disabled={isSubmitting} onClick={() => setIsConfirmOpen(false)}>Cancel</button>
+            </div>
+            {lastTxHash && <p style={{ marginTop: '10px' }}>Last Tx: {lastTxHash}</p>}
+          </div>
+        )}
 
         {/* Dedicated Status Message Area */}
         {responseMessage && (
