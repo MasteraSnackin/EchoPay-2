@@ -42,7 +42,7 @@ export const testHelpers = {
         await new Promise(resolve => setTimeout(resolve, 100));
         results.push({ step, status: 'passed', timestamp: new Date().toISOString() });
       } catch (error) {
-        results.push({ step, status: 'failed', error: error.message, timestamp: new Date().toISOString() });
+        results.push({ step, status: 'failed', error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date().toISOString() });
       }
     }
     return results;

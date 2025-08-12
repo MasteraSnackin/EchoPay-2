@@ -15,8 +15,7 @@ interface ContactLookupProps {
 const ContactLookup: React.FC<ContactLookupProps> = ({ onContactSelect, currentRecipient }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
 
   // Mock contacts for demo - in real app, fetch from backend
   const mockContacts: Contact[] = [
@@ -156,18 +155,7 @@ const ContactLookup: React.FC<ContactLookupProps> = ({ onContactSelect, currentR
         ➕ Add New Contact
       </button>
 
-      {error && (
-        <div style={{
-          marginTop: '10px',
-          padding: '8px',
-          backgroundColor: '#ffebee',
-          color: '#c62828',
-          borderRadius: '4px',
-          fontSize: '12px'
-        }}>
-          {error}
-        </div>
-      )}
+
     </div>
   );
 };

@@ -6,7 +6,7 @@ import type { AccountInfo } from '@polkadot/types/interfaces';
 import { formatBalance } from '@polkadot/util';
 import { u8aToHex } from '@polkadot/util';
 import './App.css';
-import ContactList, { mockContacts, Contact } from './ContactList';
+import ContactList from './ContactList';
 import config from './config';
 import testHelpers from './utils/testHelpers';
 
@@ -90,12 +90,7 @@ interface AIStats {
   nlpTrained: boolean;
 }
 
-// Enhanced voice command processing
-interface VoiceCommand {
-  text: string;
-  audioData?: string;
-  confidence?: number;
-}
+
 
 function App() {
   // Wallet State
@@ -123,7 +118,6 @@ function App() {
   const recognitionRef = useRef(recognition);
 
   // Enhanced voice command processing
-  const [voiceCommands, setVoiceCommands] = useState<VoiceCommand[]>([]);
   const [currentAudioData, setCurrentAudioData] = useState<string>('');
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -254,7 +248,7 @@ function App() {
   }, [selectedAccount]);
 
   // Enhanced voice command processing with Worker integration
-  const processVoiceCommand = async (command: VoiceCommand) => {
+  const processVoiceCommand = async (command: { text: string; audioData?: string }) => {
     if (!selectedAccount || !isWalletVerified) {
       setResponseMessage('Please connect and verify your wallet first');
       return;
@@ -388,7 +382,7 @@ function App() {
       const transfer = api.tx.balances.transfer(recipientAddress, transaction.amount * 1e10); // Convert to planck units
       
       // Sign the extrinsic
-      const { signature } = await transfer.signAsync(selectedAccount.address, { signer: injector.signer });
+      await transfer.signAsync(selectedAccount.address, { signer: injector.signer });
       
       // Get the signed extrinsic as hex
       const signedTx = transfer.toHex();
@@ -628,71 +622,7 @@ function App() {
     setWalletError('');
   };
 
-  // Enhanced Backend Communication
-  const sendCommandToBackend = async (commandText: string) => {
-    if (!commandText) return;
-    setResponseMessage('Processing command with AI...');
-    setConfirmation({ isRequired: false });
-    try {
-      const commandData = {
-        command: commandText,
-      };
 
-      const response = await fetch('/api/process-command', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(commandData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      // Handle confirmation-required flow
-      if (result.status === 'confirmation_required') {
-        setParsedCommand(result.parsedCommand || null);
-        setConfirmation({
-          isRequired: true,
-          confirmationId: result.confirmationId,
-          confirmationText: result.confirmationText,
-          timeoutMs: result.timeout,
-          deadlineTs: Date.now() + (result.timeout || 30000)
-        });
-        setResponseMessage('Confirmation required. Please confirm below.');
-        return;
-      }
-
-      setResponseMessage(result.message || 'Command processed.');
-      setParsedCommand(result.parsedCommand || null);
-      
-      // Update transactions if it's a payment
-      if (result.transaction) {
-        setTransactions(prev => [result.transaction, ...prev]);
-      }
-
-      // Update contacts if contact was added/removed
-      if (result.contact || result.removedContact) {
-        const contactResponse = await fetch('/api/contacts');
-        if (contactResponse.ok) {
-          const contactData = await contactResponse.json();
-          setContacts(contactData.contacts || []);
-        }
-      }
-
-      // Update recurring payments if one was added
-      if (result.recurringPayment) {
-        setRecurringPayments(prev => [result.recurringPayment, ...prev]);
-      }
-
-    } catch (error) {
-      console.error("Error sending command:", error);
-      setResponseMessage(`Error sending command: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
 
   const confirmCommand = async (accept: boolean) => {
     if (!confirmation.isRequired || !confirmation.confirmationId) return;
