@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js';
-import type { IFuseOptions } from 'fuse.js';
+import type { IFuseOptions, FuseResult } from 'fuse.js';
 import type { Contact } from '../ContactList';
 
 const fuseOptions: IFuseOptions<Contact> = {
@@ -11,6 +11,11 @@ const fuseOptions: IFuseOptions<Contact> = {
   ],
 };
 
+export interface ContactSuggestion {
+  contact: Contact;
+  score: number; // lower is better
+}
+
 export function createContactSearcher(contacts: Contact[]) {
   const fuse = new Fuse(contacts, fuseOptions);
   return {
@@ -19,6 +24,11 @@ export function createContactSearcher(contacts: Contact[]) {
       const results = fuse.search(query);
       if (results.length === 0) return null;
       return results[0].item;
+    },
+    suggest(query: string, limit = 5): ContactSuggestion[] {
+      if (!query) return [];
+      const results: Array<FuseResult<Contact>> = fuse.search(query, { limit });
+      return results.map(r => ({ contact: r.item, score: r.score ?? 1 }));
     },
   };
 }
