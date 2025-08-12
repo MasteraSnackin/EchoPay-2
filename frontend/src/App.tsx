@@ -43,6 +43,11 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [lastTxHash, setLastTxHash] = useState<string>('');
 
+  // Fee estimation state
+  const [isEstimatingFee, setIsEstimatingFee] = useState<boolean>(false);
+  const [estimatedFee, setEstimatedFee] = useState<string>('');
+  const [estimateError, setEstimateError] = useState<string>('');
+
   // Effect for Speech Recognition Setup
   useEffect(() => {
     if (!recognitionRef.current) {
@@ -155,6 +160,44 @@ function App() {
 
     fetchBalance();
   }, [selectedAccount]);
+
+  // --- Estimate fee when confirmation opens ---
+  useEffect(() => {
+    const estimate = async () => {
+      if (!isConfirmOpen || !parsedCommand || !recognizedContact || !selectedAccount) return;
+      setIsEstimatingFee(true);
+      setEstimateError('');
+      setEstimatedFee('');
+
+      let api: ApiPromise | null = null;
+      try {
+        const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
+        api = await ApiPromise.create({ provider: wsProvider });
+        await api.isReady;
+
+        const decimals = api.registry.chainDecimals[0];
+        const token = api.registry.chainTokens[0];
+        formatBalance.setDefaults({ decimals, unit: token });
+
+        const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, decimals);
+        const tx = api.tx.balances.transferKeepAlive(recognizedContact.address, amountPlanck);
+
+        const info = await tx.paymentInfo(selectedAccount.address);
+        const partialFee = info.partialFee?.toString?.() || info.partialFee.toString();
+        setEstimatedFee(formatBalance(partialFee, { withUnit: true, withSi: false }));
+      } catch (error) {
+        console.error('Fee estimation error', error);
+        setEstimateError(error instanceof Error ? error.message : 'Unknown error');
+      } finally {
+        setIsEstimatingFee(false);
+        if (api) {
+          try { await api.disconnect(); } catch {}
+        }
+      }
+    };
+
+    estimate();
+  }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount]);
 
   // --- Wallet Connection Logic ---
   const handleConnectWallet = async () => {
@@ -464,15 +507,21 @@ function App() {
             <p><strong>From</strong>: {selectedAccount?.meta?.name} ({selectedAccount?.address})</p>
             <p><strong>To</strong>: {recognizedContact?.name} ({recognizedContact?.address})</p>
             <p><strong>Amount</strong>: {parsedCommand.amount} {parsedCommand.token}</p>
+            <p>
+              <strong>Estimated Fee</strong>: {isEstimatingFee ? 'Estimating...' : (estimateError ? `Error: ${estimateError}` : (estimatedFee || 'N/A'))}
+            </p>
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button disabled={isSubmitting} onClick={() => { setIsConfirmOpen(false); executeOnChainTransfer(); }}>Confirm</button>
               <button disabled={isSubmitting} onClick={() => setIsConfirmOpen(false)}>Cancel</button>
+              <button disabled={isSubmitting || isEstimatingFee} onClick={() => setIsConfirmOpen(true)}>
+                Re-estimate
+              </button>
             </div>
             {lastTxHash && <p style={{ marginTop: '10px' }}>Last Tx: {lastTxHash}</p>}
           </div>
         )}
 
-        {/* Dedicated Status Message Area */}
+        {/* Status Area */}
         {responseMessage && (
           <div className="card status-area">
             <p>Status: {responseMessage}</p>
