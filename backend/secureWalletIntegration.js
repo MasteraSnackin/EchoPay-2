@@ -2,7 +2,18 @@ const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
 const { cryptoWaitReady } = require('@polkadot/util-crypto');
 const { formatBalance, formatNumber } = require('@polkadot/util');
-const { web3Accounts, web3Enable } = require('@polkadot/extension-dapp');
+
+// Extension integration (will be null in Node.js environment)
+let web3Accounts, web3Enable;
+try {
+  const extensionDapp = require('@polkadot/extension-dapp');
+  web3Accounts = extensionDapp.web3Accounts;
+  web3Enable = extensionDapp.web3Enable;
+} catch (error) {
+  console.log('⚠️  @polkadot/extension-dapp not available in Node.js environment');
+  web3Accounts = null;
+  web3Enable = null;
+}
 
 class SecureWalletIntegration {
   constructor() {
@@ -105,6 +116,10 @@ class SecureWalletIntegration {
 
   async connectPolkadotExtension() {
     try {
+      if (!web3Enable || !web3Accounts) {
+        throw new Error('Wallet extensions not available in this environment. Use browser with Polkadot.js extension.');
+      }
+      
       // Enable the Polkadot extension
       const extensions = await web3Enable('EchoPay Voice Payment System');
       
@@ -142,6 +157,10 @@ class SecureWalletIntegration {
 
   async connectSubWallet() {
     try {
+      if (!web3Enable || !web3Accounts) {
+        throw new Error('Wallet extensions not available in this environment. Use browser with SubWallet extension.');
+      }
+      
       // SubWallet integration would use their specific API
       // For now, we'll use the same approach as Polkadot extension
       const extensions = await web3Enable('EchoPay Voice Payment System');
@@ -185,6 +204,10 @@ class SecureWalletIntegration {
 
   async connectTalisman() {
     try {
+      if (!web3Enable || !web3Accounts) {
+        throw new Error('Wallet extensions not available in this environment. Use browser with Talisman extension.');
+      }
+      
       // Talisman integration would use their specific API
       // For now, we'll use the same approach as Polkadot extension
       const extensions = await web3Enable('EchoPay Voice Payment System');
@@ -392,6 +415,10 @@ class SecureWalletIntegration {
 
   async getAvailableExtensions() {
     try {
+      if (!web3Enable) {
+        return [];
+      }
+      
       const extensions = await web3Enable('EchoPay Voice Payment System');
       return extensions.map(ext => ({
         name: ext.name,
@@ -406,6 +433,10 @@ class SecureWalletIntegration {
 
   async checkExtensionAvailability(extensionName) {
     try {
+      if (!web3Enable) {
+        return { available: false, extension: null, reason: 'Extensions not available in this environment' };
+      }
+      
       const extensions = await web3Enable('EchoPay Voice Payment System');
       const targetExtension = extensions.find(ext => 
         ext.name.toLowerCase().includes(extensionName.toLowerCase())
@@ -420,7 +451,7 @@ class SecureWalletIntegration {
       };
     } catch (error) {
       console.error(`❌ Failed to check ${extensionName} availability:`, error);
-      return { available: false, extension: null };
+      return { available: false, extension: null, reason: error.message };
     }
   }
 
