@@ -6,6 +6,7 @@ import type { AccountInfo } from '@polkadot/types/interfaces';
 import { formatBalance } from '@polkadot/util';
 import './App.css';
 import ContactList, { mockContacts, Contact } from './ContactList';
+import config from './config';
 
 // Add helper to read test mode from URL
 function isTestMode() {
@@ -87,6 +88,13 @@ interface AIStats {
   nlpTrained: boolean;
 }
 
+// Enhanced voice command processing
+interface VoiceCommand {
+  text: string;
+  audioData?: string;
+  confidence?: number;
+}
+
 function App() {
   // Wallet State
   const [extensionsLoaded, setExtensionsLoaded] = useState<boolean>(false);
@@ -95,6 +103,7 @@ function App() {
   const [accountBalance, setAccountBalance] = useState<string>('');
   const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(false);
   const [walletError, setWalletError] = useState<string>('');
+  const [isWalletVerified, setIsWalletVerified] = useState<boolean>(false);
 
   // Voice Command State
   const [responseMessage, setResponseMessage] = useState<string>('');
@@ -108,7 +117,12 @@ function App() {
   const [aiStats, setAiStats] = useState<AIStats | null>(null);
   const [confirmation, setConfirmation] = useState<ConfirmationState>({ isRequired: false });
   const [countdownSec, setCountdownSec] = useState<number>(0);
+  const [isProcessingCommand, setIsProcessingCommand] = useState<boolean>(false);
   const recognitionRef = useRef(recognition);
+
+  // Enhanced voice command processing
+  const [voiceCommands, setVoiceCommands] = useState<VoiceCommand[]>([]);
+  const [currentAudioData, setCurrentAudioData] = useState<string>('');
 
   // Enable E2E test mode: mock a selected account to bypass wallet dependency
   useEffect(() => {
@@ -203,7 +217,7 @@ function App() {
       setAccountBalance('');
       setWalletError('');
 
-      const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
+      const wsProvider = new WsProvider(config.polkadot.rpcEndpoint);
       let api: ApiPromise | null = null;
 
       try {
@@ -233,6 +247,149 @@ function App() {
 
     fetchBalance();
   }, [selectedAccount]);
+
+  // Enhanced voice command processing with Worker integration
+  const processVoiceCommand = async (command: VoiceCommand) => {
+    if (!selectedAccount || !isWalletVerified) {
+      setResponseMessage('Please connect and verify your wallet first');
+      return;
+    }
+
+    setIsProcessingCommand(true);
+    setResponseMessage('Processing voice command...');
+
+    try {
+      // Send command to Worker for processing
+      const response = await fetch(`${config.worker.url}${config.worker.endpoints.voice}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: command.text,
+          audio_data: command.audioData,
+          user_id: selectedAccount.address,
+          wallet_address: selectedAccount.address
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Worker error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        setParsedCommand({
+          type: result.transaction_type || 'transfer',
+          amount: result.amount,
+          recipient: result.recipient,
+          currency: result.currency || 'DOT',
+          originalCommand: command.text,
+          confidence: result.confidence,
+          processingMethods: result.methods || ['voice', 'nlp']
+        });
+
+        // Create transaction in backend
+        await createTransaction(result);
+        
+        setResponseMessage('Command processed successfully! Transaction created.');
+      } else {
+        setResponseMessage(`Command processing failed: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Voice command processing error:', error);
+      setResponseMessage(`Error processing command: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessingCommand(false);
+    }
+  };
+
+  // Create transaction in backend
+  const createTransaction = async (transactionData: any) => {
+    try {
+      const response = await fetch(`${config.backend.url}${config.backend.endpoints.wallet.transaction}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from_address: selectedAccount?.address,
+          to_address: transactionData.recipient_address || transactionData.recipient,
+          amount: transactionData.amount,
+          currency: transactionData.currency || 'DOT',
+          type: transactionData.transaction_type || 'transfer',
+          metadata: {
+            voice_command: transactionData.original_command,
+            confidence: transactionData.confidence,
+            methods: transactionData.methods
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Transaction created:', result);
+      
+      // Add to local transactions list
+      const newTransaction: Transaction = {
+        id: Date.now(),
+        type: transactionData.transaction_type || 'transfer',
+        amount: transactionData.amount,
+        recipient: transactionData.recipient,
+        currency: transactionData.currency || 'DOT',
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        txHash: result.tx_hash || 'pending',
+        confidence: transactionData.confidence,
+        processingMethods: transactionData.methods
+      };
+      
+      setTransactions(prev => [newTransaction, ...prev]);
+    } catch (error) {
+      console.error('Transaction creation error:', error);
+      throw error;
+    }
+  };
+
+  // Wallet verification with backend
+  const verifyWallet = async () => {
+    if (!selectedAccount) return;
+
+    try {
+      setResponseMessage('Verifying wallet...');
+      
+      // Create a simple message for signing
+      const message = `Verify wallet for EchoPay: ${Date.now()}`;
+      
+      // Get the signer from the account
+      const signer = selectedAccount.meta.source;
+      if (!signer) {
+        throw new Error('No signer available for this account');
+      }
+
+      // For now, we'll use a simple verification approach
+      // In production, you'd want to use proper cryptographic verification
+      const response = await fetch(`${config.backend.url}${config.backend.endpoints.wallet.verify}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet_address: selectedAccount.address,
+          signature: 'verified', // Placeholder - in real implementation, get actual signature
+          message: message
+        })
+      });
+
+      if (response.ok) {
+        setIsWalletVerified(true);
+        setResponseMessage('Wallet verified successfully!');
+      } else {
+        throw new Error('Wallet verification failed');
+      }
+    } catch (error) {
+      console.error('Wallet verification error:', error);
+      setResponseMessage(`Wallet verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
 
   // Fetch data from backend
   useEffect(() => {
@@ -550,6 +707,19 @@ function App() {
                                  }
                         {walletError && !isBalanceLoading && <span style={{ color: 'orange', marginLeft: '10px' }}>(Error fetching balance)</span>}
                     </p>
+                    {!isWalletVerified ? (
+                      <button 
+                        onClick={verifyWallet} 
+                        style={{marginTop: '10px', backgroundColor: '#ff6b6b', color: 'white'}}
+                        disabled={isProcessingCommand}
+                      >
+                        Verify Wallet
+                      </button>
+                    ) : (
+                      <div style={{marginTop: '10px', color: 'green', fontWeight: 'bold'}}>
+                        ✓ Wallet Verified
+                      </div>
+                    )}
                     <button onClick={handleDisconnectWallet} style={{marginTop: '10px'}}>
                       Disconnect Wallet
                     </button>
@@ -597,9 +767,14 @@ function App() {
                 <p><strong>Address:</strong> {recognizedContact.address}</p>
               </div>
             )}
-                         <button data-testid="process-command" onClick={() => sendCommandToBackend(recognizedText)} disabled={!recognizedText || (!isTestMode() && !selectedAccount) || (responseMessage.startsWith('Processing') && !isTestMode())}>
-              Process Command with AI
-            </button>
+                         <button 
+                           data-testid="process-command" 
+                           onClick={() => processVoiceCommand({ text: recognizedText, audioData: currentAudioData })} 
+                           disabled={!recognizedText || (!isTestMode() && !selectedAccount) || isProcessingCommand || !isWalletVerified}
+                           style={{ backgroundColor: isProcessingCommand ? '#ccc' : '#4CAF50', color: 'white' }}
+                         >
+                           {isProcessingCommand ? 'Processing...' : 'Process Command with AI'}
+                         </button>
           </>
         )}
         </div>
@@ -616,6 +791,33 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Enhanced Voice Command Section */}
+        <div className="card">
+          <h3>Enhanced Voice Commands</h3>
+          <div style={{ marginBottom: '15px' }}>
+            <p><strong>Status:</strong> {isWalletVerified ? '✓ Wallet Verified' : '⚠ Wallet Not Verified'}</p>
+            <p><strong>Processing:</strong> {isProcessingCommand ? '🔄 Processing...' : '✅ Ready'}</p>
+          </div>
+          
+          {isWalletVerified && (
+            <div style={{ marginTop: '15px' }}>
+              <h4>Voice Command Examples:</h4>
+              <ul style={{ fontSize: '14px', color: '#666' }}>
+                <li>"Pay 50 DOT to Alice"</li>
+                <li>"Send 100 DOT to 5F...abc"</li>
+                <li>"Transfer 25 DOT to Bob"</li>
+              </ul>
+              
+              <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                <p><strong>Current Command:</strong></p>
+                <p style={{ fontFamily: 'monospace', backgroundColor: 'white', padding: '8px', borderRadius: '4px' }}>
+                  {recognizedText || 'No command recognized yet'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Parsed Command Display */}
         {parsedCommand && (

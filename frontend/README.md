@@ -1,54 +1,144 @@
-# React + TypeScript + Vite
+# EchoPay Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based frontend for the EchoPay voice-controlled cryptocurrency payment system.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Voice Command Processing**: Use voice commands to create cryptocurrency transactions
+- **Polkadot Wallet Integration**: Connect with Polkadot.js compatible wallets
+- **Real-time Transaction Management**: Monitor transaction status and history
+- **AI-Powered Command Parsing**: Intelligent voice command interpretation
+- **Responsive Design**: Modern UI with Tailwind CSS
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 18+ 
+- Polkadot.js browser extension (SubWallet, Talisman, etc.)
+- EchoPay Worker running (for voice processing)
+- EchoPay Backend running (for blockchain operations)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Setup
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Configure environment**:
+   - Update `src/config.ts` with your Worker and Backend URLs
+   - Set production URLs when deploying
+
+3. **Start development server**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Open browser**:
+   Navigate to `http://localhost:5173`
+
+## Configuration
+
+Edit `src/config.ts` to customize:
+
+- **Worker URL**: Your Cloudflare Worker endpoint
+- **Backend URL**: Your backend server endpoint  
+- **Polkadot Network**: RPC endpoint and chain settings
+- **Voice Settings**: Speech recognition configuration
+- **UI Settings**: Timeouts and refresh intervals
+
+## Usage
+
+### 1. Connect Wallet
+- Click "Connect Wallet" 
+- Select your Polkadot account
+- Verify wallet ownership
+
+### 2. Voice Commands
+- Click "Start Listening" or type commands manually
+- Say commands like:
+  - "Pay 50 DOT to Alice"
+  - "Send 100 DOT to 5F...abc"
+  - "Transfer 25 DOT to Bob"
+
+### 3. Transaction Processing
+- Commands are processed by AI Worker
+- Transactions created in backend
+- Monitor status in transaction history
+
+### 4. Voice Confirmation
+- Confirm transactions with voice
+- Say "Yes" or "No" when prompted
+- Automatic timeout for security
+
+## Architecture
+
+```
+Frontend → Worker (Voice Processing) → Backend (Blockchain) → Polkadot Network
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- **Frontend**: React UI with voice recognition
+- **Worker**: ElevenLabs STT + AI command parsing
+- **Backend**: Transaction creation and blockchain submission
+- **Polkadot**: Final transaction execution
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Development
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+### Project Structure
 ```
+src/
+├── App.tsx          # Main application component
+├── config.ts        # Configuration and constants
+├── ContactList.tsx  # Contact management component
+├── App.css          # Main styles
+└── main.tsx         # Application entry point
+```
+
+### Key Components
+- **Wallet Management**: Polkadot extension integration
+- **Voice Processing**: Web Speech API + Worker integration
+- **Transaction Flow**: Command → Parse → Create → Execute
+- **State Management**: React hooks for application state
+
+### Testing
+- **E2E Mode**: Add `?testMode=1` to URL for testing without wallet
+- **Manual Input**: Type commands for accessibility and testing
+- **Error Handling**: Comprehensive error states and user feedback
+
+## Deployment
+
+1. **Build for production**:
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy to your hosting service**:
+   - Vercel, Netlify, or static hosting
+   - Update production URLs in config
+
+3. **Environment variables**:
+   - Set `NODE_ENV=production`
+   - Configure Worker and Backend URLs
+
+## Troubleshooting
+
+### Common Issues
+- **Wallet Connection**: Ensure Polkadot extension is installed and enabled
+- **Voice Recognition**: Check browser compatibility and microphone permissions
+- **Network Errors**: Verify Worker and Backend URLs are correct
+- **Transaction Failures**: Check wallet balance and network status
+
+### Debug Mode
+- Open browser console for detailed logs
+- Check Network tab for API calls
+- Verify environment configuration
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Make changes with tests
+4. Submit pull request
+
+## License
+
+MIT License - see LICENSE file for details
