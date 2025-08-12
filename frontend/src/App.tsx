@@ -2,20 +2,40 @@ import { useState, useEffect, useRef } from 'react';
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import type { AccountInfo } from '@polkadot/types/interfaces'; // Import AccountInfo type
+import type { AccountInfo } from '@polkadot/types/interfaces';
 import { formatBalance } from '@polkadot/util';
 import './App.css';
-import ContactList, { mockContacts, Contact } from './ContactList'; // Import the new component AND mock data/type
+import ContactList, { mockContacts, Contact } from './ContactList';
 
 // Check if the browser supports the Web Speech API
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
 if (recognition) {
-  recognition.continuous = false; // Process single utterances
-  recognition.lang = 'en-US'; // Set language
-  recognition.interimResults = false; // We only want final results
-  recognition.maxAlternatives = 1; // Get the single best result
+  recognition.continuous = false;
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+}
+
+interface Transaction {
+  id: number;
+  type: string;
+  amount: number;
+  recipient: string;
+  currency: string;
+  status: string;
+  timestamp: string;
+  txHash: string;
+}
+
+interface ParsedCommand {
+  type: string;
+  amount?: number;
+  recipient?: string;
+  currency?: string;
+  originalCommand: string;
+  message?: string;
 }
 
 function App() {
@@ -31,14 +51,14 @@ function App() {
   const [responseMessage, setResponseMessage] = useState<string>('');
   const [isListening, setIsListening] = useState<boolean>(false);
   const [recognizedText, setRecognizedText] = useState<string>('');
-  const [recognizedContact, setRecognizedContact] = useState<Contact | null>(null); // State for matched contact
-  const recognitionRef = useRef(recognition); // Use ref to avoid issues with state closure in callbacks
+  const [recognizedContact, setRecognizedContact] = useState<Contact | null>(null);
+  const [parsedCommand, setParsedCommand] = useState<ParsedCommand | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const recognitionRef = useRef(recognition);
 
   // Effect for Speech Recognition Setup
   useEffect(() => {
     if (!recognitionRef.current) {
-      // Don't overwrite wallet messages if speech isn't supported
-      // setResponseMessage("Speech recognition not supported by this browser.");
       console.warn("Speech recognition not supported by this browser.");
       return;
     }
@@ -49,10 +69,8 @@ function App() {
       const speechResult = event.results[0][0].transcript;
       console.log('Speech recognized:', speechResult);
       setRecognizedText(speechResult);
-      setIsListening(false); // Stop listening visually
-      // Don't automatically send, wait for button press
-      // sendCommandToBackend(speechResult);
-      setResponseMessage('Command recognized. Press "Process Command" to send.'); // Update status
+      setIsListening(false);
+      setResponseMessage('Command recognized. Press "Process Command" to send.');
     };
 
     currentRecognition.onerror = (event: any) => {
@@ -62,12 +80,9 @@ function App() {
     };
 
     currentRecognition.onend = () => {
-      // Ensure listening state is false when recognition ends naturally
-      // (e.g., after a period of silence)
       setIsListening(false);
     };
 
-    // Cleanup function to remove listeners when component unmounts
     return () => {
         currentRecognition.onresult = null;
         currentRecognition.onerror = null;
@@ -76,10 +91,9 @@ function App() {
             currentRecognition.stop();
         }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run speech setup once on mount
+  }, [isListening]);
 
-  // --- Recognize Contact from Speech ---
+  // Recognize Contact from Speech
   useEffect(() => {
     if (!recognizedText) {
       setRecognizedContact(null);
@@ -87,15 +101,11 @@ function App() {
     }
 
     const lowerCaseText = recognizedText.toLowerCase().trim();
-    // Explicitly type 'contact' parameter
     const foundContact = mockContacts.find((contact: Contact) => contact.name.toLowerCase() === lowerCaseText);
-
     setRecognizedContact(foundContact || null);
+  }, [recognizedText]);
 
-  }, [recognizedText]); // Re-run when recognizedText changes
-
-
-  // --- Fetch Account Balance ---
+  // Fetch Account Balance
   useEffect(() => {
     const fetchBalance = async () => {
       if (!selectedAccount) {
@@ -104,10 +114,9 @@ function App() {
       }
 
       setIsBalanceLoading(true);
-      setAccountBalance(''); // Clear previous balance
-      setWalletError(''); // Clear previous errors
+      setAccountBalance('');
+      setWalletError('');
 
-      // Connect to a Westend node
       const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
       let api: ApiPromise | null = null;
 
@@ -115,26 +124,21 @@ function App() {
         api = await ApiPromise.create({ provider: wsProvider });
         await api.isReady;
 
-        // Get chain properties once
         const chainDecimals = api.registry.chainDecimals[0];
         const chainTokens = api.registry.chainTokens[0];
         formatBalance.setDefaults({ decimals: chainDecimals, unit: chainTokens });
 
-
-        // Query account info and cast to the correct type
         const accountInfo = await api.query.system.account(selectedAccount.address) as AccountInfo;
         const freeBalance = accountInfo.data.free;
 
-        // Format and set balance
         setAccountBalance(formatBalance(freeBalance, { withUnit: true, withSi: false }));
 
       } catch (error) {
         console.error("Error fetching balance:", error);
         setWalletError(`Error fetching balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        setAccountBalance(''); // Clear balance on error
+        setAccountBalance('');
       } finally {
         setIsBalanceLoading(false);
-        // Disconnect API
         if (api) {
           await api.disconnect();
         }
@@ -142,21 +146,36 @@ function App() {
     };
 
     fetchBalance();
-  }, [selectedAccount]); // Re-run when selectedAccount changes
+  }, [selectedAccount]);
 
+  // Fetch transaction history
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await fetch('/api/transactions');
+        if (response.ok) {
+          const data = await response.json();
+          setTransactions(data.transactions || []);
+        }
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      }
+    };
 
-  // --- Wallet Connection Logic ---
+    fetchTransactions();
+  }, []);
+
+  // Wallet Connection Logic
   const handleConnectWallet = async () => {
     setWalletError('');
-    setExtensionsLoaded(false); // Reset state initially
+    setExtensionsLoaded(false);
     setAccounts([]);
     setSelectedAccount(null);
-    console.log("Attempting to enable extensions..."); // Log start
+    console.log("Attempting to enable extensions...");
 
     try {
-      // Request permission to access extensions
       const injectedExtensions = await web3Enable('EchoPay App');
-      console.log("web3Enable executed. Result:", injectedExtensions); // Log result
+      console.log("web3Enable executed. Result:", injectedExtensions);
 
       if (!injectedExtensions || injectedExtensions.length === 0) {
         console.error("No extensions found or enabled.");
@@ -166,19 +185,15 @@ function App() {
 
       console.log("Enabled extensions:", injectedExtensions.map(ext => ext.name));
 
-      // Check specifically for SubWallet
       const subwalletExtension = injectedExtensions.find(ext => ext.name === 'subwallet-js');
       if (!subwalletExtension) {
           console.warn("SubWallet extension not found among enabled extensions. Other extensions might be available.");
-          // Optionally, you could set a non-blocking warning message here.
-          // setWalletError("SubWallet not detected, but other extensions might work.");
       } else {
           console.log("SubWallet extension detected.");
       }
 
-      setExtensionsLoaded(true); // Mark extensions as loaded *after* successful enable
+      setExtensionsLoaded(true);
 
-      // Get accounts from ALL enabled extensions (including SubWallet if present)
       console.log("Attempting to fetch accounts...");
       const allAccounts = await web3Accounts();
       console.log("web3Accounts executed. Found accounts:", allAccounts.length);
@@ -186,21 +201,17 @@ function App() {
       if (allAccounts.length === 0) {
           console.error("No accounts found in enabled extensions.");
           setWalletError('No accounts found in the extension. Please ensure you have created or imported an account and granted access.');
-          setAccounts([]); // Keep accounts empty
-          // Keep extensionsLoaded true, as extensions *were* enabled
+          setAccounts([]);
           return;
       }
       setAccounts(allAccounts);
-      // Optionally select the first account by default
       if (allAccounts.length > 0) {
         setSelectedAccount(allAccounts[0]);
       }
 
     } catch (error) {
       console.error("Error during wallet connection process:", error);
-      // Display a more user-friendly error
       setWalletError(`Error connecting wallet: ${error instanceof Error ? error.message : 'An unexpected error occurred.'}. Check console for details.`);
-      // Reset state fully on error
       setExtensionsLoaded(false);
       setAccounts([]);
       setSelectedAccount(null);
@@ -213,11 +224,9 @@ function App() {
     setExtensionsLoaded(false);
     setAccountBalance('');
     setWalletError('');
-    // Note: This doesn't revoke permissions in the extension itself,
-    // just disconnects the app's state.
   };
 
-  // --- Mock Backend Communication ---
+  // Enhanced Backend Communication
   const sendCommandToBackend = async (commandText: string) => {
     if (!commandText) return;
     setResponseMessage('Processing command...');
@@ -240,6 +249,12 @@ function App() {
 
       const result = await response.json();
       setResponseMessage(result.message || 'Command processed.');
+      setParsedCommand(result.parsedCommand || null);
+      
+      // Update transactions if it's a payment
+      if (result.transaction) {
+        setTransactions(prev => [result.transaction, ...prev]);
+      }
 
     } catch (error) {
       console.error("Error sending command:", error);
@@ -254,25 +269,24 @@ function App() {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      setRecognizedText(''); // Clear previous text
-      setResponseMessage(''); // Clear previous response
+      setRecognizedText('');
+      setResponseMessage('');
+      setParsedCommand(null);
       try {
         recognitionRef.current.start();
         setIsListening(true);
         setResponseMessage('Listening...');
       } catch (error) {
-          // Handle cases where recognition might already be active or other errors
           console.error("Error starting recognition:", error);
           setResponseMessage(`Error starting recognition: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          setIsListening(false); // Ensure state is consistent
+          setIsListening(false);
       }
     }
   };
 
-
   return (
-    <div className="app-container"> {/* Add a container for layout */}
-      <div className="main-content"> {/* Container for the main interface */}
+    <div className="app-container">
+      <div className="main-content">
         <h1>EchoPay Interface</h1>
 
         {/* Wallet Section */}
@@ -291,7 +305,7 @@ function App() {
               onChange={(e) => {
                 const selected = accounts.find(acc => acc.address === e.target.value) || null;
                 setSelectedAccount(selected);
-                setAccountBalance(''); // Clear balance when changing account
+                setAccountBalance('');
               }}
             >
               {accounts.map((account) => (
@@ -305,7 +319,7 @@ function App() {
                     <p>Connected as: {selectedAccount.meta.name} ({selectedAccount.address})</p>
                     <p>
                         Balance: {isBalanceLoading
-                                    ? <span className="loading-spinner"></span> /* Use spinner class */
+                                    ? <span className="loading-spinner"></span>
                                     : (accountBalance || 'N/A')
                                  }
                         {walletError && !isBalanceLoading && <span style={{ color: 'orange', marginLeft: '10px' }}>(Error fetching balance)</span>}
@@ -317,7 +331,6 @@ function App() {
             )}
           </div>
         )}
-        {/* Show Connect button again if disconnected but extensions were loaded */}
         {!selectedAccount && extensionsLoaded && accounts.length === 0 && (
              <button onClick={handleConnectWallet}>Connect Wallet</button>
         )}
@@ -328,35 +341,66 @@ function App() {
         <h2>Voice Command</h2>
         {!recognition && <p style={{ color: 'red' }}>Speech Recognition not available in this browser.</p>}
         {recognition && (
-          <button onClick={toggleListen} disabled={!recognition || !selectedAccount}> {/* Disable if no wallet connected */}
+          <button onClick={toggleListen} disabled={!recognition || !selectedAccount}>
             {isListening ? 'Stop Listening' : 'Start Listening'}
           </button>
         )}
         {recognizedText && (
           <>
             <p>Recognized: "{recognizedText}"</p>
-            {/* Display recognized contact details */}
             {recognizedContact && (
               <div className="recognized-contact-details">
                 <p><strong>Matched Contact:</strong> {recognizedContact.name}</p>
                 <p><strong>Address:</strong> {recognizedContact.address}</p>
               </div>
             )}
-            {/* Disable processing if no wallet connected */}
             <button onClick={() => sendCommandToBackend(recognizedText)} disabled={!recognizedText || !selectedAccount || responseMessage.startsWith('Processing')}>
-              Process Command (Mock)
+              Process Command
             </button>
           </>
         )}
-          {/* Remove status message display from here */}
-          {/* {responseMessage && <p>Status: {responseMessage}</p>} */}
         </div>
 
-        {/* Dedicated Status Message Area */}
+        {/* Parsed Command Display */}
+        {parsedCommand && (
+          <div className="card parsed-command">
+            <h3>Command Analysis</h3>
+            <p><strong>Type:</strong> {parsedCommand.type}</p>
+            {parsedCommand.amount && <p><strong>Amount:</strong> {parsedCommand.amount}</p>}
+            {parsedCommand.recipient && <p><strong>Recipient:</strong> {parsedCommand.recipient}</p>}
+            {parsedCommand.currency && <p><strong>Currency:</strong> {parsedCommand.currency}</p>}
+            <p><strong>Original:</strong> "{parsedCommand.originalCommand}"</p>
+          </div>
+        )}
+
+        {/* Status Message Area */}
         {responseMessage && (
             <div className="card status-area">
                 <p>Status: {responseMessage}</p>
             </div>
+        )}
+
+        {/* Transaction History */}
+        {transactions.length > 0 && (
+          <div className="card">
+            <h3>Recent Transactions</h3>
+            <div className="transaction-list">
+              {transactions.slice(0, 5).map((tx) => (
+                <div key={tx.id} className="transaction-item">
+                  <div className="tx-header">
+                    <span className="tx-type">{tx.type}</span>
+                    <span className="tx-status">{tx.status}</span>
+                  </div>
+                  <div className="tx-details">
+                    <p><strong>Amount:</strong> {tx.amount} {tx.currency}</p>
+                    <p><strong>To:</strong> {tx.recipient}</p>
+                    <p><strong>Time:</strong> {new Date(tx.timestamp).toLocaleString()}</p>
+                    <p><strong>Hash:</strong> <code>{tx.txHash.substring(0, 10)}...</code></p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
       </div>

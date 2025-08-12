@@ -78,20 +78,103 @@ body {
 }
 */
 
-.card {
-  padding: 1.5em;
-  border: 1px solid var(--border-color); /* Use variable */
-  border-radius: 8px;
-  background-color: var(--card-background); /* Use variable */
-  text-align: left;
+/* Parsed Command Display */
+.parsed-command {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  margin-top: 20px;
 }
 
-.card h2 {
+.parsed-command h3 {
   margin-top: 0;
-  border-bottom: 1px solid var(--border-color); /* Use variable */
-  padding-bottom: 0.5em;
-  margin-bottom: 1em;
-  color: var(--text-color); /* Ensure heading color */
+  color: white;
+}
+
+.parsed-command p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+/* Transaction History */
+.transaction-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.transaction-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.transaction-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tx-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tx-type {
+  background: #007bff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.tx-status {
+  background: #28a745;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.tx-details p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.tx-details code {
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+/* Enhanced Card Styling */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card h2, .card h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
 }
 
 /* Button Styles */
@@ -149,23 +232,20 @@ button:disabled {
   word-break: break-all;
 }
 
-/* Loading Spinner Animation */
+/* Loading Spinner */
 .loading-spinner {
-  display: inline-block; /* To place it next to text like "Balance: " */
-  width: 1.2em; /* Size relative to font size */
-  height: 1.2em;
-  border: 3px solid rgba(255, 255, 255, 0.3); /* Light border */
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
   border-radius: 50%;
-  border-top-color: var(--primary-color); /* Spinner color */
-  animation: spin 1s ease-in-out infinite;
-  margin-left: 10px; /* Space from preceding text */
-  vertical-align: middle; /* Align nicely with text */
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Other minor adjustments */
@@ -189,21 +269,17 @@ p strong { /* Make strong text stand out more */
  color: var(--text-color);
 }
 
-/* Status Area Styling */
+/* Status Area */
 .status-area {
-  margin-top: 0; /* Remove default card margin if needed */
-  border-top: 2px solid var(--primary-color); /* Add a top border */
-  padding-top: 1em;
-  background-color: var(--background-color); /* Match main background */
-  border: none; /* Remove card border */
-  border-radius: 0; /* Remove card radius */
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
 }
 
 .status-area p {
-    margin: 0; /* Remove default paragraph margin */
-    font-weight: 500; /* Make status text slightly bolder */
+  margin: 0;
+  font-weight: 500;
 }
-
 
 /* Remove read-the-docs if not used */
 /*
@@ -231,5 +307,15 @@ p strong { /* Make strong text stand out more */
   .main-content {
      flex: none; /* Reset flex property */
      width: 100%; /* Take full width */
+  }
+
+  .transaction-item {
+    padding: 12px;
+  }
+  
+  .tx-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }

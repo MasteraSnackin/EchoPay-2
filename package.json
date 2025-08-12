@@ -1,0 +1,33 @@
+{
+    "name": "echopay",
+    "version": "1.0.0",
+    "description": "Voice-activated cross-chain payment system",
+    "main": "index.js",
+    "scripts": {
+      "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+      "dev:backend": "cd backend && npm run dev",
+      "dev:frontend": "cd frontend && npm run dev",
+      "build": "cd frontend && npm run build",
+      "test": "hardhat test",
+      "compile": "hardhat compile",
+      "deploy": "hardhat run scripts/deploy.js --network moonbaseAlpha",
+      "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+      "node": "hardhat node",
+      "clean": "hardhat clean"
+    },
+    "dependencies": {
+      "compromise": "^14.10.0",
+      "web3": "^4.4.0"
+    },
+    "devDependencies": {
+      "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+      "@openzeppelin/contracts": "^5.0.0",
+      "chai": "^4.3.10",
+      "dotenv": "^16.3.1",
+      "ethers": "^6.8.1",
+      "hardhat": "^2.19.0",
+      "concurrently": "^8.2.2"
+    },
+    "author": "",
+    "license": "ISC"
+  }

@@ -1,37 +1,10 @@
-<<<<<<< HEAD
-# EchoPay-2
-EchoPay is a voice-activated Ethereum transaction application that interacts with the Moonbase Alpha network (a test network for the Moonbeam blockchain). It allows users to send transactions and check balances using voice commands.
-1. Security Improvements
-Private Key Handling: 
-Input Validation: 
-2. Improving the Command Parsing
-Enhance NLP Accuracy: 
-Command Confirmation: 
-3. Error Handling and Feedback
-User Feedback: 
-Detailed Error Messages: 
-4. Enhance Web3 Integration
-Network Switch Prompt:
-Gas Estimation: 
-5. Code Optimization and Best Practices
-Async/Await in Loops: 
-Separate Concerns: 
-6. UI/UX Improvements
-Progress Indicators:
-Responsive Design: 
-7. Extending Functionality
-Additional Commands: Consider adding more voice commands, such as checking the transaction history, setting up recurring payments, or interacting with smart contracts beyond simple token transfers.
-Multi-language Support: Depending on your target audience, you might want to implement support for multiple languages in voice commands.
-=======
-# EchoPay: Voice-Activated Cross-Chain Payment System (Proof of Concept)
+# EchoPay: Voice-Activated Cross-Chain Payment System
 
-EchoPay is an innovative payment platform concept enabling users to conduct secure, cross-chain transactions through voice commands. This repository contains the initial proof-of-concept implementation focusing on the frontend interface, wallet connection, and voice input simulation.
+EchoPay is an innovative payment platform concept enabling users to conduct secure, cross-chain transactions through voice commands. This repository contains the implementation focusing on the frontend interface, wallet connection, voice input simulation, and smart contract integration.
 
 ## Overview (Vision)
 
-By integrating advanced AI voice recognition with Polkadot’s blockchain infrastructure, EchoPay aims to eliminate traditional payment friction while prioritizing accessibility, security, and interoperability. The ultimate goal is to allow users to execute transactions via natural language (e.g., “Pay 50 DOT to Alice on Ethereum”).
-
-*(Note: The AI/ML layer and actual blockchain transaction signing/cross-chain functionality are **not** implemented in this current PoC).*
+By integrating advanced AI voice recognition with Polkadot's blockchain infrastructure, EchoPay aims to eliminate traditional payment friction while prioritizing accessibility, security, and interoperability. The ultimate goal is to allow users to execute transactions via natural language (e.g., "Pay 50 DOT to Alice on Ethereum").
 
 ## Features (Current Implementation)
 
@@ -43,6 +16,7 @@ By integrating advanced AI voice recognition with Polkadot’s blockchain infras
 *   **Manual Processing Trigger:** Requires clicking a button to process the recognized voice command (currently sends to a mock backend).
 *   **Mock Backend:** A simple Node.js/Express server that simulates receiving and acknowledging commands.
 *   **Contact List:** Displays a static, hardcoded list of contacts in a sidebar.
+*   **Smart Contracts:** Basic ERC20 token implementation for Moonbase Alpha testnet.
 *   **Disconnect:** Allows disconnecting the wallet within the application's state.
 
 ## Tech Stack
@@ -51,6 +25,8 @@ By integrating advanced AI voice recognition with Polkadot’s blockchain infras
 *   **Blockchain Interaction (Client-side):** `@polkadot/api`, `@polkadot/extension-dapp`, `@polkadot/util`
 *   **Voice Input:** Web Speech API (Browser-native)
 *   **Mock Backend:** Node.js, Express, CORS
+*   **Smart Contracts:** Solidity, Hardhat, OpenZeppelin
+*   **Testnet:** Moonbase Alpha (Moonbeam), Westend (Polkadot)
 
 ## Project Structure
 
@@ -84,7 +60,12 @@ By integrating advanced AI voice recognition with Polkadot’s blockchain infras
 │   ├── tsconfig.json
 │   ├── tsconfig.node.json
 │   └── vite.config.ts
-├── .gitignore       # (Optional: Add a root gitignore if needed)
+├── contracts/       # Smart contracts
+│   └── simpleToken.sol
+├── scripts/         # Deployment scripts
+│   └── deploy.js
+├── hardhat.config.js # Hardhat configuration
+├── .gitignore       # Git ignore file
 └── README.md        # This file
 ```
 
@@ -114,11 +95,16 @@ By integrating advanced AI voice recognition with Polkadot’s blockchain infras
     cd ../frontend
     npm install
     ```
-4.  **Run Backend Server:**
+4.  **Install Smart Contract Dependencies:**
+    ```bash
+    cd ..
+    npm install
+    ```
+5.  **Run Backend Server:**
     *   Open a terminal in the `backend` directory.
     *   Run: `node server.js`
     *   *(Expected output: `Mock backend server listening at http://localhost:3001`)*
-5.  **Run Frontend Development Server:**
+6.  **Run Frontend Development Server:**
     *   Open a *separate* terminal in the `frontend` directory.
     *   Run: `npm run dev`
     *   Open the URL provided (usually `http://localhost:5173`) in your browser.
@@ -146,4 +132,7 @@ This is a proof-of-concept demonstrating the basic UI flow and integration point
 *   **Dynamic Contact List:** Fetch contacts from on-chain storage, user settings, or other sources.
 *   **Error Handling:** More robust error handling and user feedback.
 *   **UI/UX Refinements:** Improve the overall user experience.
->>>>>>> master
+*   **Security Improvements:** Implement proper private key handling and input validation.
+*   **Command Parsing:** Enhance NLP accuracy and add command confirmation.
+*   **Gas Estimation:** Add automatic gas estimation for transactions.
+*   **Multi-language Support:** Implement support for multiple languages in voice commands.
