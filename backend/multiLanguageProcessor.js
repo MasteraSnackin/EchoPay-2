@@ -421,7 +421,9 @@ class MultiLanguageProcessor {
       detectedLanguage: 'en',
       confidence: 0.3,
       message: 'Command not recognized. Please try again in English, Spanish, or French.',
-      processingMethods: ['fallback_english']
+      processingMethods: ['fallback_english'],
+      extractedData: {},
+      entities: []
     };
   }
 
