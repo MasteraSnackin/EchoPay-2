@@ -23,10 +23,13 @@ interface Transaction {
   type: string;
   amount: number;
   recipient: string;
+  recipientAddress?: string;
   currency: string;
   status: string;
+  confidence?: number;
   timestamp: string;
   txHash: string;
+  processingMethods?: string[];
 }
 
 interface ParsedCommand {
@@ -36,6 +39,34 @@ interface ParsedCommand {
   currency?: string;
   originalCommand: string;
   message?: string;
+  confidence?: number;
+  processingMethods?: string[];
+  extractedData?: any;
+  entities?: any;
+}
+
+interface Contact {
+  id: number;
+  name: string;
+  address: string;
+  balance: number;
+}
+
+interface RecurringPayment {
+  id: number;
+  amount: number;
+  recipient: string;
+  currency: string;
+  frequency: string;
+  status: string;
+  createdAt: string;
+  nextPayment: string;
+}
+
+interface AIStats {
+  methods: string[];
+  totalTrained: number;
+  nlpTrained: boolean;
 }
 
 function App() {
@@ -54,6 +85,9 @@ function App() {
   const [recognizedContact, setRecognizedContact] = useState<Contact | null>(null);
   const [parsedCommand, setParsedCommand] = useState<ParsedCommand | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([]);
+  const [aiStats, setAiStats] = useState<AIStats | null>(null);
   const recognitionRef = useRef(recognition);
 
   // Effect for Speech Recognition Setup
@@ -101,9 +135,9 @@ function App() {
     }
 
     const lowerCaseText = recognizedText.toLowerCase().trim();
-    const foundContact = mockContacts.find((contact: Contact) => contact.name.toLowerCase() === lowerCaseText);
+    const foundContact = contacts.find((contact: Contact) => contact.name.toLowerCase() === lowerCaseText);
     setRecognizedContact(foundContact || null);
-  }, [recognizedText]);
+  }, [recognizedText, contacts]);
 
   // Fetch Account Balance
   useEffect(() => {
@@ -148,21 +182,43 @@ function App() {
     fetchBalance();
   }, [selectedAccount]);
 
-  // Fetch transaction history
+  // Fetch data from backend
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/transactions');
-        if (response.ok) {
-          const data = await response.json();
-          setTransactions(data.transactions || []);
+        // Fetch transactions
+        const txResponse = await fetch('/api/transactions');
+        if (txResponse.ok) {
+          const txData = await txResponse.json();
+          setTransactions(txData.transactions || []);
+        }
+
+        // Fetch contacts
+        const contactResponse = await fetch('/api/contacts');
+        if (contactResponse.ok) {
+          const contactData = await contactResponse.json();
+          setContacts(contactData.contacts || []);
+        }
+
+        // Fetch recurring payments
+        const recurringResponse = await fetch('/api/recurring-payments');
+        if (recurringResponse.ok) {
+          const recurringData = await recurringResponse.json();
+          setRecurringPayments(recurringData.recurringPayments || []);
+        }
+
+        // Fetch AI stats
+        const aiResponse = await fetch('/api/ai-stats');
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          setAiStats(aiData.stats || null);
         }
       } catch (error) {
-        console.error('Error fetching transactions:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchTransactions();
+    fetchData();
   }, []);
 
   // Wallet Connection Logic
@@ -229,7 +285,7 @@ function App() {
   // Enhanced Backend Communication
   const sendCommandToBackend = async (commandText: string) => {
     if (!commandText) return;
-    setResponseMessage('Processing command...');
+    setResponseMessage('Processing command with AI...');
     try {
       const commandData = {
         command: commandText,
@@ -254,6 +310,20 @@ function App() {
       // Update transactions if it's a payment
       if (result.transaction) {
         setTransactions(prev => [result.transaction, ...prev]);
+      }
+
+      // Update contacts if contact was added/removed
+      if (result.contact || result.removedContact) {
+        const contactResponse = await fetch('/api/contacts');
+        if (contactResponse.ok) {
+          const contactData = await contactResponse.json();
+          setContacts(contactData.contacts || []);
+        }
+      }
+
+      // Update recurring payments if one was added
+      if (result.recurringPayment) {
+        setRecurringPayments(prev => [result.recurringPayment, ...prev]);
       }
 
     } catch (error) {
@@ -284,10 +354,35 @@ function App() {
     }
   };
 
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return '#28a745'; // Green
+    if (confidence >= 0.6) return '#ffc107'; // Yellow
+    return '#dc3545'; // Red
+  };
+
+  const getConfidenceText = (confidence: number) => {
+    if (confidence >= 0.8) return 'High';
+    if (confidence >= 0.6) return 'Medium';
+    return 'Low';
+  };
+
   return (
     <div className="app-container">
       <div className="main-content">
-        <h1>EchoPay Interface</h1>
+        <h1>EchoPay AI Interface</h1>
+
+        {/* AI Status Banner */}
+        {aiStats && (
+          <div className="ai-status-banner">
+            <div className="ai-status-content">
+              <span className="ai-status-icon">🤖</span>
+              <span className="ai-status-text">
+                AI Command Processor Active - {aiStats.methods.join(', ')} | 
+                Trained on {aiStats.totalTrained} examples
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Wallet Section */}
         <div className="card">
@@ -338,7 +433,7 @@ function App() {
 
       {/* Voice Command Section */}
       <div className="card">
-        <h2>Voice Command</h2>
+        <h2>AI Voice Command</h2>
         {!recognition && <p style={{ color: 'red' }}>Speech Recognition not available in this browser.</p>}
         {recognition && (
           <button onClick={toggleListen} disabled={!recognition || !selectedAccount}>
@@ -355,7 +450,7 @@ function App() {
               </div>
             )}
             <button onClick={() => sendCommandToBackend(recognizedText)} disabled={!recognizedText || !selectedAccount || responseMessage.startsWith('Processing')}>
-              Process Command
+              Process Command with AI
             </button>
           </>
         )}
@@ -364,11 +459,44 @@ function App() {
         {/* Parsed Command Display */}
         {parsedCommand && (
           <div className="card parsed-command">
-            <h3>Command Analysis</h3>
-            <p><strong>Type:</strong> {parsedCommand.type}</p>
-            {parsedCommand.amount && <p><strong>Amount:</strong> {parsedCommand.amount}</p>}
-            {parsedCommand.recipient && <p><strong>Recipient:</strong> {parsedCommand.recipient}</p>}
-            {parsedCommand.currency && <p><strong>Currency:</strong> {parsedCommand.currency}</p>}
+            <h3>AI Command Analysis</h3>
+            <div className="command-analysis-grid">
+              <div className="analysis-item">
+                <strong>Type:</strong> {parsedCommand.type}
+              </div>
+              {parsedCommand.confidence !== undefined && (
+                <div className="analysis-item">
+                  <strong>Confidence:</strong> 
+                  <span style={{ 
+                    color: getConfidenceColor(parsedCommand.confidence),
+                    marginLeft: '8px',
+                    fontWeight: 'bold'
+                  }}>
+                    {getConfidenceText(parsedCommand.confidence)} ({(parsedCommand.confidence * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              )}
+              {parsedCommand.amount && (
+                <div className="analysis-item">
+                  <strong>Amount:</strong> {parsedCommand.amount}
+                </div>
+              )}
+              {parsedCommand.recipient && (
+                <div className="analysis-item">
+                  <strong>Recipient:</strong> {parsedCommand.recipient}
+                </div>
+              )}
+              {parsedCommand.currency && (
+                <div className="analysis-item">
+                  <strong>Currency:</strong> {parsedCommand.currency}
+                </div>
+              )}
+              {parsedCommand.processingMethods && (
+                <div className="analysis-item">
+                  <strong>AI Methods:</strong> {parsedCommand.processingMethods.join(', ')}
+                </div>
+              )}
+            </div>
             <p><strong>Original:</strong> "{parsedCommand.originalCommand}"</p>
           </div>
         )}
@@ -390,12 +518,48 @@ function App() {
                   <div className="tx-header">
                     <span className="tx-type">{tx.type}</span>
                     <span className="tx-status">{tx.status}</span>
+                    {tx.confidence && (
+                      <span 
+                        className="tx-confidence"
+                        style={{ backgroundColor: getConfidenceColor(tx.confidence) }}
+                      >
+                        AI: {(tx.confidence * 100).toFixed(0)}%
+                      </span>
+                    )}
                   </div>
                   <div className="tx-details">
                     <p><strong>Amount:</strong> {tx.amount} {tx.currency}</p>
                     <p><strong>To:</strong> {tx.recipient}</p>
+                    {tx.recipientAddress && (
+                      <p><strong>Address:</strong> <code>{tx.recipientAddress.substring(0, 10)}...</code></p>
+                    )}
                     <p><strong>Time:</strong> {new Date(tx.timestamp).toLocaleString()}</p>
                     <p><strong>Hash:</strong> <code>{tx.txHash.substring(0, 10)}...</code></p>
+                    {tx.processingMethods && (
+                      <p><strong>AI Methods:</strong> {tx.processingMethods.join(', ')}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recurring Payments */}
+        {recurringPayments.length > 0 && (
+          <div className="card">
+            <h3>Recurring Payments</h3>
+            <div className="recurring-payments-list">
+              {recurringPayments.map((payment) => (
+                <div key={payment.id} className="recurring-payment-item">
+                  <div className="rp-header">
+                    <span className="rp-amount">{payment.amount} {payment.currency}</span>
+                    <span className="rp-status">{payment.status}</span>
+                  </div>
+                  <div className="rp-details">
+                    <p><strong>To:</strong> {payment.recipient}</p>
+                    <p><strong>Frequency:</strong> {payment.frequency}</p>
+                    <p><strong>Next Payment:</strong> {new Date(payment.nextPayment).toLocaleDateString()}</p>
                   </div>
                 </div>
               ))}
@@ -407,7 +571,7 @@ function App() {
 
       {/* Contact List Section */}
       <div className="sidebar">
-        <ContactList />
+        <ContactList contacts={contacts} />
       </div>
     </div>
   );
