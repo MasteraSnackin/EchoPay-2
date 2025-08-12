@@ -1,12 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const AICommandProcessor = require('./aiCommandProcessor');
+const MultiLanguageProcessor = require('./multiLanguageProcessor');
+const CommandConfirmation = require('./commandConfirmation');
+const BlockchainIntegration = require('./blockchainIntegration');
 
 const app = express();
 const port = 3001;
 
-// Initialize AI command processor
-const aiProcessor = new AICommandProcessor();
+// Initialize multi-language processor, confirmation system, and blockchain integration
+const multiLangProcessor = new MultiLanguageProcessor();
+const commandConfirmation = new CommandConfirmation();
+const blockchain = new BlockchainIntegration();
 
 // Middleware
 app.use(cors());
@@ -16,7 +20,7 @@ app.use(express.json());
 let transactions = [];
 let transactionId = 1;
 let contacts = [
-  { id: 1, name: 'Alice', address: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', balance: 1000 },
+  { id: 1, name: 'Alice', address: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQg', balance: 1000 },
   { id: 2, name: 'Bob', address: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', balance: 500 },
   { id: 3, name: 'Charlie', address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59K', balance: 750 },
   { id: 4, name: 'Dave', address: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy', balance: 300 }
@@ -26,31 +30,61 @@ let contacts = [
 let recurringPayments = [];
 let recurringPaymentId = 1;
 
-// Enhanced command processing with AI
+// Initialize blockchain connection on startup
+async function initializeBlockchain() {
+  try {
+    console.log('Initializing blockchain connection...');
+    await blockchain.initialize('moonbaseAlpha');
+    console.log('✅ Blockchain connection established');
+  } catch (error) {
+    console.error('❌ Blockchain initialization failed:', error);
+    console.log('Continuing with mock blockchain mode...');
+  }
+}
+
+// Enhanced command processing with multi-language AI and confirmation
 async function processVoiceCommand(command) {
   try {
-    // Use AI processor for enhanced understanding
-    const aiResult = await aiProcessor.processCommand(command);
+    console.log(`Processing command: "${command}"`);
+    
+    // Use multi-language processor for enhanced understanding
+    const aiResult = await multiLangProcessor.processCommand(command);
     
     // If AI processing failed, fallback to basic processing
     if (!aiResult || aiResult.type === 'unknown') {
       return {
         type: 'unknown',
         originalCommand: command,
-        message: 'Command not recognized. Try saying "Pay 10 to Alice" or "Check balance"',
-        confidence: 0.0
+        message: 'Command not recognized. Try saying "Pay 10 to Alice" or "Check balance" in English, Spanish, or French.',
+        confidence: 0.0,
+        detectedLanguage: 'en'
+      };
+    }
+
+    // Check if command requires confirmation
+    const confirmation = commandConfirmation.generateConfirmationPrompt(command, aiResult);
+    
+    if (confirmation.requiresConfirmation) {
+      return {
+        ...aiResult,
+        requiresConfirmation: true,
+        confirmationId: confirmation.confirmationId,
+        confirmationText: confirmation.confirmationText,
+        timeout: confirmation.timeout
       };
     }
 
     return aiResult;
+    
   } catch (error) {
-    console.error('Error in AI command processing:', error);
+    console.error('Error in multi-language command processing:', error);
     // Fallback to basic processing
     return {
       type: 'unknown',
       originalCommand: command,
-      message: 'Error processing command. Please try again.',
-      confidence: 0.0
+      message: 'Error processing command. Please try again in English, Spanish, or French.',
+      confidence: 0.0,
+      detectedLanguage: 'en'
     };
   }
 }
@@ -70,186 +104,394 @@ app.post('/api/process-command', async (req, res) => {
   try {
     const parsedCommand = await processVoiceCommand(commandData.command);
     
-    switch (parsedCommand.type) {
-      case 'payment':
-        // Validate payment data
-        if (!parsedCommand.amount || !parsedCommand.recipient) {
-          return res.status(400).json({
-            status: 'error',
-            message: 'Payment command missing amount or recipient',
-            parsedCommand: parsedCommand
-          });
-        }
-
-        // Check if recipient exists in contacts
-        const recipientContact = contacts.find(c => 
-          c.name.toLowerCase() === parsedCommand.recipient.toLowerCase()
-        );
-
-        if (!recipientContact) {
-          return res.status(400).json({
-            status: 'error',
-            message: `Recipient "${parsedCommand.recipient}" not found in contacts`,
-            parsedCommand: parsedCommand
-          });
-        }
-
-        // Simulate payment processing
-        const transaction = {
-          id: transactionId++,
-          type: 'payment',
-          amount: parsedCommand.amount,
-          recipient: parsedCommand.recipient,
-          recipientAddress: recipientContact.address,
-          currency: parsedCommand.currency || 'WND',
-          status: 'completed',
-          confidence: parsedCommand.confidence,
-          timestamp: new Date().toISOString(),
-          txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-          processingMethods: parsedCommand.processingMethods || []
-        };
-        
-        transactions.push(transaction);
-        
-        res.json({
-          status: 'success',
-          message: `Successfully sent ${parsedCommand.amount} ${parsedCommand.currency || 'WND'} to ${parsedCommand.recipient}`,
-          transaction: transaction,
-          parsedCommand: parsedCommand
-        });
-        break;
-        
-      case 'balance_check':
-        res.json({
-          status: 'success',
-          message: 'Balance check requested',
-          parsedCommand: parsedCommand,
-          suggestedResponse: 'Your current balance is 1,250 WND'
-        });
-        break;
-        
-      case 'transaction_history':
-        res.json({
-          status: 'success',
-          message: `Showing ${transactions.length} recent transactions`,
-          transactions: transactions.slice(-5), // Last 5 transactions
-          parsedCommand: parsedCommand
-        });
-        break;
-
-      case 'add_contact':
-        if (!parsedCommand.contactName) {
-          return res.status(400).json({
-            status: 'error',
-            message: 'Contact name not specified',
-            parsedCommand: parsedCommand
-          });
-        }
-
-        // Check if contact already exists
-        const existingContact = contacts.find(c => 
-          c.name.toLowerCase() === parsedCommand.contactName.toLowerCase()
-        );
-
-        if (existingContact) {
-          return res.status(400).json({
-            status: 'error',
-            message: `Contact "${parsedCommand.contactName}" already exists`,
-            parsedCommand: parsedCommand
-          });
-        }
-
-        // Generate mock address for new contact
-        const newContact = {
-          id: contacts.length + 1,
-          name: parsedCommand.contactName,
-          address: `0x${Math.random().toString(16).substr(2, 40)}`,
-          balance: 0
-        };
-
-        contacts.push(newContact);
-
-        res.json({
-          status: 'success',
-          message: `Contact "${parsedCommand.contactName}" added successfully`,
-          contact: newContact,
-          parsedCommand: parsedCommand
-        });
-        break;
-
-      case 'remove_contact':
-        if (!parsedCommand.contactName) {
-          return res.status(400).json({
-            status: 'error',
-            message: 'Contact name not specified',
-            parsedCommand: parsedCommand
-          });
-        }
-
-        const contactIndex = contacts.findIndex(c => 
-          c.name.toLowerCase() === parsedCommand.contactName.toLowerCase()
-        );
-
-        if (contactIndex === -1) {
-          return res.status(400).json({
-            status: 'error',
-            message: `Contact "${parsedCommand.contactName}" not found`,
-            parsedCommand: parsedCommand
-          });
-        }
-
-        const removedContact = contacts.splice(contactIndex, 1)[0];
-
-        res.json({
-          status: 'success',
-          message: `Contact "${parsedCommand.contactName}" removed successfully`,
-          removedContact: removedContact,
-          parsedCommand: parsedCommand
-        });
-        break;
-
-      case 'recurring_payment':
-        if (!parsedCommand.amount || !parsedCommand.recipient) {
-          return res.status(400).json({
-            status: 'error',
-            message: 'Recurring payment missing amount or recipient',
-            parsedCommand: parsedCommand
-          });
-        }
-
-        const recurringPayment = {
-          id: recurringPaymentId++,
-          amount: parsedCommand.amount,
-          recipient: parsedCommand.recipient,
-          currency: parsedCommand.currency || 'WND',
-          frequency: 'monthly', // Default frequency
-          status: 'active',
-          createdAt: new Date().toISOString(),
-          nextPayment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-        };
-
-        recurringPayments.push(recurringPayment);
-
-        res.json({
-          status: 'success',
-          message: `Recurring payment of ${parsedCommand.amount} ${parsedCommand.currency || 'WND'} to ${parsedCommand.recipient} set up successfully`,
-          recurringPayment: recurringPayment,
-          parsedCommand: parsedCommand
-        });
-        break;
-        
-      default:
-        res.json({
-          status: 'error',
-          message: parsedCommand.message || 'Command not recognized',
-          parsedCommand: parsedCommand
-        });
+    // If command requires confirmation, return confirmation request
+    if (parsedCommand.requiresConfirmation) {
+      return res.json({
+        status: 'confirmation_required',
+        message: 'Command requires confirmation',
+        parsedCommand: parsedCommand,
+        confirmationId: parsedCommand.confirmationId,
+        confirmationText: parsedCommand.confirmationText,
+        timeout: parsedCommand.timeout
+      });
     }
+    
+    // Process command immediately if no confirmation needed
+    const result = await executeCommand(parsedCommand);
+    res.json(result);
+    
   } catch (error) {
     console.error('Error processing command:', error);
     res.status(500).json({
       status: 'error',
       message: 'Error processing command',
+      error: error.message
+    });
+  }
+});
+
+// New endpoint for command confirmation
+app.post('/api/confirm-command', async (req, res) => {
+  const { confirmationId, userResponse } = req.body;
+  
+  if (!confirmationId || !userResponse) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Confirmation ID and user response required'
+    });
+  }
+
+  try {
+    const confirmationResult = commandConfirmation.processConfirmation(confirmationId, userResponse);
+    
+    if (confirmationResult.status === 'confirmed') {
+      // Execute the confirmed command
+      const result = await executeCommand(confirmationResult.parsedCommand);
+      res.json({
+        status: 'success',
+        message: 'Command confirmed and executed successfully',
+        confirmationResult: confirmationResult,
+        executionResult: result
+      });
+    } else {
+      res.json(confirmationResult);
+    }
+    
+  } catch (error) {
+    console.error('Error processing confirmation:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error processing confirmation',
+      error: error.message
+    });
+  }
+});
+
+// Execute confirmed commands
+async function executeCommand(parsedCommand) {
+  switch (parsedCommand.type) {
+    case 'payment':
+      // Validate payment data
+      if (!parsedCommand.amount || !parsedCommand.recipient) {
+        return {
+          status: 'error',
+          message: 'Payment command missing amount or recipient',
+          parsedCommand: parsedCommand
+        };
+      }
+
+      // Check if recipient exists in contacts
+      const recipientContact = contacts.find(c => 
+        c.name.toLowerCase() === parsedCommand.recipient.toLowerCase()
+      );
+
+      if (!recipientContact) {
+        return {
+          status: 'error',
+          message: `Recipient "${parsedCommand.recipient}" not found in contacts`,
+          parsedCommand: parsedCommand
+        };
+      }
+
+      // Execute real blockchain transaction if blockchain is connected
+      let transactionResult;
+      if (blockchain.getConnectionStatus().isConnected) {
+        try {
+          // For demo purposes, use a mock private key
+          // In production, this would come from secure wallet integration
+          const mockPrivateKey = '0x' + '1'.repeat(64);
+          
+          // Convert amount to proper format
+          const network = blockchain.getCurrentNetwork();
+          const amountInSmallestUnit = parsedCommand.amount * Math.pow(10, network.decimals);
+          
+          transactionResult = await blockchain.executeTransfer(
+            mockPrivateKey,
+            recipientContact.address,
+            amountInSmallestUnit.toString()
+          );
+          
+          console.log('Blockchain transaction executed:', transactionResult);
+          
+        } catch (blockchainError) {
+          console.error('Blockchain transaction failed, falling back to mock:', blockchainError);
+          transactionResult = null;
+        }
+      }
+
+      // If blockchain transaction failed or not connected, use mock transaction
+      if (!transactionResult) {
+        transactionResult = {
+          txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+          status: 'completed',
+          method: 'Mock Transfer'
+        };
+      }
+
+      // Create transaction record
+      const transaction = {
+        id: transactionId++,
+        type: 'payment',
+        amount: parsedCommand.amount,
+        recipient: parsedCommand.recipient,
+        recipientAddress: recipientContact.address,
+        currency: parsedCommand.currency || blockchain.getCurrentNetwork().currency,
+        status: 'completed',
+        confidence: parsedCommand.confidence,
+        timestamp: new Date().toISOString(),
+        txHash: transactionResult.txHash,
+        processingMethods: parsedCommand.processingMethods || [],
+        confirmed: true,
+        language: parsedCommand.detectedLanguage || 'en',
+        blockchainMethod: transactionResult.method,
+        network: blockchain.getCurrentNetwork().name
+      };
+      
+      transactions.push(transaction);
+      
+      return {
+        status: 'success',
+        message: `Successfully sent ${parsedCommand.amount} ${transaction.currency} to ${parsedCommand.recipient}`,
+        transaction: transaction,
+        parsedCommand: parsedCommand,
+        blockchainResult: transactionResult
+      };
+      
+    case 'balance_check':
+      return {
+        status: 'success',
+        message: 'Balance check requested',
+        parsedCommand: parsedCommand,
+        suggestedResponse: 'Your current balance is 1,250 WND'
+      };
+      
+    case 'transaction_history':
+      return {
+        status: 'success',
+        message: `Showing ${transactions.length} recent transactions`,
+        transactions: transactions.slice(-5), // Last 5 transactions
+        parsedCommand: parsedCommand
+      };
+
+    case 'add_contact':
+      if (!parsedCommand.contactName) {
+        return {
+          status: 'error',
+          message: 'Contact name not specified',
+          parsedCommand: parsedCommand
+        };
+      }
+
+      // Check if contact already exists
+      const existingContact = contacts.find(c => 
+        c.name.toLowerCase() === parsedCommand.contactName.toLowerCase()
+      );
+
+      if (existingContact) {
+        return {
+          status: 'error',
+          message: `Contact "${parsedCommand.contactName}" already exists`,
+          parsedCommand: parsedCommand
+        };
+      }
+
+      // Generate mock address for new contact
+      const newContact = {
+        id: contacts.length + 1,
+        name: parsedCommand.contactName,
+        address: `0x${Math.random().toString(16).substr(2, 40)}`,
+        balance: 0
+      };
+
+      contacts.push(newContact);
+
+      return {
+        status: 'success',
+        message: `Contact "${parsedCommand.contactName}" added successfully`,
+        contact: newContact,
+        parsedCommand: parsedCommand
+      };
+
+    case 'remove_contact':
+      if (!parsedCommand.contactName) {
+        return {
+          status: 'error',
+          message: 'Contact name not specified',
+          parsedCommand: parsedCommand
+        };
+      }
+
+      const contactIndex = contacts.findIndex(c => 
+        c.name.toLowerCase() === parsedCommand.contactName.toLowerCase()
+      );
+
+      if (contactIndex === -1) {
+        return {
+          status: 'error',
+          message: `Contact "${parsedCommand.contactName}" not found`,
+          parsedCommand: parsedCommand
+        };
+      }
+
+      const removedContact = contacts.splice(contactIndex, 1)[0];
+
+      return {
+        status: 'success',
+        message: `Contact "${parsedCommand.contactName}" removed successfully`,
+        removedContact: removedContact,
+        parsedCommand: parsedCommand
+      };
+
+    case 'recurring_payment':
+      if (!parsedCommand.amount || !parsedCommand.recipient) {
+        return {
+          status: 'error',
+          message: 'Recurring payment missing amount or recipient',
+          parsedCommand: parsedCommand
+        };
+      }
+
+      const recurringPayment = {
+        id: recurringPaymentId++,
+        amount: parsedCommand.amount,
+        recipient: parsedCommand.recipient,
+        currency: parsedCommand.currency || blockchain.getCurrentNetwork().currency,
+        frequency: 'monthly', // Default frequency
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        nextPayment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+      };
+
+      recurringPayments.push(recurringPayment);
+
+      return {
+        status: 'success',
+        message: `Recurring payment of ${parsedCommand.amount} ${parsedCommand.currency || blockchain.getCurrentNetwork().currency} to ${parsedCommand.recipient} set up successfully`,
+        recurringPayment: recurringPayment,
+        parsedCommand: parsedCommand
+      };
+      
+    default:
+      return {
+        status: 'error',
+        message: parsedCommand.message || 'Command not recognized',
+        parsedCommand: parsedCommand
+      };
+  }
+}
+
+// Blockchain endpoints
+app.post('/api/blockchain/connect', async (req, res) => {
+  const { network } = req.body;
+  
+  try {
+    const result = await blockchain.initialize(network || 'moonbaseAlpha');
+    res.json({
+      status: 'success',
+      message: `Connected to ${result.network}`,
+      connection: result
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to connect to blockchain',
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/blockchain/status', (req, res) => {
+  res.json({
+    status: 'success',
+    connection: blockchain.getConnectionStatus(),
+    networks: blockchain.getAvailableNetworks()
+  });
+});
+
+app.post('/api/blockchain/switch-network', async (req, res) => {
+  const { network } = req.body;
+  
+  try {
+    const result = await blockchain.switchNetwork(network);
+    res.json({
+      status: 'success',
+      message: `Switched to ${result.network}`,
+      connection: result
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to switch network',
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/blockchain/balance/:address', async (req, res) => {
+  const { address } = req.params;
+  
+  try {
+    const balance = await blockchain.getBalance(address);
+    res.json({
+      status: 'success',
+      balance: balance
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get balance',
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/blockchain/estimate-fees', async (req, res) => {
+  const { fromAddress, toAddress, amount } = req.body;
+  
+  try {
+    const fees = await blockchain.estimateFees(fromAddress, toAddress, amount);
+    res.json({
+      status: 'success',
+      fees: fees
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to estimate fees',
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/blockchain/stats', async (req, res) => {
+  try {
+    const stats = await blockchain.getBlockchainStats();
+    res.json({
+      status: 'success',
+      stats: stats
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get blockchain stats',
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/blockchain/transaction/:txHash', async (req, res) => {
+  const { txHash } = req.params;
+  
+  try {
+    const status = await blockchain.getTransactionStatus(txHash);
+    res.json({
+      status: 'success',
+      transaction: status
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get transaction status',
       error: error.message
     });
   }
@@ -279,11 +521,35 @@ app.get('/api/recurring-payments', (req, res) => {
   });
 });
 
-// Get AI processing statistics
+// Get pending confirmations
+app.get('/api/confirmations', (req, res) => {
+  res.json({
+    status: 'success',
+    confirmations: commandConfirmation.getPendingConfirmations()
+  });
+});
+
+// Get confirmation statistics
+app.get('/api/confirmation-stats', (req, res) => {
+  res.json({
+    status: 'success',
+    stats: commandConfirmation.getStats()
+  });
+});
+
+// Get supported languages
+app.get('/api/languages', (req, res) => {
+  res.json({
+    status: 'success',
+    languages: multiLangProcessor.getSupportedLanguages()
+  });
+});
+
+// Get multi-language processing statistics
 app.get('/api/ai-stats', (req, res) => {
   res.json({
     status: 'success',
-    stats: aiProcessor.getProcessingStats(),
+    stats: multiLangProcessor.getProcessingStats(),
     totalCommands: transactions.length + recurringPayments.length
   });
 });
@@ -294,22 +560,42 @@ app.get('/api/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    aiProcessor: 'active',
+    multiLanguageProcessor: 'active',
+    commandConfirmation: 'active',
+    blockchain: blockchain.getConnectionStatus(),
+    supportedLanguages: multiLangProcessor.getSupportedLanguages().length,
     totalContacts: contacts.length,
     totalTransactions: transactions.length,
-    totalRecurringPayments: recurringPayments.length
+    totalRecurringPayments: recurringPayments.length,
+    pendingConfirmations: commandConfirmation.getPendingConfirmations().length
   });
 });
 
+// Initialize blockchain on startup
+initializeBlockchain();
+
 app.listen(port, () => {
-  console.log(`EchoPay AI-powered backend server listening at http://localhost:${port}`);
+  console.log(`EchoPay Multi-Language AI-powered backend with blockchain integration listening at http://localhost:${port}`);
   console.log('Available endpoints:');
-  console.log('  POST /api/process-command    - Process voice commands with AI');
-  console.log('  GET  /api/transactions       - Get transaction history');
-  console.log('  GET  /api/contacts           - Get contact list');
-  console.log('  GET  /api/recurring-payments - Get recurring payments');
-  console.log('  GET  /api/ai-stats           - Get AI processing statistics');
-  console.log('  GET  /api/health             - Health check');
+  console.log('  POST /api/process-command           - Process voice commands with multi-language AI');
+  console.log('  POST /api/confirm-command           - Confirm pending commands');
+  console.log('  GET  /api/confirmations             - Get pending confirmations');
+  console.log('  GET  /api/confirmation-stats        - Get confirmation statistics');
+  console.log('  GET  /api/languages                 - Get supported languages');
+  console.log('  POST /api/blockchain/connect        - Connect to blockchain network');
+  console.log('  GET  /api/blockchain/status         - Get blockchain connection status');
+  console.log('  POST /api/blockchain/switch-network - Switch blockchain network');
+  console.log('  GET  /api/blockchain/balance/:addr  - Get account balance');
+  console.log('  POST /api/blockchain/estimate-fees  - Estimate transaction fees');
+  console.log('  GET  /api/blockchain/stats          - Get blockchain statistics');
+  console.log('  GET  /api/blockchain/transaction/:hash - Get transaction status');
+  console.log('  GET  /api/transactions              - Get transaction history');
+  console.log('  GET  /api/contacts                  - Get contact list');
+  console.log('  GET  /api/recurring-payments        - Get recurring payments');
+  console.log('  GET  /api/ai-stats                  - Get AI processing statistics');
+  console.log('  GET  /api/health                    - Health check');
   console.log('');
-  console.log('AI Command Processor initialized and ready!');
+  console.log('Multi-Language AI Command Processor, Confirmation System, and Blockchain Integration initialized!');
+  console.log(`Supported Languages: ${multiLangProcessor.getSupportedLanguages().map(l => l.name).join(', ')}`);
+  console.log(`Available Networks: ${blockchain.getAvailableNetworks().map(n => n.name).join(', ')}`);
 });

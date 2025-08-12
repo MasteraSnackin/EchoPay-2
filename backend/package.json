@@ -1,7 +1,7 @@
 {
   "name": "echopay-backend",
   "version": "1.0.0",
-  "description": "EchoPay backend server with AI-powered voice processing",
+  "description": "EchoPay backend server with AI-powered voice processing and blockchain integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -16,7 +16,11 @@
     "natural": "^6.10.4",
     "node-nlp": "^4.27.0",
     "openai": "^4.28.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "@polkadot/api": "^10.11.2",
+    "@polkadot/keyring": "^12.6.2",
+    "@polkadot/util": "^12.6.2",
+    "@polkadot/util-crypto": "^12.6.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
