@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { validator } from '@hono/zod-validator';
-import { getDb } from '../db/client';
-import { voiceSessions, transactions } from '../db/schema';
+import { getDb } from '../utils/db';
+import { transactions } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { elevenLabsSTT } from '../utils/elevenlabs';
 import { nanoid } from 'nanoid';
 
 const router = new Hono<{ Bindings: { DB: D1Database; ELEVENLABS_API_KEY: string; ELEVENLABS_VOICE_ID: string; ENCRYPTION_KEY: string } }>();
@@ -13,12 +14,6 @@ const processSchema = z.object({
   user_id: z.string(),
   format: z.enum(['mp3', 'wav', 'webm']).default('mp3')
 });
-
-async function elevenLabsSTT(apiKey: string, base64: string, format: string): Promise<string> {
-  // Placeholder STT; replace with real ElevenLabs STT endpoint when available
-  // As ElevenLabs STT beta varies, this is a stub returning static transcript
-  return 'Pay 5 DOT to 14abc...';
-}
 
 async function elevenLabsTTS(apiKey: string, voiceId: string, text: string): Promise<string> {
   const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {

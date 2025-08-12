@@ -4,6 +4,8 @@ const MultiLanguageProcessor = require('./multiLanguageProcessor');
 const CommandConfirmation = require('./commandConfirmation');
 const SecureWalletIntegration = require('./secureWalletIntegration');
 const { signatureVerify } = require('@polkadot/util-crypto');
+const { ApiPromise } = require('@polkadot/api');
+const { WsProvider } = require('@polkadot/api/node/providers');
 
 const app = express();
 const port = 3001;
@@ -741,13 +743,31 @@ app.post('/api/wallet/verify', async (req, res) => {
 // Broadcast signed extrinsic (stub: accept and echo). Replace with real RPC submit if needed.
 app.post('/api/wallet/broadcast', async (req, res) => {
   try {
-    const { signedExtrinsic } = req.body;
-    if (!signedExtrinsic) return res.status(400).json({ status: 'error', message: 'signedExtrinsic required' });
-    // TODO: Submit to RPC via @polkadot/api if running in Node
-    const txHash = `0x${Math.random().toString(16).slice(2).padEnd(64, '0')}`;
-    res.json({ status: 'success', txHash });
-  } catch (e) {
-    res.status(500).json({ status: 'error', message: e.message });
+    const { signed_tx, network } = req.body;
+    if (!signed_tx || !network) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'signed_tx and network are required'
+      });
+    }
+
+    const wsProvider = new WsProvider('wss://moonbase-alpha.api.onfinality.io/public-ws');
+    const api = await ApiPromise.create({ provider: wsProvider });
+    await api.isReady;
+
+    const txHash = await api.rpc.author.submitExtrinsic(signed_tx);
+    
+    res.json({
+      status: 'success',
+      tx_hash: txHash.toHex(),
+      network
+    });
+  } catch (error) {
+    console.error('Broadcast error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
   }
 });
 
