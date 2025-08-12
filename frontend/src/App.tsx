@@ -45,6 +45,14 @@ interface ParsedCommand {
   entities?: any;
 }
 
+interface ConfirmationState {
+  isRequired: boolean;
+  confirmationId?: string;
+  confirmationText?: string;
+  timeoutMs?: number;
+  deadlineTs?: number;
+}
+
 interface Contact {
   id: number;
   name: string;
@@ -88,7 +96,28 @@ function App() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([]);
   const [aiStats, setAiStats] = useState<AIStats | null>(null);
+  const [confirmation, setConfirmation] = useState<ConfirmationState>({ isRequired: false });
+  const [countdownSec, setCountdownSec] = useState<number>(0);
   const recognitionRef = useRef(recognition);
+
+  // Countdown for confirmation
+  useEffect(() => {
+    if (!confirmation.isRequired || !confirmation.deadlineTs) {
+      setCountdownSec(0);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((confirmation.deadlineTs! - Date.now()) / 1000));
+      setCountdownSec(remaining);
+      if (remaining === 0) {
+        setConfirmation({ isRequired: false });
+        setResponseMessage('Confirmation expired. Please try the command again.');
+      }
+    };
+    tick();
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
+  }, [confirmation]);
 
   // Effect for Speech Recognition Setup
   useEffect(() => {
@@ -286,6 +315,7 @@ function App() {
   const sendCommandToBackend = async (commandText: string) => {
     if (!commandText) return;
     setResponseMessage('Processing command with AI...');
+    setConfirmation({ isRequired: false });
     try {
       const commandData = {
         command: commandText,
@@ -304,6 +334,21 @@ function App() {
       }
 
       const result = await response.json();
+
+      // Handle confirmation-required flow
+      if (result.status === 'confirmation_required') {
+        setParsedCommand(result.parsedCommand || null);
+        setConfirmation({
+          isRequired: true,
+          confirmationId: result.confirmationId,
+          confirmationText: result.confirmationText,
+          timeoutMs: result.timeout,
+          deadlineTs: Date.now() + (result.timeout || 30000)
+        });
+        setResponseMessage('Confirmation required. Please confirm below.');
+        return;
+      }
+
       setResponseMessage(result.message || 'Command processed.');
       setParsedCommand(result.parsedCommand || null);
       
@@ -329,6 +374,69 @@ function App() {
     } catch (error) {
       console.error("Error sending command:", error);
       setResponseMessage(`Error sending command: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const confirmCommand = async (accept: boolean) => {
+    if (!confirmation.isRequired || !confirmation.confirmationId) return;
+    setResponseMessage(accept ? 'Confirming...' : 'Cancelling...');
+    try {
+      const resp = await fetch('/api/confirm-command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          confirmationId: confirmation.confirmationId,
+          userResponse: accept ? 'yes' : 'no'
+        })
+      });
+      const data = await resp.json();
+
+      // Clear confirmation state regardless
+      setConfirmation({ isRequired: false });
+
+      if (data.status === 'success' && data.executionResult) {
+        const exec = data.executionResult;
+        setResponseMessage(exec.message || 'Command confirmed and executed.');
+        setParsedCommand(exec.parsedCommand || null);
+        if (exec.transaction) {
+          setTransactions(prev => [exec.transaction, ...prev]);
+        }
+        if (exec.contact || exec.removedContact) {
+          const contactResponse = await fetch('/api/contacts');
+          if (contactResponse.ok) {
+            const contactData = await contactResponse.json();
+            setContacts(contactData.contacts || []);
+          }
+        }
+        if (exec.recurringPayment) {
+          setRecurringPayments(prev => [exec.recurringPayment, ...prev]);
+        }
+        return;
+      }
+
+      if (data.status === 'cancelled') {
+        setResponseMessage('Command cancelled.');
+        return;
+      }
+
+      if (data.status === 'clarification') {
+        setResponseMessage(data.message || 'Please confirm again.');
+        // Re-open confirmation prompt with same id/text
+        setConfirmation({
+          isRequired: true,
+          confirmationId: data.confirmationId,
+          confirmationText: data.message,
+          timeoutMs: 15000,
+          deadlineTs: Date.now() + 15000
+        });
+        return;
+      }
+
+      // Fallback
+      setResponseMessage(data.message || 'Unable to process confirmation.');
+    } catch (e) {
+      console.error('Error confirming command:', e);
+      setResponseMessage(`Error confirming: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
   };
 
@@ -455,6 +563,19 @@ function App() {
           </>
         )}
         </div>
+
+        {/* Confirmation Prompt */}
+        {confirmation.isRequired && (
+          <div className="card confirmation-card">
+            <h3>Confirm Action</h3>
+            <p>{confirmation.confirmationText}</p>
+            <div className="confirmation-actions">
+              <button className="confirm-yes" onClick={() => confirmCommand(true)}>Yes</button>
+              <button className="confirm-no" onClick={() => confirmCommand(false)}>No</button>
+              <span className="countdown">{countdownSec}s</span>
+            </div>
+          </div>
+        )}
 
         {/* Parsed Command Display */}
         {parsedCommand && (

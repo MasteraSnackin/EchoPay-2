@@ -567,3 +567,40 @@ p strong { /* Make strong text stand out more */
     justify-content: center;
   }
 }
+
+/* Confirmation UI */
+.confirmation-card {
+  border-left: 4px solid #ff9800;
+  background: #fff8e1;
+}
+
+.confirmation-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.confirm-yes {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.confirm-no {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.countdown {
+  margin-left: auto;
+  font-weight: bold;
+  color: #6c757d;
+}
