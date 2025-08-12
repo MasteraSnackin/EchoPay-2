@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
-import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { AccountInfo } from '@polkadot/types/interfaces';
 import { formatBalance } from '@polkadot/util';
 import './App.css';
@@ -13,6 +12,7 @@ import { getLocalJSON, setLocalJSON } from './utils/storage';
 import Identicon from '@polkadot/react-identicon';
 import { isAddress } from '@polkadot/util-crypto';
 import { isValidSs58WithPrefix, normalizeToPrefix } from './utils/ss58';
+import { useApi } from './chain/ApiProvider';
 
 // Westend SS58 prefix
 const WESTEND_PREFIX = 42;
@@ -29,6 +29,8 @@ if (recognition) {
 }
 
 function App() {
+  const { api, ready, decimals: chainDecimalsCtx, token: chainTokenCtx, existentialDeposit } = useApi();
+
   // Wallet State
   const [extensionsLoaded, setExtensionsLoaded] = useState<boolean>(false);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
@@ -90,6 +92,14 @@ function App() {
 
   // Fuzzy searcher
   const contactSearcher = useMemo(() => createContactSearcher([...recentRecipients, ...mockContacts]), [recentRecipients]);
+
+  // Apply chain display formatting when api metadata is ready
+  useEffect(() => {
+    if (chainDecimalsCtx != null && chainTokenCtx) {
+      setChainDecimals(chainDecimalsCtx);
+      formatBalance.setDefaults({ decimals: chainDecimalsCtx, unit: chainTokenCtx });
+    }
+  }, [chainDecimalsCtx, chainTokenCtx]);
 
   // Effect for Speech Recognition Setup
   useEffect(() => {
@@ -170,7 +180,7 @@ function App() {
   // --- Fetch Account Balance ---
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!selectedAccount) {
+      if (!selectedAccount || !api || !ready) {
         setAccountBalance('');
         setAccountBalancePlanck(null);
         return;
@@ -180,23 +190,10 @@ function App() {
       setAccountBalance(''); // Clear previous balance
       setWalletError(''); // Clear previous errors
 
-      // Connect to a Westend node
-      const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
-      let api: ApiPromise | null = null;
-
       try {
-        api = await ApiPromise.create({ provider: wsProvider });
-        await api.isReady;
-
-        // Get chain properties once
-        const decimals = api.registry.chainDecimals[0];
-        const token = api.registry.chainTokens[0];
-        setChainDecimals(decimals);
-        formatBalance.setDefaults({ decimals, unit: token });
-
         // Query account info and cast to the correct type
-        const accountInfo = await api.query.system.account(selectedAccount.address) as AccountInfo;
-        const freeBalance = accountInfo.data.free; // BN
+        const accountInfo = await api.query.system.account(selectedAccount.address) as unknown as AccountInfo;
+        const freeBalance = (accountInfo as any).data.free; // BN
         setAccountBalancePlanck(BigInt(freeBalance.toString()));
 
         // Format and set balance
@@ -209,60 +206,40 @@ function App() {
         setAccountBalancePlanck(null);
       } finally {
         setIsBalanceLoading(false);
-        // Disconnect API
-        if (api) {
-          await api.disconnect();
-        }
       }
     };
 
     fetchBalance();
-  }, [selectedAccount]);
+  }, [selectedAccount, api, ready]);
 
   // --- Estimate fee when confirmation opens ---
   useEffect(() => {
     const estimate = async () => {
-      if (!isConfirmOpen || !parsedCommand || !recognizedContact || !selectedAccount) return;
+      if (!isConfirmOpen || !parsedCommand || !recognizedContact || !selectedAccount || !api || chainDecimals == null) return;
       setIsEstimatingFee(true);
       setEstimateError('');
       setEstimatedFee('');
       setEstimatedFeePlanck(null);
-      setExistentialDepositPlanck(null);
+      setExistentialDepositPlanck(existentialDeposit ?? null);
 
-      let api: ApiPromise | null = null;
       try {
-        const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
-        api = await ApiPromise.create({ provider: wsProvider });
-        await api.isReady;
-
-        const decimals = api.registry.chainDecimals[0];
-        const token = api.registry.chainTokens[0];
-        formatBalance.setDefaults({ decimals, unit: token });
-
-        const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, decimals);
+        const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, chainDecimals);
         const tx = api.tx.balances.transferKeepAlive(recognizedContact.address, amountPlanck);
 
         const info = await tx.paymentInfo(selectedAccount.address);
         const partialFee = info.partialFee?.toString?.() || info.partialFee.toString();
         setEstimatedFee(formatBalance(partialFee, { withUnit: true, withSi: false }));
         setEstimatedFeePlanck(BigInt(partialFee));
-
-        // existential deposit
-        const edConst = api.consts.balances.existentialDeposit;
-        setExistentialDepositPlanck(BigInt(edConst.toString()));
       } catch (error) {
         console.error('Fee estimation error', error);
         setEstimateError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setIsEstimatingFee(false);
-        if (api) {
-          try { await api.disconnect(); } catch {}
-        }
       }
     };
 
     estimate();
-  }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount]);
+  }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount, api, chainDecimals, existentialDeposit]);
 
   // --- Preflight checks whenever inputs/estimates change ---
   useEffect(() => {
@@ -279,9 +256,9 @@ function App() {
       const sufficient = accountBalancePlanck >= required;
       setHasSufficientBalance(sufficient);
 
-      if (existentialDepositPlanck != null) {
+      if (existentialDeposit != null) {
         const remaining = accountBalancePlanck - required;
-        if (remaining < existentialDepositPlanck) {
+        if (remaining < existentialDeposit) {
           setReapRiskWarning('Warning: Balance after transfer may be below existential deposit (account reaping risk).');
         } else {
           setReapRiskWarning('');
@@ -294,7 +271,7 @@ function App() {
       setHasSufficientBalance(true);
       setReapRiskWarning('');
     }
-  }, [parsedCommand, chainDecimals, accountBalancePlanck, estimatedFeePlanck, existentialDepositPlanck]);
+  }, [parsedCommand, chainDecimals, accountBalancePlanck, estimatedFeePlanck, existentialDeposit]);
 
   // --- Wallet Connection Logic ---
   const handleConnectWallet = async () => {
@@ -438,18 +415,16 @@ function App() {
       setResponseMessage('Insufficient balance for amount + fee.');
       return;
     }
+    if (!api || chainDecimals == null) {
+      setResponseMessage('Network not ready.');
+      return;
+    }
 
     setIsSubmitting(true);
     setResponseMessage('Submitting transfer...');
 
-    let api: ApiPromise | null = null;
     try {
-      const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
-      api = await ApiPromise.create({ provider: wsProvider });
-      await api.isReady;
-
-      const decimals = api.registry.chainDecimals[0];
-      const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, decimals);
+      const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, chainDecimals);
 
       const injector = await web3FromAddress(selectedAccount.address);
       api.setSigner(injector.signer);
@@ -458,8 +433,8 @@ function App() {
 
       const unsub = await tx.signAndSend(selectedAccount.address, ({ status, dispatchError, txHash }) => {
         if (dispatchError) {
-          if (dispatchError.isModule) {
-            const decoded = api!.registry.findMetaError(dispatchError.asModule);
+          if ((dispatchError as any).isModule) {
+            const decoded = api!.registry.findMetaError((dispatchError as any).asModule);
             const { section, name, docs } = decoded;
             setResponseMessage(`On-chain error: ${section}.${name} - ${docs.join(' ')}`);
           } else {
@@ -487,10 +462,6 @@ function App() {
       console.error('Transfer error', error);
       setResponseMessage(`Transfer failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsSubmitting(false);
-    } finally {
-      if (api) {
-        try { await api.disconnect(); } catch {}
-      }
     }
   };
 
@@ -548,22 +519,57 @@ function App() {
     }
   };
 
-  // Open confirm from typed form
-  const openConfirmFromTyped = () => {
+  // Open confirm from typed form with pre-check
+  const openConfirmFromTyped = async () => {
     const result = validateTyped();
     if (!result) return;
 
-    const provisional: ParsedCommand = {
-      action: 'pay',
-      amount: Number(typedAmount.replace(/,/g, '.')),
-      token: typedToken.toUpperCase(),
-      recipientName: result.contact!.name,
-      recipientAddress: result.contact!.address,
-    };
+    if (!api || chainDecimals == null || !selectedAccount) {
+      setTypedErrors('Network not ready or no account selected.');
+      return;
+    }
 
-    setParsedCommand(provisional);
-    setRecognizedContact(result.contact);
-    setIsConfirmOpen(true);
+    try {
+      const amountNumeric = Number(typedAmount.replace(/,/g, '.'));
+      const amountPlanck = toPlanckFromDecimal(amountNumeric, chainDecimals);
+      const recipientAddress = result.contact!.address;
+      const tx = api.tx.balances.transferKeepAlive(recipientAddress, amountPlanck);
+      const info = await tx.paymentInfo(selectedAccount.address);
+      const partialFee = info.partialFee?.toString?.() || info.partialFee.toString();
+      const feePlanck = BigInt(partialFee);
+
+      const balance = accountBalancePlanck ?? BigInt(0);
+      const required = amountPlanck + feePlanck;
+      if (balance < required) {
+        setTypedErrors('Insufficient balance for amount + estimated fee.');
+        return;
+      }
+      const ed = existentialDeposit ?? existentialDepositPlanck ?? null;
+      if (ed != null) {
+        const remaining = balance - required;
+        if (remaining < ed) {
+          setTypedErrors('Warning: Remaining balance may fall below existential deposit (reaping risk).');
+          // Allow continue or require explicit? For now we allow continue; remove return to allow
+        }
+      }
+
+      // Seed confirm with parsed + estimated fee available
+      const provisional: ParsedCommand = {
+        action: 'pay',
+        amount: amountNumeric,
+        token: typedToken.toUpperCase(),
+        recipientName: result.contact!.name,
+        recipientAddress: recipientAddress,
+      };
+      setParsedCommand(provisional);
+      setRecognizedContact(result.contact);
+      setEstimatedFee(formatBalance(partialFee, { withUnit: true, withSi: false }));
+      setEstimatedFeePlanck(feePlanck);
+      setIsConfirmOpen(true);
+
+    } catch (error) {
+      setTypedErrors(`Failed to estimate fee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   // Validate typed form
