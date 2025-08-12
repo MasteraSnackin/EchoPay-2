@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { web3Accounts, web3Enable, web3FromAddress } from '@polkadot/extension-dapp';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
@@ -8,6 +8,7 @@ import './App.css';
 import ContactList, { mockContacts, Contact } from './ContactList';
 import { parseCommandText, type ParsedCommand } from './utils/parseCommand';
 import { toPlanckFromDecimal } from './utils/amount';
+import { createContactSearcher } from './utils/contacts';
 
 // Check if the browser supports the Web Speech API
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -47,6 +48,15 @@ function App() {
   const [isEstimatingFee, setIsEstimatingFee] = useState<boolean>(false);
   const [estimatedFee, setEstimatedFee] = useState<string>('');
   const [estimateError, setEstimateError] = useState<string>('');
+
+  // Typed command form state
+  const [typedAmount, setTypedAmount] = useState<string>('');
+  const [typedToken, setTypedToken] = useState<string>('WND');
+  const [typedRecipient, setTypedRecipient] = useState<string>('');
+  const [typedErrors, setTypedErrors] = useState<string>('');
+
+  // Fuzzy searcher
+  const contactSearcher = useMemo(() => createContactSearcher(mockContacts), []);
 
   // Effect for Speech Recognition Setup
   useEffect(() => {
@@ -99,19 +109,74 @@ function App() {
     setParsedCommand(parsed);
 
     const lowerCaseText = recognizedText.toLowerCase().trim();
-    const foundContact = mockContacts.find((contact: Contact) => contact.name.toLowerCase() === lowerCaseText);
-    setRecognizedContact(foundContact || null);
+    const exactMatch = mockContacts.find((contact: Contact) => contact.name.toLowerCase() === lowerCaseText);
 
-    // If parser found a recipient by name, try to map to contact list for address
+    if (exactMatch) {
+      setRecognizedContact(exactMatch);
+    } else {
+      const fuzzy = contactSearcher.searchByNameOrAddress(lowerCaseText);
+      setRecognizedContact(fuzzy);
+    }
+
     if (parsed && parsed.recipientName) {
-      const contactByName = mockContacts.find(
-        (c) => c.name.toLowerCase() === parsed.recipientName!.toLowerCase()
-      );
-      if (contactByName) {
-        setRecognizedContact(contactByName);
+      const fuzzyByParsed = contactSearcher.searchByNameOrAddress(parsed.recipientName);
+      if (fuzzyByParsed) {
+        setRecognizedContact(fuzzyByParsed);
       }
     }
-  }, [recognizedText]);
+  }, [recognizedText, contactSearcher]);
+
+  // Prefill typed form when parsedCommand changes
+  useEffect(() => {
+    if (!parsedCommand) return;
+    setTypedAmount(String(parsedCommand.amount));
+    setTypedToken(parsedCommand.token);
+    setTypedRecipient(parsedCommand.recipientName || '');
+  }, [parsedCommand]);
+
+  // Validate typed form
+  const validateTyped = (): { contact: Contact | null } | null => {
+    setTypedErrors('');
+
+    if (!typedAmount || !/^\d+(?:[.,]\d+)?$/.test(typedAmount)) {
+      setTypedErrors('Enter a valid amount.');
+      return null;
+    }
+    if (!typedToken || !/^[A-Za-z]{2,5}$/.test(typedToken)) {
+      setTypedErrors('Enter a valid token symbol (2-5 letters).');
+      return null;
+    }
+    if (!typedRecipient) {
+      setTypedErrors('Enter a recipient name or address.');
+      return null;
+    }
+
+    const match = contactSearcher.searchByNameOrAddress(typedRecipient);
+    if (!match) {
+      setTypedErrors('Could not match recipient. Check the name/address.');
+      return null;
+    }
+
+    return { contact: match };
+  };
+
+  // Open confirm from typed form
+  const openConfirmFromTyped = () => {
+    const result = validateTyped();
+    if (!result) return;
+
+    const provisional: ParsedCommand = {
+      action: 'pay',
+      amount: Number(typedAmount.replace(/,/g, '.')),
+      token: typedToken.toUpperCase(),
+      recipientName: result.contact!.name,
+      recipientAddress: result.contact!.address,
+    };
+
+    setParsedCommand(provisional);
+    setRecognizedContact(result.contact);
+    setIsConfirmOpen(true);
+  };
 
   // --- Fetch Account Balance ---
   useEffect(() => {
@@ -500,6 +565,47 @@ function App() {
           )}
         </div>
 
+        {/* Typed Command Fallback */}
+        <div className="card">
+          <h2>Typed Command (Fallback)</h2>
+          <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: '1fr 1fr 2fr' }}>
+            <div>
+              <label>Amount</label>
+              <input
+                type="text"
+                value={typedAmount}
+                onChange={(e) => setTypedAmount(e.target.value)}
+                placeholder="e.g., 1.25"
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label>Token</label>
+              <input
+                type="text"
+                value={typedToken}
+                onChange={(e) => setTypedToken(e.target.value.toUpperCase())}
+                placeholder="WND"
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div>
+              <label>Recipient (name or address)</label>
+              <input
+                type="text"
+                value={typedRecipient}
+                onChange={(e) => setTypedRecipient(e.target.value)}
+                placeholder="Alice"
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+          {typedErrors && <p style={{ color: 'orange', marginTop: '8px' }}>{typedErrors}</p>}
+          <div style={{ marginTop: '10px' }}>
+            <button disabled={!selectedAccount} onClick={openConfirmFromTyped}>Review and Confirm</button>
+          </div>
+        </div>
+
         {/* Confirmation Section */}
         {isConfirmOpen && parsedCommand && (
           <div className="card" style={{ borderColor: '#4a90e2' }}>
@@ -530,7 +636,7 @@ function App() {
 
       </div>
 
-      {/* Contact List Section */}
+      {/* Sidebar */}
       <div className="sidebar">
         <ContactList />
       </div>
