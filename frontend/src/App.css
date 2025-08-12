@@ -233,3 +233,40 @@ p strong { /* Make strong text stand out more */
      width: 100%; /* Take full width */
   }
 }
+
+.suggestions {
+  position: relative;
+}
+
+.suggestions-list {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  max-height: 180px;
+  overflow-y: auto;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.suggestions-item {
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.suggestions-item:hover {
+  background-color: rgba(255,255,255,0.06);
+}
+
+.inline-spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+  vertical-align: text-bottom;
+  margin-left: 6px;
+}
