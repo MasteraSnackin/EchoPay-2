@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { web3Accounts, web3Enable } from '@polkadot/extension-dapp';
+import { web3Accounts, web3Enable, web3FromSource } from '@polkadot/extension-dapp';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { AccountInfo } from '@polkadot/types/interfaces';
 import { formatBalance } from '@polkadot/util';
+import { u8aToHex } from '@polkadot/util';
 import './App.css';
 import ContactList, { mockContacts, Contact } from './ContactList';
 import config from './config';
@@ -123,6 +124,9 @@ function App() {
   // Enhanced voice command processing
   const [voiceCommands, setVoiceCommands] = useState<VoiceCommand[]>([]);
   const [currentAudioData, setCurrentAudioData] = useState<string>('');
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Enable E2E test mode: mock a selected account to bypass wallet dependency
   useEffect(() => {
@@ -345,21 +349,141 @@ function App() {
       };
       
       setTransactions(prev => [newTransaction, ...prev]);
+      
+      // Return the transaction for further processing
+      return { ...newTransaction, backendId: result.id };
     } catch (error) {
       console.error('Transaction creation error:', error);
       throw error;
     }
   };
 
-  // Wallet verification with backend
+  // Sign and broadcast transaction
+  const signAndBroadcastTransaction = async (transaction: Transaction, recipientAddress: string) => {
+    if (!selectedAccount) {
+      throw new Error('No account selected');
+    }
+
+    try {
+      setResponseMessage('Signing transaction...');
+      
+      // Get the signer
+      const signer = selectedAccount.meta.source;
+      if (!signer) {
+        throw new Error('No signer available for this account');
+      }
+
+      const injector = await web3FromSource(signer);
+      if (!injector?.signer?.signRaw) {
+        throw new Error('Signer does not support raw signing');
+      }
+
+      // Create the transfer extrinsic
+      const wsProvider = new WsProvider(config.polkadot.rpcEndpoint);
+      const api = await ApiPromise.create({ provider: wsProvider });
+      await api.isReady;
+
+      // Build transfer extrinsic
+      const transfer = api.tx.balances.transfer(recipientAddress, transaction.amount * 1e10); // Convert to planck units
+      
+      // Sign the extrinsic
+      const { signature } = await transfer.signAsync(selectedAccount.address, { signer: injector.signer });
+      
+      // Get the signed extrinsic as hex
+      const signedTx = transfer.toHex();
+      
+      // Broadcast to backend
+      setResponseMessage('Broadcasting transaction...');
+      const broadcastResponse = await fetch(`${config.backend.url}${config.backend.endpoints.wallet.broadcast}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          signed_tx: signedTx,
+          network: config.polkadot.chainName
+        })
+      });
+
+      if (!broadcastResponse.ok) {
+        throw new Error(`Broadcast failed: ${broadcastResponse.statusText}`);
+      }
+
+      const broadcastResult = await broadcastResponse.json();
+      
+      // Update transaction with hash
+      setTransactions(prev => prev.map(tx => 
+        tx.id === transaction.id 
+          ? { ...tx, txHash: broadcastResult.tx_hash, status: 'broadcasted' }
+          : tx
+      ));
+
+      setResponseMessage(`Transaction broadcasted successfully! Hash: ${broadcastResult.tx_hash}`);
+      
+      // Cleanup
+      await api.disconnect();
+      
+    } catch (error) {
+      console.error('Transaction signing/broadcast error:', error);
+      setResponseMessage(`Transaction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
+    }
+  };
+
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Audio = reader.result as string;
+          setCurrentAudioData(base64Audio);
+        };
+        reader.readAsDataURL(audioBlob);
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.start();
+      setIsRecording(true);
+      setResponseMessage('Recording audio... Click stop when done.');
+      
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setResponseMessage('Error starting recording. Please check microphone permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setResponseMessage('Audio recorded! You can now process the command.');
+    }
+  };
+
+  // Wallet verification with backend using real signature
   const verifyWallet = async () => {
     if (!selectedAccount) return;
 
     try {
       setResponseMessage('Verifying wallet...');
       
-      // Create a simple message for signing
+      // Create a message for signing
       const message = `Verify wallet for EchoPay: ${Date.now()}`;
+      const messageHex = u8aToHex(new TextEncoder().encode(message));
       
       // Get the signer from the account
       const signer = selectedAccount.meta.source;
@@ -367,15 +491,27 @@ function App() {
         throw new Error('No signer available for this account');
       }
 
-      // For now, we'll use a simple verification approach
-      // In production, you'd want to use proper cryptographic verification
+      // Get the actual signer instance
+      const injector = await web3FromSource(signer);
+      if (!injector?.signer?.signRaw) {
+        throw new Error('Signer does not support raw signing');
+      }
+
+      // Sign the message
+      const { signature } = await injector.signer.signRaw({
+        address: selectedAccount.address,
+        data: messageHex,
+        type: 'bytes'
+      });
+
+      // Verify signature with backend
       const response = await fetch(`${config.backend.url}${config.backend.endpoints.wallet.verify}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wallet_address: selectedAccount.address,
-          signature: 'verified', // Placeholder - in real implementation, get actual signature
-          message: message
+          signature: signature,
+          message_hex: messageHex
         })
       });
 
@@ -775,6 +911,43 @@ function App() {
                          >
                            {isProcessingCommand ? 'Processing...' : 'Process Command with AI'}
                          </button>
+                         
+                         {/* Audio Recording Controls */}
+                         <div style={{ marginTop: '15px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                           <button
+                             onClick={startRecording}
+                             disabled={isRecording}
+                             style={{ 
+                               backgroundColor: isRecording ? '#ccc' : '#2196F3', 
+                               color: 'white',
+                               padding: '8px 16px',
+                               borderRadius: '4px'
+                             }}
+                           >
+                             {isRecording ? 'Recording...' : '🎤 Record Audio'}
+                           </button>
+                           {isRecording && (
+                             <button
+                               onClick={stopRecording}
+                               style={{ 
+                                 backgroundColor: '#f44336', 
+                                 color: 'white',
+                                 padding: '8px 16px',
+                                 borderRadius: '4px'
+                               }}
+                             >
+                               ⏹️ Stop Recording
+                             </button>
+                           )}
+                         </div>
+                         
+                         {currentAudioData && (
+                           <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#e8f5e8', borderRadius: '4px' }}>
+                             <p style={{ margin: 0, fontSize: '14px' }}>
+                               <strong>Audio recorded:</strong> Ready to process with voice command
+                             </p>
+                           </div>
+                         )}
           </>
         )}
         </div>
@@ -861,6 +1034,53 @@ function App() {
               )}
             </div>
             <p><strong>Original:</strong> "{parsedCommand.originalCommand}"</p>
+            
+            {/* Transaction Execution */}
+            {parsedCommand.type === 'transfer' && (
+              <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f0f8ff', borderRadius: '6px' }}>
+                <h4>Execute Transaction</h4>
+                <p><strong>Amount:</strong> {parsedCommand.amount} {parsedCommand.currency}</p>
+                <p><strong>To:</strong> {parsedCommand.recipient}</p>
+                <p><strong>Status:</strong> Ready to execute</p>
+                
+                <button
+                  onClick={async () => {
+                    try {
+                      // For demo, use a mock address - in real app, lookup contact address
+                      const mockAddress = '5F...abc'; // This should come from contact lookup
+                      await signAndBroadcastTransaction(
+                        { 
+                          id: Date.now(), 
+                          type: 'transfer', 
+                          amount: parsedCommand.amount || 0, 
+                          recipient: parsedCommand.recipient || '', 
+                          currency: parsedCommand.currency || 'DOT',
+                          status: 'pending',
+                          timestamp: new Date().toISOString(),
+                          txHash: 'pending',
+                          confidence: parsedCommand.confidence,
+                          processingMethods: parsedCommand.processingMethods
+                        },
+                        mockAddress
+                      );
+                    } catch (error) {
+                      console.error('Transaction execution failed:', error);
+                    }
+                  }}
+                  style={{ 
+                    backgroundColor: '#4CAF50', 
+                    color: 'white',
+                    padding: '10px 20px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '16px'
+                  }}
+                >
+                  🚀 Execute Transaction
+                </button>
+              </div>
+            )}
           </div>
         )}
 
