@@ -60,6 +60,7 @@ function App() {
   const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [lastTxHash, setLastTxHash] = useState<string>('');
+  const [refreshTick, setRefreshTick] = useState<number>(0);
 
   // Fee estimation state
   const [isEstimatingFee, setIsEstimatingFee] = useState<boolean>(false);
@@ -212,7 +213,7 @@ function App() {
     };
 
     fetchBalance();
-  }, [selectedAccount, ready, getBalancePlanck]);
+  }, [selectedAccount, ready, getBalancePlanck, refreshTick]);
 
   // --- Estimate fee when confirmation opens (cached) ---
   useEffect(() => {
@@ -229,7 +230,7 @@ function App() {
         const { value: fee } = await estimateTransferFeePlanck(selectedAccount.address, recognizedContact.address, amountPlanck);
         setEstimatedFee(formatBalance(fee.toString(), { withUnit: true, withSi: false }));
         setEstimatedFeePlanck(fee);
-              } catch (error) {
+      } catch (error) {
         console.error('Fee estimation error', error);
         setEstimateError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
@@ -238,7 +239,7 @@ function App() {
     };
 
     estimate();
-  }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount, chainDecimals, existentialDeposit, estimateTransferFeePlanck]);
+  }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount, chainDecimals, existentialDeposit, estimateTransferFeePlanck, refreshTick]);
 
   // --- Preflight checks whenever inputs/estimates change ---
   useEffect(() => {
@@ -605,21 +606,28 @@ function App() {
     return { contact: { ...match, address: normalized } };
   };
 
-  // UI refresh handlers
-  const refreshBalance = () => {
+  // Unified refresh handler for both balance and fee
+  const refreshAll = () => {
+    // Invalidate balance for selected account
+    const patterns: string[] = [];
     if (selectedAccount) {
-      invalidate(new RegExp(`^${selectedAccount.address}$`));
-      setBalanceCacheHit(false);
-      // trigger effect
-      setAccountBalance(prev => prev);
+      patterns.push(`^${selectedAccount.address}$`);
     }
-  };
-  const refreshFee = () => {
+    // Invalidate fee for current tuple if present
     if (selectedAccount && parsedCommand && recognizedContact && chainDecimals != null) {
-      const key = `${selectedAccount.address}:${recognizedContact.address}:${toPlanckFromDecimal(parsedCommand.amount, chainDecimals).toString()}`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      invalidate(new RegExp(key));
-      setIsConfirmOpen(true); // trigger re-estimate effect
+      const feeKey = `${selectedAccount.address}:${recognizedContact.address}:${toPlanckFromDecimal(parsedCommand.amount, chainDecimals).toString()}`
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      patterns.push(feeKey);
     }
+    if (patterns.length === 0) {
+      // Fallback: clear all caches
+      invalidate();
+    } else {
+      invalidate(new RegExp(patterns.join("|")));
+    }
+    setBalanceCacheHit(false);
+    // bump tick to trigger both effects
+    setRefreshTick((t: number) => t + 1);
   };
 
   return (
@@ -674,7 +682,7 @@ function App() {
                     }
                     {walletError && !isBalanceLoading && <span style={{ color: 'orange', marginLeft: '10px' }}>(Error fetching balance)</span>}
                   </p>
-                  <button onClick={refreshBalance} disabled={!selectedAccount || isBalanceLoading}>
+                  <button onClick={refreshAll} disabled={!selectedAccount || isBalanceLoading}>
                     {isBalanceLoading ? 'Refreshing...' : 'Refresh Balance'}
                   </button>
                   <p style={{ marginTop: '10px' }}>Balance Cache Hit: {balanceCacheHit ? 'Yes' : 'No'}</p>
@@ -843,7 +851,7 @@ function App() {
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button disabled={isSubmitting || !hasSufficientBalance} onClick={() => { setIsConfirmOpen(false); executeOnChainTransfer(); }}>Confirm</button>
               <button disabled={isSubmitting} onClick={() => setIsConfirmOpen(false)}>Cancel</button>
-              <button disabled={isSubmitting || isEstimatingFee} onClick={refreshFee}>Re-estimate</button>
+              <button disabled={isSubmitting || isEstimatingFee} onClick={refreshAll}>Re-estimate</button>
               <button disabled={isSubmitting} onClick={() => invalidate()}>Clear Cache</button>
             </div>
             {lastTxHash && <p style={{ marginTop: '10px' }}>Last Tx: {lastTxHash}</p>}
