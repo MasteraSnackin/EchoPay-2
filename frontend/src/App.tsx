@@ -12,6 +12,10 @@ import { createContactSearcher, type ContactSuggestion } from './utils/contacts'
 import { getLocalJSON, setLocalJSON } from './utils/storage';
 import Identicon from '@polkadot/react-identicon';
 import { isAddress } from '@polkadot/util-crypto';
+import { isValidSs58WithPrefix, normalizeToPrefix } from './utils/ss58';
+
+// Westend SS58 prefix
+const WESTEND_PREFIX = 42;
 
 // Check if the browser supports the Web Speech API
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -502,10 +506,13 @@ function App() {
     return suggestions.slice(0, 5);
   }, [showSuggestions, typedRecipient, recentRecipients, contactSearcher]);
 
-  // Determine identicon preview address
+  // Determine identicon preview address (normalized to Westend if possible)
   const identiconAddress: string | null = useMemo(() => {
     const q = typedRecipient.trim();
-    if (isAddress(q)) return q;
+    if (isAddress(q)) {
+      const norm = normalizeToPrefix(q, WESTEND_PREFIX);
+      return norm || q;
+    }
     const match = contactSearcher.searchByNameOrAddress(q || (parsedCommand?.recipientName || ''));
     return match?.address || null;
   }, [typedRecipient, parsedCommand, contactSearcher]);
@@ -578,7 +585,13 @@ function App() {
 
     const q = typedRecipient.trim();
     if (isAddress(q)) {
-      return { contact: { name: q, address: q } };
+      // Enforce Westend-encoded format for display and confirm
+      const norm = normalizeToPrefix(q, WESTEND_PREFIX);
+      if (!norm || !isValidSs58WithPrefix(norm, WESTEND_PREFIX)) {
+        setTypedErrors('Address is not valid for the Westend SS58 prefix.');
+        return null;
+      }
+      return { contact: { name: norm, address: norm } };
     }
 
     const match = contactSearcher.searchByNameOrAddress(q);
@@ -587,7 +600,9 @@ function App() {
       return null;
     }
 
-    return { contact: match };
+    // If contact address exists and is an address, ensure it conforms to Westend prefix for display
+    const normalized = normalizeToPrefix(match.address, WESTEND_PREFIX) || match.address;
+    return { contact: { ...match, address: normalized } };
   };
 
   return (
