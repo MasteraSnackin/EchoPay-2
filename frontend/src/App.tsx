@@ -8,6 +8,7 @@ import { u8aToHex } from '@polkadot/util';
 import './App.css';
 import ContactList, { mockContacts, Contact } from './ContactList';
 import config from './config';
+import testHelpers from './utils/testHelpers';
 
 // Add helper to read test mode from URL
 function isTestMode() {
@@ -991,6 +992,50 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* Test Mode Validation Panel */}
+        {isTestMode() && (
+          <div className="card" style={{ border: '2px solid #ff6b6b' }}>
+            <h3>🧪 Test Mode - Flow Validation</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <button
+                onClick={async () => {
+                  const steps = [
+                    'Wallet Connection',
+                    'Voice Command Processing',
+                    'Transaction Creation',
+                    'Wallet Verification',
+                    'Transaction Signing',
+                    'Blockchain Broadcast'
+                  ];
+                  const results = await testHelpers.validateCompleteFlow(steps);
+                  console.log('Flow validation results:', results);
+                  setResponseMessage('Flow validation completed! Check console for results.');
+                }}
+                style={{ 
+                  backgroundColor: '#ff6b6b', 
+                  color: 'white',
+                  padding: '10px 20px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                🔍 Validate Complete Flow
+              </button>
+            </div>
+            
+            <div style={{ fontSize: '14px', color: '#666' }}>
+              <p><strong>Test Commands:</strong></p>
+              <ul>
+                <li>"Pay 50 DOT to Alice" - Basic transfer</li>
+                <li>"Send 100 DOT to Bob" - Alternative syntax</li>
+                <li>"Transfer 25 DOT to Charlie" - Full command</li>
+              </ul>
+              <p><strong>Note:</strong> Test mode bypasses wallet requirements for UI testing</p>
+            </div>
+          </div>
+        )}
 
         {/* Parsed Command Display */}
         {parsedCommand && (
