@@ -10,6 +10,8 @@ import { parseCommandText, type ParsedCommand } from './utils/parseCommand';
 import { toPlanckFromDecimal } from './utils/amount';
 import { createContactSearcher, type ContactSuggestion } from './utils/contacts';
 import { getLocalJSON, setLocalJSON } from './utils/storage';
+import Identicon from '@polkadot/react-identicon';
+import { isAddress } from '@polkadot/util-crypto';
 
 // Check if the browser supports the Web Speech API
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -68,6 +70,7 @@ function App() {
 
   // Recipient suggestions
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
 
   // Recent recipients
   const [recentRecipients, setRecentRecipients] = useState<Contact[]>(() => getLocalJSON<Contact[]>('recentRecipients', []));
@@ -491,12 +494,52 @@ function App() {
   const currentSuggestions: ContactSuggestion[] = useMemo(() => {
     if (!showSuggestions) return [];
     const q = typedRecipient.trim();
-    if (!q) {
-      // map recent recipients to suggestions with default score
-      return recentRecipients.map(c => ({ contact: c, score: 0.5 })).slice(0, 5);
+    const suggestions = q ? contactSearcher.suggest(q, 5) : recentRecipients.map(c => ({ contact: c, score: 0.5 }));
+    if (q && isAddress(q)) {
+      // Prepend direct address suggestion
+      return [{ contact: { name: q, address: q }, score: 0 }, ...suggestions].slice(0, 5);
     }
-    return contactSearcher.suggest(q, 5);
+    return suggestions.slice(0, 5);
   }, [showSuggestions, typedRecipient, recentRecipients, contactSearcher]);
+
+  // Determine identicon preview address
+  const identiconAddress: string | null = useMemo(() => {
+    const q = typedRecipient.trim();
+    if (isAddress(q)) return q;
+    const match = contactSearcher.searchByNameOrAddress(q || (parsedCommand?.recipientName || ''));
+    return match?.address || null;
+  }, [typedRecipient, parsedCommand, contactSearcher]);
+
+  // ARIA ids
+  const listboxId = 'recipient-suggestions';
+  const activeOptionId = activeSuggestionIndex >= 0 ? `recipient-option-${activeSuggestionIndex}` : undefined;
+
+  // Keyboard handling for suggestions
+  const onRecipientKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions) return;
+    const max = currentSuggestions.length;
+    if (max === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggestionIndex((prev) => (prev + 1) % max);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggestionIndex((prev) => (prev - 1 + max) % max);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const idx = activeSuggestionIndex >= 0 ? activeSuggestionIndex : 0;
+      const pick = currentSuggestions[idx];
+      if (pick) {
+        setTypedRecipient(pick.contact.name);
+        setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
+      }
+    }
+  };
 
   // Open confirm from typed form
   const openConfirmFromTyped = () => {
@@ -533,7 +576,12 @@ function App() {
       return null;
     }
 
-    const match = contactSearcher.searchByNameOrAddress(typedRecipient);
+    const q = typedRecipient.trim();
+    if (isAddress(q)) {
+      return { contact: { name: q, address: q } };
+    }
+
+    const match = contactSearcher.searchByNameOrAddress(q);
     if (!match) {
       setTypedErrors('Could not match recipient. Check the name/address.');
       return null;
@@ -676,27 +724,49 @@ function App() {
               />
             </div>
             <div>
-              <label>Recipient (name or address)</label>
-              <div className="suggestions">
+              <label id="recipient-label">Recipient (name or address)</label>
+              <div
+                className="suggestions"
+                role="combobox"
+                aria-haspopup="listbox"
+                aria-owns={listboxId}
+                aria-expanded={showSuggestions}
+              >
                 <input
                   type="text"
+                  role="textbox"
+                  aria-autocomplete="list"
+                  aria-controls={listboxId}
+                  aria-activedescendant={activeOptionId}
+                  aria-labelledby="recipient-label"
                   value={typedRecipient}
-                  onChange={(e) => setTypedRecipient(e.target.value)}
+                  onChange={(e) => { setTypedRecipient(e.target.value); setActiveSuggestionIndex(-1); }}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onKeyDown={onRecipientKeyDown}
                   placeholder="Alice"
                   style={{ width: '100%' }}
                 />
+                {identiconAddress && (
+                  <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Identicon value={identiconAddress} size={24} theme="polkadot" />
+                    <span style={{ fontSize: '0.85em', opacity: 0.8 }}>{identiconAddress.substring(0, 10)}...{identiconAddress.substring(identiconAddress.length - 8)}</span>
+                  </div>
+                )}
                 {showSuggestions && currentSuggestions.length > 0 && (
-                  <div className="suggestions-list">
-                    {currentSuggestions.map((s) => (
+                  <div id={listboxId} role="listbox" className="suggestions-list">
+                    {currentSuggestions.map((s, idx) => (
                       <div
                         key={s.contact.address}
+                        id={`recipient-option-${idx}`}
+                        role="option"
+                        aria-selected={idx === activeSuggestionIndex}
                         className="suggestions-item"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           setTypedRecipient(s.contact.name);
                           setShowSuggestions(false);
+                          setActiveSuggestionIndex(-1);
                         }}
                         title={s.contact.address}
                       >
