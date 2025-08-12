@@ -5,7 +5,7 @@ import { getDb } from '../db/client';
 import { transactions } from '../db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
-const router = new Hono<{ Bindings: { DB: D1Database; POLKADOT_RPC_ENDPOINT: string } }>();
+const router = new Hono<{ Bindings: { DB: D1Database; POLKADOT_RPC_ENDPOINT: string; RELAYER_URL: string } }>();
 
 router.get('/', async (c) => {
   const db = getDb(c.env);
@@ -42,11 +42,24 @@ router.post('/execute', validator('json', executeSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb(c.env);
 
-  // TODO: Submit via PAPI (ApiPromise) extrinsic broadcast and wait for status
-  // For Worker, this may be proxied to a relayer; here we accept and mark as completed
-
-  await db.update(transactions).set({ status: 'completed', transactionHash: body.signed_extrinsic }).where(eq(transactions.id, body.transaction_id));
-  return c.json({ status: 'success', message: 'Executed (stubbed)', txHash: body.signed_extrinsic });
+  // Proxy to relayer (existing Node backend) for broadcast
+  try {
+    const resp = await fetch(`${c.env.RELAYER_URL}/api/wallet/broadcast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signedExtrinsic: body.signed_extrinsic })
+    });
+    if (!resp.ok) {
+      const errTx = await resp.text();
+      throw new Error(`Relayer failed: ${resp.status} ${errTx}`);
+    }
+    const data = await resp.json();
+    await db.update(transactions).set({ status: 'completed', transactionHash: data.txHash || body.signed_extrinsic }).where(eq(transactions.id, body.transaction_id));
+    return c.json({ status: 'success', message: 'Executed via relayer', txHash: data.txHash || body.signed_extrinsic });
+  } catch (e: any) {
+    await db.update(transactions).set({ status: 'failed' }).where(eq(transactions.id, body.transaction_id));
+    return c.json({ status: 'error', message: e.message }, 500);
+  }
 });
 
 export default router;

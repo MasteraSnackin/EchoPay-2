@@ -6,7 +6,7 @@ import { voiceSessions, transactions } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
-const router = new Hono<{ Bindings: { DB: D1Database; ELEVENLABS_API_KEY: string; ENCRYPTION_KEY: string } }>();
+const router = new Hono<{ Bindings: { DB: D1Database; ELEVENLABS_API_KEY: string; ELEVENLABS_VOICE_ID: string; ENCRYPTION_KEY: string } }>();
 
 const processSchema = z.object({
   audio_data: z.string(),
@@ -14,18 +14,43 @@ const processSchema = z.object({
   format: z.enum(['mp3', 'wav', 'webm']).default('mp3')
 });
 
+async function elevenLabsSTT(apiKey: string, base64: string, format: string): Promise<string> {
+  // Placeholder STT; replace with real ElevenLabs STT endpoint when available
+  // As ElevenLabs STT beta varies, this is a stub returning static transcript
+  return 'Pay 5 DOT to 14abc...';
+}
+
+async function elevenLabsTTS(apiKey: string, voiceId: string, text: string): Promise<string> {
+  const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' })
+  });
+  if (!resp.ok) {
+    const errTxt = await resp.text();
+    throw new Error(`TTS failed: ${resp.status} ${errTxt}`);
+  }
+  // ElevenLabs returns audio/mpeg stream. Convert to base64.
+  const arr = new Uint8Array(await resp.arrayBuffer());
+  const b64 = btoa(String.fromCharCode(...arr));
+  return `data:audio/mpeg;base64,${b64}`;
+}
+
 router.post('/process', validator('json', processSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb(c.env);
 
-  // TODO: ElevenLabs STT call using c.env.ELEVENLABS_API_KEY
-  // For now, placeholder transcription and parsed intent
-  const transcription = 'Pay 5 DOT to 14abc...';
+  const transcription = await elevenLabsSTT(c.env.ELEVENLABS_API_KEY, body.audio_data, body.format);
+
+  // TODO: Parse transcription (NLP) properly. Static parse for now.
   const parsedIntent = {
     type: 'payment',
     amount: '5',
     token: 'DOT',
-    recipient: '14abcDEF...' // Polkadot address parsed
+    recipient: '14abcDEF...'
   };
 
   const sessionId = nanoid();
@@ -41,7 +66,6 @@ router.post('/process', validator('json', processSchema), async (c) => {
     createdAt: now
   });
 
-  // Create pending transaction record
   const txId = nanoid();
   await db.insert(transactions).values({
     id: txId,
@@ -55,15 +79,22 @@ router.post('/process', validator('json', processSchema), async (c) => {
     createdAt: now
   });
 
-  // TODO: ElevenLabs TTS to read back confirmation text
   const responseText = `Do you want to send ${parsedIntent.amount} ${parsedIntent.token} to ${parsedIntent.recipient}?`;
+  let responseAudioUrl: string | null = null;
+  try {
+    if (c.env.ELEVENLABS_VOICE_ID) {
+      responseAudioUrl = await elevenLabsTTS(c.env.ELEVENLABS_API_KEY, c.env.ELEVENLABS_VOICE_ID, responseText);
+    }
+  } catch (e) {
+    // ignore TTS failure and continue with text only
+  }
 
   return c.json({
     status: 'confirmation_required',
     transaction_id: txId,
     parsed_intent: parsedIntent,
     response_text: responseText,
-    // response_audio_url: 'https://...'
+    response_audio_url: responseAudioUrl
   });
 });
 
@@ -77,7 +108,7 @@ router.post('/confirm', validator('json', confirmSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb(c.env);
 
-  // TODO: ElevenLabs STT to recognize yes/no
+  // TODO: ElevenLabs STT for yes/no
   const userSaidYes = true; // placeholder
 
   if (!userSaidYes) {
@@ -85,7 +116,6 @@ router.post('/confirm', validator('json', confirmSchema), async (c) => {
     return c.json({ status: 'cancelled', message: 'Transaction cancelled by user' });
   }
 
-  // Mark as confirmed (execution handled by /transactions/execute)
   await db.update(transactions).set({ status: 'confirmed', confirmedAt: Date.now() }).where(eq(transactions.id, body.transaction_id));
 
   return c.json({ status: 'success', message: 'Transaction confirmed, ready for execution' });

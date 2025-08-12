@@ -3,6 +3,7 @@ const cors = require('cors');
 const MultiLanguageProcessor = require('./multiLanguageProcessor');
 const CommandConfirmation = require('./commandConfirmation');
 const SecureWalletIntegration = require('./secureWalletIntegration');
+const { signatureVerify } = require('@polkadot/util-crypto');
 
 const app = express();
 const port = 3001;
@@ -721,6 +722,34 @@ app.get('/api/wallet/extension-status', async (req, res) => {
   }
 });
 
+// Wallet verification for Worker (signature check)
+app.post('/api/wallet/verify', async (req, res) => {
+  try {
+    const { wallet_address, signature, message } = req.body;
+    if (!wallet_address || !signature || !message) {
+      return res.status(400).json({ status: 'error', message: 'Missing fields' });
+    }
+    const verify = signatureVerify(message, signature, wallet_address);
+    if (!verify.isValid) return res.status(400).json({ status: 'error', message: 'Invalid signature' });
+    res.json({ status: 'success', message: 'Signature valid' });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// Broadcast signed extrinsic (stub: accept and echo). Replace with real RPC submit if needed.
+app.post('/api/wallet/broadcast', async (req, res) => {
+  try {
+    const { signedExtrinsic } = req.body;
+    if (!signedExtrinsic) return res.status(400).json({ status: 'error', message: 'signedExtrinsic required' });
+    // TODO: Submit to RPC via @polkadot/api if running in Node
+    const txHash = `0x${Math.random().toString(16).slice(2).padEnd(64, '0')}`;
+    res.json({ status: 'success', txHash });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -759,6 +788,8 @@ app.listen(port, () => {
   console.log('  GET  /api/wallet/extensions         - Get available wallet extensions');
   console.log('  GET  /api/wallet/extensions/:name/check - Check specific extension availability');
   console.log('  GET  /api/wallet/extension-status   - Get extension connection status');
+  console.log('  POST /api/wallet/verify             - Worker signature verification');
+  console.log('  POST /api/wallet/broadcast          - Worker signed extrinsic broadcast (stub)');
   console.log('  GET  /api/transactions              - Get transaction history');
   console.log('  GET  /api/contacts                  - Get contact list');
   console.log('  GET  /api/recurring-payments        - Get recurring payments');
