@@ -74,31 +74,56 @@ class MultiLanguageProcessor {
   }
 
   addSpanishPatterns(manager) {
-    // Payment patterns
+    // Payment patterns - enhanced
     manager.addDocument('es', 'pagar %amount% a %recipient%', 'payment');
+    manager.addDocument('es', 'pagar %amount% euros a %recipient%', 'payment');
+    manager.addDocument('es', 'pagar %amount% dólares a %recipient%', 'payment');
     manager.addDocument('es', 'enviar %amount% a %recipient%', 'payment');
+    manager.addDocument('es', 'enviar %amount% euros a %recipient%', 'payment');
     manager.addDocument('es', 'transferir %amount% a %recipient%', 'payment');
+    manager.addDocument('es', 'transferir %amount% euros a %recipient%', 'payment');
     manager.addDocument('es', 'dar %amount% a %recipient%', 'payment');
+    manager.addDocument('es', 'realizar pago de %amount% a %recipient%', 'payment');
     
-    // Balance patterns
+    // Balance patterns - enhanced
     manager.addDocument('es', 'verificar saldo', 'balance_check');
+    manager.addDocument('es', 'verificar mi saldo', 'balance_check');
     manager.addDocument('es', 'mostrar saldo', 'balance_check');
+    manager.addDocument('es', 'mostrar mi saldo', 'balance_check');
     manager.addDocument('es', 'cuál es mi saldo', 'balance_check');
     manager.addDocument('es', 'cuánto tengo', 'balance_check');
+    manager.addDocument('es', 'ver saldo', 'balance_check');
+    manager.addDocument('es', 'consultar saldo', 'balance_check');
     
-    // Transaction patterns
+    // Transaction patterns - enhanced
     manager.addDocument('es', 'mostrar transacciones', 'transaction_history');
+    manager.addDocument('es', 'mostrar mis transacciones', 'transaction_history');
     manager.addDocument('es', 'historial de transacciones', 'transaction_history');
+    manager.addDocument('es', 'historial de mis transacciones', 'transaction_history');
     manager.addDocument('es', 'pagos recientes', 'transaction_history');
+    manager.addDocument('es', 'mis pagos recientes', 'transaction_history');
+    manager.addDocument('es', 'ver transacciones', 'transaction_history');
+    manager.addDocument('es', 'ver mis transacciones', 'transaction_history');
     
-    // Contact patterns
+    // Contact patterns - enhanced
     manager.addDocument('es', 'agregar contacto %name%', 'add_contact');
+    manager.addDocument('es', 'agregar el contacto %name%', 'add_contact');
     manager.addDocument('es', 'crear contacto %name%', 'add_contact');
+    manager.addDocument('es', 'crear el contacto %name%', 'add_contact');
+    manager.addDocument('es', 'nuevo contacto %name%', 'add_contact');
     manager.addDocument('es', 'eliminar contacto %name%', 'remove_contact');
+    manager.addDocument('es', 'eliminar el contacto %name%', 'remove_contact');
+    manager.addDocument('es', 'quitar contacto %name%', 'remove_contact');
+    manager.addDocument('es', 'eliminar %name%', 'remove_contact');
     
-    // Recurring payment patterns
+    // Recurring payment patterns - enhanced
     manager.addDocument('es', 'configurar pago recurrente %amount% a %recipient%', 'recurring_payment');
+    manager.addDocument('es', 'configurar un pago recurrente %amount% a %recipient%', 'recurring_payment');
     manager.addDocument('es', 'programar pago %amount% a %recipient%', 'recurring_payment');
+    manager.addDocument('es', 'programar un pago %amount% a %recipient%', 'recurring_payment');
+    manager.addDocument('es', 'pago mensual %amount% a %recipient%', 'recurring_payment');
+    manager.addDocument('es', 'pago semanal %amount% a %recipient%', 'recurring_payment');
+    manager.addDocument('es', 'transferencia automática %amount% a %recipient%', 'recurring_payment');
   }
 
   addFrenchPatterns(manager) {
@@ -192,10 +217,31 @@ class MultiLanguageProcessor {
 
   addSpanishExamples(classifier) {
     const examples = [
-      'pagar 10 a alicia', 'enviar 5.5 a bob', 'transferir 100 a carlos',
-      'verificar saldo', 'mostrar saldo', 'cuál es mi saldo',
-      'mostrar transacciones', 'historial de transacciones', 'pagos recientes',
-      'agregar contacto sarah', 'eliminar contacto juan'
+      // Payment examples
+      'pagar 10 a alicia', 'pagar 25 euros a alicia', 'pagar 50 dólares a alicia',
+      'enviar 5.5 a bob', 'enviar 15 euros a bob', 'enviar 30 dólares a bob',
+      'transferir 100 a carlos', 'transferir 200 euros a carlos',
+      'dar 75 a david', 'realizar pago de 120 a emma',
+      
+      // Balance examples
+      'verificar saldo', 'verificar mi saldo', 'mostrar saldo', 'mostrar mi saldo',
+      'cuál es mi saldo', 'cuánto tengo', 'ver saldo', 'consultar saldo',
+      
+      // Transaction examples
+      'mostrar transacciones', 'mostrar mis transacciones', 'historial de transacciones',
+      'historial de mis transacciones', 'pagos recientes', 'mis pagos recientes',
+      'ver transacciones', 'ver mis transacciones',
+      
+      // Contact examples
+      'agregar contacto sarah', 'agregar el contacto sarah', 'crear contacto sarah',
+      'crear el contacto sarah', 'nuevo contacto sarah', 'eliminar contacto juan',
+      'eliminar el contacto juan', 'quitar contacto juan', 'eliminar juan',
+      
+      // Recurring payment examples
+      'configurar pago recurrente 100 a alicia', 'configurar un pago recurrente 100 a alicia',
+      'programar pago 75 a bob', 'programar un pago 75 a bob',
+      'pago mensual 200 a carlos', 'pago semanal 50 a david',
+      'transferencia automática 150 a emma'
     ];
     
     examples.forEach(example => {
@@ -258,8 +304,13 @@ class MultiLanguageProcessor {
   detectLanguage(command) {
     const lowerCommand = command.toLowerCase();
     
-    // Spanish indicators
-    const spanishWords = ['pagar', 'enviar', 'transferir', 'verificar', 'mostrar', 'agregar', 'eliminar', 'configurar', 'programar'];
+    // Spanish indicators - enhanced
+    const spanishWords = [
+      'pagar', 'enviar', 'transferir', 'verificar', 'mostrar', 'agregar', 'eliminar', 
+      'configurar', 'programar', 'dar', 'realizar', 'pago', 'transferencia', 'saldo',
+      'transacciones', 'historial', 'pagos', 'contacto', 'recurrente', 'mensual',
+      'semanal', 'automática', 'cuál', 'cuánto', 'mi', 'mis', 'el', 'un', 'de', 'a'
+    ];
     const spanishCount = spanishWords.filter(word => lowerCommand.includes(word)).length;
     
     // French indicators - enhanced with more words and accent handling
@@ -281,6 +332,8 @@ class MultiLanguageProcessor {
     
     // Boost French score if accents are present
     const adjustedFrenchCount = frenchCount + (frenchAccentCount * 0.5);
+    
+
     
     // Return language with highest count, default to English
     if (spanishCount > adjustedFrenchCount && spanishCount > englishCount) return 'es';
