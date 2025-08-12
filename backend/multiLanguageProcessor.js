@@ -102,31 +102,58 @@ class MultiLanguageProcessor {
   }
 
   addFrenchPatterns(manager) {
-    // Payment patterns
+    // Payment patterns - enhanced with more variations
     manager.addDocument('fr', 'payer %amount% à %recipient%', 'payment');
+    manager.addDocument('fr', 'payer %amount% euros à %recipient%', 'payment');
+    manager.addDocument('fr', 'payer %amount% dollars à %recipient%', 'payment');
     manager.addDocument('fr', 'envoyer %amount% à %recipient%', 'payment');
+    manager.addDocument('fr', 'envoyer %amount% euros à %recipient%', 'payment');
     manager.addDocument('fr', 'transférer %amount% à %recipient%', 'payment');
+    manager.addDocument('fr', 'transférer %amount% euros à %recipient%', 'payment');
     manager.addDocument('fr', 'donner %amount% à %recipient%', 'payment');
+    manager.addDocument('fr', 'verser %amount% à %recipient%', 'payment');
+    manager.addDocument('fr', 'effectuer un paiement de %amount% à %recipient%', 'payment');
     
-    // Balance patterns
+    // Balance patterns - enhanced
     manager.addDocument('fr', 'vérifier solde', 'balance_check');
+    manager.addDocument('fr', 'vérifier mon solde', 'balance_check');
     manager.addDocument('fr', 'afficher solde', 'balance_check');
+    manager.addDocument('fr', 'afficher mon solde', 'balance_check');
     manager.addDocument('fr', 'quel est mon solde', 'balance_check');
     manager.addDocument('fr', 'combien j\'ai', 'balance_check');
+    manager.addDocument('fr', 'combien ai-je', 'balance_check');
+    manager.addDocument('fr', 'montrer solde', 'balance_check');
+    manager.addDocument('fr', 'voir solde', 'balance_check');
     
-    // Transaction patterns
+    // Transaction patterns - enhanced
     manager.addDocument('fr', 'afficher transactions', 'transaction_history');
+    manager.addDocument('fr', 'afficher mes transactions', 'transaction_history');
     manager.addDocument('fr', 'historique des transactions', 'transaction_history');
+    manager.addDocument('fr', 'historique de mes transactions', 'transaction_history');
     manager.addDocument('fr', 'paiements récents', 'transaction_history');
+    manager.addDocument('fr', 'mes paiements récents', 'transaction_history');
+    manager.addDocument('fr', 'voir transactions', 'transaction_history');
+    manager.addDocument('fr', 'voir mes transactions', 'transaction_history');
     
-    // Contact patterns
+    // Contact patterns - enhanced
     manager.addDocument('fr', 'ajouter contact %name%', 'add_contact');
+    manager.addDocument('fr', 'ajouter le contact %name%', 'add_contact');
     manager.addDocument('fr', 'créer contact %name%', 'add_contact');
+    manager.addDocument('fr', 'créer le contact %name%', 'add_contact');
+    manager.addDocument('fr', 'nouveau contact %name%', 'add_contact');
     manager.addDocument('fr', 'supprimer contact %name%', 'remove_contact');
+    manager.addDocument('fr', 'supprimer le contact %name%', 'remove_contact');
+    manager.addDocument('fr', 'enlever contact %name%', 'remove_contact');
+    manager.addDocument('fr', 'supprimer %name%', 'remove_contact');
     
-    // Recurring payment patterns
+    // Recurring payment patterns - enhanced
     manager.addDocument('fr', 'configurer paiement récurrent %amount% à %recipient%', 'recurring_payment');
+    manager.addDocument('fr', 'configurer un paiement récurrent %amount% à %recipient%', 'recurring_payment');
     manager.addDocument('fr', 'programmer paiement %amount% à %recipient%', 'recurring_payment');
+    manager.addDocument('fr', 'programmer un paiement %amount% à %recipient%', 'recurring_payment');
+    manager.addDocument('fr', 'paiement mensuel %amount% à %recipient%', 'recurring_payment');
+    manager.addDocument('fr', 'paiement hebdomadaire %amount% à %recipient%', 'recurring_payment');
+    manager.addDocument('fr', 'virement automatique %amount% à %recipient%', 'recurring_payment');
   }
 
   trainClassifiers() {
@@ -179,10 +206,31 @@ class MultiLanguageProcessor {
 
   addFrenchExamples(classifier) {
     const examples = [
-      'payer 10 à alice', 'envoyer 5.5 à bob', 'transférer 100 à charles',
-      'vérifier solde', 'afficher solde', 'quel est mon solde',
-      'afficher transactions', 'historique des transactions', 'paiements récents',
-      'ajouter contact sarah', 'supprimer contact jean'
+      // Payment examples
+      'payer 10 à alice', 'payer 25 euros à alice', 'payer 50 dollars à alice',
+      'envoyer 5.5 à bob', 'envoyer 15 euros à bob', 'envoyer 30 dollars à bob',
+      'transférer 100 à charles', 'transférer 200 euros à charles',
+      'donner 75 à david', 'verser 45 à emma', 'effectuer un paiement de 120 à françois',
+      
+      // Balance examples
+      'vérifier solde', 'vérifier mon solde', 'afficher solde', 'afficher mon solde',
+      'quel est mon solde', 'combien j\'ai', 'combien ai-je', 'montrer solde', 'voir solde',
+      
+      // Transaction examples
+      'afficher transactions', 'afficher mes transactions', 'historique des transactions',
+      'historique de mes transactions', 'paiements récents', 'mes paiements récents',
+      'voir transactions', 'voir mes transactions',
+      
+      // Contact examples
+      'ajouter contact sarah', 'ajouter le contact sarah', 'créer contact sarah',
+      'créer le contact sarah', 'nouveau contact sarah', 'supprimer contact jean',
+      'supprimer le contact jean', 'enlever contact jean', 'supprimer jean',
+      
+      // Recurring payment examples
+      'configurer paiement récurrent 100 à alice', 'configurer un paiement récurrent 100 à alice',
+      'programmer paiement 75 à bob', 'programmer un paiement 75 à bob',
+      'paiement mensuel 200 à charles', 'paiement hebdomadaire 50 à david',
+      'virement automatique 150 à emma'
     ];
     
     examples.forEach(example => {
@@ -214,17 +262,29 @@ class MultiLanguageProcessor {
     const spanishWords = ['pagar', 'enviar', 'transferir', 'verificar', 'mostrar', 'agregar', 'eliminar', 'configurar', 'programar'];
     const spanishCount = spanishWords.filter(word => lowerCommand.includes(word)).length;
     
-    // French indicators
-    const frenchWords = ['payer', 'envoyer', 'transférer', 'vérifier', 'afficher', 'ajouter', 'supprimer', 'configurer', 'programmer'];
+    // French indicators - enhanced with more words and accent handling
+    const frenchWords = [
+      'payer', 'envoyer', 'transférer', 'vérifier', 'afficher', 'ajouter', 'supprimer', 
+      'configurer', 'programmer', 'donner', 'verser', 'effectuer', 'paiement', 'virement',
+      'solde', 'transactions', 'historique', 'paiements', 'contact', 'récurrent', 'mensuel',
+      'hebdomadaire', 'automatique', 'combien', 'quel', 'mon', 'mes', 'le', 'un', 'de', 'à'
+    ];
     const frenchCount = frenchWords.filter(word => lowerCommand.includes(word)).length;
     
     // English indicators
     const englishWords = ['pay', 'send', 'transfer', 'check', 'show', 'add', 'remove', 'set', 'schedule'];
     const englishCount = englishWords.filter(word => lowerCommand.includes(word)).length;
     
+    // Special French accent patterns
+    const frenchAccentPatterns = ['à', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'ù', 'û', 'ü', 'ç'];
+    const frenchAccentCount = frenchAccentPatterns.filter(accent => lowerCommand.includes(accent)).length;
+    
+    // Boost French score if accents are present
+    const adjustedFrenchCount = frenchCount + (frenchAccentCount * 0.5);
+    
     // Return language with highest count, default to English
-    if (spanishCount > frenchCount && spanishCount > englishCount) return 'es';
-    if (frenchCount > spanishCount && frenchCount > englishCount) return 'fr';
+    if (spanishCount > adjustedFrenchCount && spanishCount > englishCount) return 'es';
+    if (adjustedFrenchCount > spanishCount && adjustedFrenchCount > englishCount) return 'fr';
     return 'en';
   }
 

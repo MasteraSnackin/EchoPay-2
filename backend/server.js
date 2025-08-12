@@ -2,15 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const MultiLanguageProcessor = require('./multiLanguageProcessor');
 const CommandConfirmation = require('./commandConfirmation');
-const BlockchainIntegration = require('./blockchainIntegration');
+const SecureWalletIntegration = require('./secureWalletIntegration');
 
 const app = express();
 const port = 3001;
 
-// Initialize multi-language processor, confirmation system, and blockchain integration
+// Initialize multi-language processor, confirmation system, and secure wallet integration
 const multiLangProcessor = new MultiLanguageProcessor();
 const commandConfirmation = new CommandConfirmation();
-const blockchain = new BlockchainIntegration();
+const secureWallet = new SecureWalletIntegration();
 
 // Middleware
 app.use(cors());
@@ -30,14 +30,14 @@ let contacts = [
 let recurringPayments = [];
 let recurringPaymentId = 1;
 
-// Initialize blockchain connection on startup
-async function initializeBlockchain() {
+// Initialize secure wallet connection on startup
+async function initializeSecureWallet() {
   try {
-    console.log('Initializing blockchain connection...');
-    await blockchain.initialize('moonbaseAlpha');
-    console.log('✅ Blockchain connection established');
+    console.log('Initializing secure wallet connection...');
+    await secureWallet.initialize('moonbaseAlpha');
+    console.log('✅ Secure wallet connection established');
   } catch (error) {
-    console.error('❌ Blockchain initialization failed:', error);
+    console.error('❌ Secure wallet initialization failed:', error);
     console.log('Continuing with mock blockchain mode...');
   }
 }
@@ -554,6 +554,124 @@ app.get('/api/ai-stats', (req, res) => {
   });
 });
 
+// Secure Wallet API endpoints
+app.post('/api/wallet/connect', async (req, res) => {
+  try {
+    const { walletType } = req.body;
+    const result = await secureWallet.connectWallet(walletType || 'extension');
+    res.json({
+      status: 'success',
+      message: 'Wallet connected successfully',
+      walletType,
+      result
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+app.get('/api/wallet/accounts', async (req, res) => {
+  try {
+    const accounts = await secureWallet.getAccounts();
+    res.json({
+      status: 'success',
+      accounts
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+app.post('/api/wallet/select-account', async (req, res) => {
+  try {
+    const { address } = req.body;
+    const account = await secureWallet.selectAccount(address);
+    res.json({
+      status: 'success',
+      message: 'Account selected successfully',
+      account: {
+        address: account.address,
+        name: account.meta.name || 'Unknown'
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+app.get('/api/wallet/balance/:address', async (req, res) => {
+  try {
+    const { address } = req.params;
+    const balance = await secureWallet.getBalance(address);
+    res.json({
+      status: 'success',
+      balance
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+app.post('/api/wallet/estimate-fees', async (req, res) => {
+  try {
+    const { fromAddress, toAddress, amount } = req.body;
+    const fees = await secureWallet.estimateFees(fromAddress, toAddress, amount);
+    res.json({
+      status: 'success',
+      fees
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+app.get('/api/wallet/health', async (req, res) => {
+  try {
+    const health = await secureWallet.getWalletHealth();
+    res.json({
+      status: 'success',
+      health
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+app.post('/api/wallet/switch-network', async (req, res) => {
+  try {
+    const { networkName } = req.body;
+    await secureWallet.switchNetwork(networkName);
+    res.json({
+      status: 'success',
+      message: `Switched to ${networkName}`,
+      network: secureWallet.getCurrentNetwork()
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -562,7 +680,7 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     multiLanguageProcessor: 'active',
     commandConfirmation: 'active',
-    blockchain: blockchain.getConnectionStatus(),
+    secureWallet: secureWallet.getConnectionStatus(),
     supportedLanguages: multiLangProcessor.getSupportedLanguages().length,
     totalContacts: contacts.length,
     totalTransactions: transactions.length,
@@ -571,8 +689,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Initialize blockchain on startup
-initializeBlockchain();
+// Initialize secure wallet on startup
+initializeSecureWallet();
 
 app.listen(port, () => {
   console.log(`EchoPay Multi-Language AI-powered backend with blockchain integration listening at http://localhost:${port}`);
@@ -582,13 +700,13 @@ app.listen(port, () => {
   console.log('  GET  /api/confirmations             - Get pending confirmations');
   console.log('  GET  /api/confirmation-stats        - Get confirmation statistics');
   console.log('  GET  /api/languages                 - Get supported languages');
-  console.log('  POST /api/blockchain/connect        - Connect to blockchain network');
-  console.log('  GET  /api/blockchain/status         - Get blockchain connection status');
-  console.log('  POST /api/blockchain/switch-network - Switch blockchain network');
-  console.log('  GET  /api/blockchain/balance/:addr  - Get account balance');
-  console.log('  POST /api/blockchain/estimate-fees  - Estimate transaction fees');
-  console.log('  GET  /api/blockchain/stats          - Get blockchain statistics');
-  console.log('  GET  /api/blockchain/transaction/:hash - Get transaction status');
+  console.log('  POST /api/wallet/connect            - Connect to wallet (extension/subwallet/talisman)');
+  console.log('  GET  /api/wallet/accounts           - Get available accounts');
+  console.log('  POST /api/wallet/select-account     - Select account for transactions');
+  console.log('  GET  /api/wallet/balance/:addr      - Get account balance');
+  console.log('  POST /api/wallet/estimate-fees      - Estimate transaction fees');
+  console.log('  GET  /api/wallet/health             - Get wallet health status');
+  console.log('  POST /api/wallet/switch-network     - Switch blockchain network');
   console.log('  GET  /api/transactions              - Get transaction history');
   console.log('  GET  /api/contacts                  - Get contact list');
   console.log('  GET  /api/recurring-payments        - Get recurring payments');
@@ -597,5 +715,5 @@ app.listen(port, () => {
   console.log('');
   console.log('Multi-Language AI Command Processor, Confirmation System, and Blockchain Integration initialized!');
   console.log(`Supported Languages: ${multiLangProcessor.getSupportedLanguages().map(l => l.name).join(', ')}`);
-  console.log(`Available Networks: ${blockchain.getAvailableNetworks().map(n => n.name).join(', ')}`);
+  console.log(`Available Networks: ${secureWallet.getAvailableNetworks().map(n => n.name).join(', ')}`);
 });
