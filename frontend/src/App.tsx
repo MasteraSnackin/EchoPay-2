@@ -7,6 +7,16 @@ import { formatBalance } from '@polkadot/util';
 import './App.css';
 import ContactList, { mockContacts, Contact } from './ContactList';
 
+// Add helper to read test mode from URL
+function isTestMode() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('testMode') === '1';
+  } catch {
+    return false;
+  }
+}
+
 // Check if the browser supports the Web Speech API
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 const recognition = SpeechRecognition ? new SpeechRecognition() : null;
@@ -99,6 +109,19 @@ function App() {
   const [confirmation, setConfirmation] = useState<ConfirmationState>({ isRequired: false });
   const [countdownSec, setCountdownSec] = useState<number>(0);
   const recognitionRef = useRef(recognition);
+
+  // Enable E2E test mode: mock a selected account to bypass wallet dependency
+  useEffect(() => {
+    if (isTestMode() && !selectedAccount) {
+      const mockAccount: any = {
+        address: '5E2ETestAccountMock111111111111111111111111111',
+        meta: { name: 'E2E Test Account' },
+        type: 'sr25519'
+      };
+      setSelectedAccount(mockAccount);
+      setExtensionsLoaded(true);
+    }
+  }, []);
 
   // Countdown for confirmation
   useEffect(() => {
@@ -496,7 +519,7 @@ function App() {
         <div className="card">
         <h2>Wallet Connection</h2>
         {!extensionsLoaded && accounts.length === 0 && (
-          <button onClick={handleConnectWallet}>Connect Wallet</button>
+          <button data-testid="connect-wallet" onClick={handleConnectWallet}>Connect Wallet</button>
         )}
         {walletError && <p style={{ color: 'red' }}>{walletError}</p>}
         {accounts.length > 0 && (
@@ -544,20 +567,37 @@ function App() {
         <h2>AI Voice Command</h2>
         {!recognition && <p style={{ color: 'red' }}>Speech Recognition not available in this browser.</p>}
         {recognition && (
-          <button onClick={toggleListen} disabled={!recognition || !selectedAccount}>
+          <button data-testid="toggle-listen" onClick={toggleListen} disabled={!recognition || !selectedAccount}>
             {isListening ? 'Stop Listening' : 'Start Listening'}
           </button>
         )}
+
+        {/* New: Manual command input for accessibility and E2E testing */}
+        <div style={{ marginTop: 12 }}>
+          <label htmlFor="command-input" style={{ display: 'block', fontWeight: 600 }}>Type a command (testing)</label>
+          <input
+            id="command-input"
+            data-testid="command-input"
+            type="text"
+            placeholder="e.g., Pay 1000 to Alice"
+            value={recognizedText}
+            onChange={(e) => setRecognizedText(e.target.value)}
+            style={{ width: '100%', padding: '8px', borderRadius: 6, border: '1px solid #ddd', marginTop: 6 }}
+          />
+        </div>
+
         {recognizedText && (
           <>
-            <p>Recognized: "{recognizedText}"</p>
+            <div className="recognized-text">
+              <strong>Recognized:</strong> {recognizedText}
+            </div>
             {recognizedContact && (
               <div className="recognized-contact-details">
                 <p><strong>Matched Contact:</strong> {recognizedContact.name}</p>
                 <p><strong>Address:</strong> {recognizedContact.address}</p>
               </div>
             )}
-            <button onClick={() => sendCommandToBackend(recognizedText)} disabled={!recognizedText || !selectedAccount || responseMessage.startsWith('Processing')}>
+                         <button data-testid="process-command" onClick={() => sendCommandToBackend(recognizedText)} disabled={!recognizedText || (!isTestMode() && !selectedAccount) || (responseMessage.startsWith('Processing') && !isTestMode())}>
               Process Command with AI
             </button>
           </>
@@ -570,8 +610,8 @@ function App() {
             <h3>Confirm Action</h3>
             <p>{confirmation.confirmationText}</p>
             <div className="confirmation-actions">
-              <button className="confirm-yes" onClick={() => confirmCommand(true)}>Yes</button>
-              <button className="confirm-no" onClick={() => confirmCommand(false)}>No</button>
+              <button data-testid="confirm-yes" className="confirm-yes" onClick={() => confirmCommand(true)}>Yes</button>
+              <button data-testid="confirm-no" className="confirm-no" onClick={() => confirmCommand(false)}>No</button>
               <span className="countdown">{countdownSec}s</span>
             </div>
           </div>
