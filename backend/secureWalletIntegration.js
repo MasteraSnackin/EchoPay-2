@@ -2,6 +2,7 @@ const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
 const { cryptoWaitReady } = require('@polkadot/util-crypto');
 const { formatBalance, formatNumber } = require('@polkadot/util');
+const { web3Accounts, web3Enable } = require('@polkadot/extension-dapp');
 
 class SecureWalletIntegration {
   constructor() {
@@ -103,50 +104,177 @@ class SecureWalletIntegration {
   }
 
   async connectPolkadotExtension() {
-    // This would integrate with @polkadot/extension-dapp
-    // For now, we'll simulate the connection flow
-    throw new Error('Polkadot extension integration not yet implemented');
+    try {
+      // Enable the Polkadot extension
+      const extensions = await web3Enable('EchoPay Voice Payment System');
+      
+      if (extensions.length === 0) {
+        throw new Error('No Polkadot extensions found. Please install Polkadot.js or SubWallet extension.');
+      }
+      
+      // Get accounts from the extension
+      const accounts = await web3Accounts();
+      
+      if (accounts.length === 0) {
+        throw new Error('No accounts found in wallet extension. Please create or import an account.');
+      }
+      
+      // Store the accounts for later use
+      this.extensionAccounts = accounts;
+      
+      console.log(`✅ Connected to Polkadot extension with ${accounts.length} accounts`);
+      
+      return {
+        success: true,
+        extensions: extensions.map(ext => ext.name),
+        accountsCount: accounts.length,
+        accounts: accounts.map(acc => ({
+          address: acc.address,
+          name: acc.meta.name || 'Unknown',
+          type: acc.type
+        }))
+      };
+    } catch (error) {
+      console.error('❌ Failed to connect to Polkadot extension:', error);
+      throw error;
+    }
   }
 
   async connectSubWallet() {
-    // This would integrate with SubWallet's API
-    // For now, we'll simulate the connection flow
-    throw new Error('SubWallet integration not yet implemented');
+    try {
+      // SubWallet integration would use their specific API
+      // For now, we'll use the same approach as Polkadot extension
+      const extensions = await web3Enable('EchoPay Voice Payment System');
+      
+      const subwalletExtension = extensions.find(ext => 
+        ext.name.toLowerCase().includes('subwallet') || 
+        ext.name.toLowerCase().includes('sub')
+      );
+      
+      if (!subwalletExtension) {
+        throw new Error('SubWallet extension not found. Please install SubWallet extension.');
+      }
+      
+      // Get accounts from SubWallet
+      const accounts = await web3Accounts();
+      
+      if (accounts.length === 0) {
+        throw new Error('No accounts found in SubWallet. Please create or import an account.');
+      }
+      
+      // Store the accounts for later use
+      this.extensionAccounts = accounts;
+      
+      console.log(`✅ Connected to SubWallet with ${accounts.length} accounts`);
+      
+      return {
+        success: true,
+        extension: 'SubWallet',
+        accountsCount: accounts.length,
+        accounts: accounts.map(acc => ({
+          address: acc.address,
+          name: acc.meta.name || 'Unknown',
+          type: acc.type
+        }))
+      };
+    } catch (error) {
+      console.error('❌ Failed to connect to SubWallet:', error);
+      throw error;
+    }
   }
 
   async connectTalisman() {
-    // This would integrate with Talisman's API
-    // For now, we'll simulate the connection flow
-    throw new Error('Talisman integration not yet implemented');
+    try {
+      // Talisman integration would use their specific API
+      // For now, we'll use the same approach as Polkadot extension
+      const extensions = await web3Enable('EchoPay Voice Payment System');
+      
+      const talismanExtension = extensions.find(ext => 
+        ext.name.toLowerCase().includes('talisman') || 
+        ext.name.toLowerCase().includes('tal')
+      );
+      
+      if (!talismanExtension) {
+        throw new Error('Talisman extension not found. Please install Talisman extension.');
+      }
+      
+      // Get accounts from Talisman
+      const accounts = await web3Accounts();
+      
+      if (accounts.length === 0) {
+        throw new Error('No accounts found in Talisman. Please create or import an account.');
+      }
+      
+      // Store the accounts for later use
+      this.extensionAccounts = accounts;
+      
+      console.log(`✅ Connected to Talisman with ${accounts.length} accounts`);
+      
+      return {
+        success: true,
+        extension: 'Talisman',
+        accountsCount: accounts.length,
+        accounts: accounts.map(acc => ({
+          address: acc.address,
+          name: acc.meta.name || 'Unknown',
+          type: acc.type
+        }))
+      };
+    } catch (error) {
+      console.error('❌ Failed to connect to Talisman:', error);
+      throw error;
+    }
   }
 
   // Account management
   async getAccounts() {
-    if (!this.keyring) {
-      throw new Error('Wallet not initialized');
+    // First try to get accounts from extension if connected
+    if (this.extensionAccounts && this.extensionAccounts.length > 0) {
+      return this.extensionAccounts.map(account => ({
+        address: account.address,
+        name: account.meta.name || 'Unknown',
+        type: account.type,
+        isCurrent: account.address === this.currentAccount?.address,
+        source: 'extension'
+      }));
     }
     
-    return this.keyring.getAccounts().map(account => ({
-      address: account.address,
-      name: account.meta.name || 'Unknown',
-      type: account.type,
-      isCurrent: account.address === this.currentAccount?.address
-    }));
+    // Fallback to keyring accounts
+    if (this.keyring) {
+      return this.keyring.getAccounts().map(account => ({
+        address: account.address,
+        name: account.meta.name || 'Unknown',
+        type: account.type,
+        isCurrent: account.address === this.currentAccount?.address,
+        source: 'keyring'
+      }));
+    }
+    
+    throw new Error('No wallet accounts available');
   }
 
   async selectAccount(address) {
-    if (!this.keyring) {
-      throw new Error('Wallet not initialized');
+    // First try to find account in extension accounts
+    if (this.extensionAccounts && this.extensionAccounts.length > 0) {
+      const extensionAccount = this.extensionAccounts.find(acc => acc.address === address);
+      if (extensionAccount) {
+        this.currentAccount = extensionAccount;
+        console.log(`✅ Selected extension account: ${extensionAccount.meta.name || address}`);
+        return extensionAccount;
+      }
     }
-
-    const account = this.keyring.getAccount(address);
-    if (!account) {
-      throw new Error(`Account not found: ${address}`);
+    
+    // Fallback to keyring accounts
+    if (this.keyring) {
+      const account = this.keyring.getAccount(address);
+      if (account) {
+        this.currentAccount = account;
+        console.log(`✅ Selected keyring account: ${account.meta.name || address}`);
+        return account;
+      }
     }
-
-    this.currentAccount = account;
-    console.log(`✅ Selected account: ${account.meta.name || address}`);
-    return account;
+    
+    throw new Error(`Account not found: ${address}`);
   }
 
   async getCurrentAccount() {
@@ -262,6 +390,40 @@ class SecureWalletIntegration {
     }));
   }
 
+  async getAvailableExtensions() {
+    try {
+      const extensions = await web3Enable('EchoPay Voice Payment System');
+      return extensions.map(ext => ({
+        name: ext.name,
+        version: ext.version,
+        description: ext.description || 'Polkadot wallet extension'
+      }));
+    } catch (error) {
+      console.error('❌ Failed to get available extensions:', error);
+      return [];
+    }
+  }
+
+  async checkExtensionAvailability(extensionName) {
+    try {
+      const extensions = await web3Enable('EchoPay Voice Payment System');
+      const targetExtension = extensions.find(ext => 
+        ext.name.toLowerCase().includes(extensionName.toLowerCase())
+      );
+      
+      return {
+        available: !!targetExtension,
+        extension: targetExtension ? {
+          name: targetExtension.name,
+          version: targetExtension.version
+        } : null
+      };
+    } catch (error) {
+      console.error(`❌ Failed to check ${extensionName} availability:`, error);
+      return { available: false, extension: null };
+    }
+  }
+
   getCurrentNetwork() {
     return {
       id: this.networkName,
@@ -273,6 +435,31 @@ class SecureWalletIntegration {
     return this.connectionStatus;
   }
 
+  isExtensionConnected() {
+    return this.extensionAccounts && this.extensionAccounts.length > 0;
+  }
+
+  getExtensionInfo() {
+    if (!this.isExtensionConnected()) {
+      return null;
+    }
+    
+    return {
+      connected: true,
+      accountsCount: this.extensionAccounts.length,
+      accounts: this.extensionAccounts.map(acc => ({
+        address: acc.address,
+        name: acc.meta.name || 'Unknown',
+        type: acc.type
+      })),
+      currentAccount: this.currentAccount ? {
+        address: this.currentAccount.address,
+        name: this.currentAccount.meta.name || 'Unknown',
+        type: this.currentAccount.type
+      } : null
+    };
+  }
+
   // Security methods
   async disconnect() {
     try {
@@ -280,6 +467,7 @@ class SecureWalletIntegration {
         await this.api.disconnect();
       }
       this.currentAccount = null;
+      this.extensionAccounts = null;
       this.connectionStatus = 'disconnected';
       console.log('✅ Wallet disconnected');
     } catch (error) {
@@ -296,6 +484,7 @@ class SecureWalletIntegration {
         address: this.currentAccount.address,
         name: this.currentAccount.meta.name || 'Unknown'
       } : null,
+      extension: this.getExtensionInfo(),
       timestamp: Date.now()
     };
   }

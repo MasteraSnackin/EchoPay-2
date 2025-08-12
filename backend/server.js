@@ -672,6 +672,55 @@ app.post('/api/wallet/switch-network', async (req, res) => {
   }
 });
 
+// Get available wallet extensions
+app.get('/api/wallet/extensions', async (req, res) => {
+  try {
+    const extensions = await secureWallet.getAvailableExtensions();
+    res.json({
+      status: 'success',
+      extensions
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+// Check specific extension availability
+app.get('/api/wallet/extensions/:name/check', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const availability = await secureWallet.checkExtensionAvailability(name);
+    res.json({
+      status: 'success',
+      availability
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
+// Get extension connection status
+app.get('/api/wallet/extension-status', async (req, res) => {
+  try {
+    const extensionInfo = secureWallet.getExtensionInfo();
+    res.json({
+      status: 'success',
+      extensionInfo
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -707,6 +756,9 @@ app.listen(port, () => {
   console.log('  POST /api/wallet/estimate-fees      - Estimate transaction fees');
   console.log('  GET  /api/wallet/health             - Get wallet health status');
   console.log('  POST /api/wallet/switch-network     - Switch blockchain network');
+  console.log('  GET  /api/wallet/extensions         - Get available wallet extensions');
+  console.log('  GET  /api/wallet/extensions/:name/check - Check specific extension availability');
+  console.log('  GET  /api/wallet/extension-status   - Get extension connection status');
   console.log('  GET  /api/transactions              - Get transaction history');
   console.log('  GET  /api/contacts                  - Get contact list');
   console.log('  GET  /api/recurring-payments        - Get recurring payments');

@@ -10,20 +10,21 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "compromise": "^14.10.0",
-    "natural": "^6.10.4",
-    "node-nlp": "^4.27.0",
-    "openai": "^4.28.0",
-    "dotenv": "^16.3.1",
     "@polkadot/api": "^10.11.2",
+    "@polkadot/extension-dapp": "^0.61.5",
     "@polkadot/keyring": "^12.6.2",
     "@polkadot/util": "^12.6.2",
-    "@polkadot/util-crypto": "^12.6.2"
+    "@polkadot/util-crypto": "^12.6.2",
+    "compromise": "^14.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "natural": "^6.10.4",
+    "node-nlp": "^4.27.0",
+    "openai": "^4.28.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2"
   }
 }
