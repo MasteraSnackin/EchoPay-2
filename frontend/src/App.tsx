@@ -8,7 +8,8 @@ import './App.css';
 import ContactList, { mockContacts, Contact } from './ContactList';
 import { parseCommandText, type ParsedCommand } from './utils/parseCommand';
 import { toPlanckFromDecimal } from './utils/amount';
-import { createContactSearcher } from './utils/contacts';
+import { createContactSearcher, type ContactSuggestion } from './utils/contacts';
+import { getLocalJSON, setLocalJSON } from './utils/storage';
 
 // Check if the browser supports the Web Speech API
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -30,6 +31,10 @@ function App() {
   const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(false);
   const [walletError, setWalletError] = useState<string>('');
 
+  // Chain metadata and numeric balances (planck)
+  const [chainDecimals, setChainDecimals] = useState<number | null>(null);
+  const [accountBalancePlanck, setAccountBalancePlanck] = useState<bigint | null>(null);
+
   // Voice Command State
   const [responseMessage, setResponseMessage] = useState<string>('');
   const [isListening, setIsListening] = useState<boolean>(false);
@@ -48,6 +53,12 @@ function App() {
   const [isEstimatingFee, setIsEstimatingFee] = useState<boolean>(false);
   const [estimatedFee, setEstimatedFee] = useState<string>('');
   const [estimateError, setEstimateError] = useState<string>('');
+  const [estimatedFeePlanck, setEstimatedFeePlanck] = useState<bigint | null>(null);
+  const [existentialDepositPlanck, setExistentialDepositPlanck] = useState<bigint | null>(null);
+
+  // Preflight checks
+  const [hasSufficientBalance, setHasSufficientBalance] = useState<boolean>(true);
+  const [reapRiskWarning, setReapRiskWarning] = useState<string>('');
 
   // Typed command form state
   const [typedAmount, setTypedAmount] = useState<string>('');
@@ -55,8 +66,23 @@ function App() {
   const [typedRecipient, setTypedRecipient] = useState<string>('');
   const [typedErrors, setTypedErrors] = useState<string>('');
 
+  // Recipient suggestions
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+
+  // Recent recipients
+  const [recentRecipients, setRecentRecipients] = useState<Contact[]>(() => getLocalJSON<Contact[]>('recentRecipients', []));
+  const addRecentRecipient = (contact: Contact) => {
+    if (!contact) return;
+    setRecentRecipients(prev => {
+      const exists = prev.some(c => c.address === contact.address);
+      const updated = exists ? prev : [contact, ...prev].slice(0, 10);
+      setLocalJSON('recentRecipients', updated);
+      return updated;
+    });
+  };
+
   // Fuzzy searcher
-  const contactSearcher = useMemo(() => createContactSearcher(mockContacts), []);
+  const contactSearcher = useMemo(() => createContactSearcher([...recentRecipients, ...mockContacts]), [recentRecipients]);
 
   // Effect for Speech Recognition Setup
   useEffect(() => {
@@ -134,55 +160,12 @@ function App() {
     setTypedRecipient(parsedCommand.recipientName || '');
   }, [parsedCommand]);
 
-  // Validate typed form
-  const validateTyped = (): { contact: Contact | null } | null => {
-    setTypedErrors('');
-
-    if (!typedAmount || !/^\d+(?:[.,]\d+)?$/.test(typedAmount)) {
-      setTypedErrors('Enter a valid amount.');
-      return null;
-    }
-    if (!typedToken || !/^[A-Za-z]{2,5}$/.test(typedToken)) {
-      setTypedErrors('Enter a valid token symbol (2-5 letters).');
-      return null;
-    }
-    if (!typedRecipient) {
-      setTypedErrors('Enter a recipient name or address.');
-      return null;
-    }
-
-    const match = contactSearcher.searchByNameOrAddress(typedRecipient);
-    if (!match) {
-      setTypedErrors('Could not match recipient. Check the name/address.');
-      return null;
-    }
-
-    return { contact: match };
-  };
-
-  // Open confirm from typed form
-  const openConfirmFromTyped = () => {
-    const result = validateTyped();
-    if (!result) return;
-
-    const provisional: ParsedCommand = {
-      action: 'pay',
-      amount: Number(typedAmount.replace(/,/g, '.')),
-      token: typedToken.toUpperCase(),
-      recipientName: result.contact!.name,
-      recipientAddress: result.contact!.address,
-    };
-
-    setParsedCommand(provisional);
-    setRecognizedContact(result.contact);
-    setIsConfirmOpen(true);
-  };
-
   // --- Fetch Account Balance ---
   useEffect(() => {
     const fetchBalance = async () => {
       if (!selectedAccount) {
         setAccountBalance('');
+        setAccountBalancePlanck(null);
         return;
       }
 
@@ -199,13 +182,15 @@ function App() {
         await api.isReady;
 
         // Get chain properties once
-        const chainDecimals = api.registry.chainDecimals[0];
-        const chainTokens = api.registry.chainTokens[0];
-        formatBalance.setDefaults({ decimals: chainDecimals, unit: chainTokens });
+        const decimals = api.registry.chainDecimals[0];
+        const token = api.registry.chainTokens[0];
+        setChainDecimals(decimals);
+        formatBalance.setDefaults({ decimals, unit: token });
 
         // Query account info and cast to the correct type
         const accountInfo = await api.query.system.account(selectedAccount.address) as AccountInfo;
-        const freeBalance = accountInfo.data.free;
+        const freeBalance = accountInfo.data.free; // BN
+        setAccountBalancePlanck(BigInt(freeBalance.toString()));
 
         // Format and set balance
         setAccountBalance(formatBalance(freeBalance, { withUnit: true, withSi: false }));
@@ -214,6 +199,7 @@ function App() {
         console.error("Error fetching balance:", error);
         setWalletError(`Error fetching balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
         setAccountBalance(''); // Clear balance on error
+        setAccountBalancePlanck(null);
       } finally {
         setIsBalanceLoading(false);
         // Disconnect API
@@ -233,6 +219,8 @@ function App() {
       setIsEstimatingFee(true);
       setEstimateError('');
       setEstimatedFee('');
+      setEstimatedFeePlanck(null);
+      setExistentialDepositPlanck(null);
 
       let api: ApiPromise | null = null;
       try {
@@ -250,6 +238,11 @@ function App() {
         const info = await tx.paymentInfo(selectedAccount.address);
         const partialFee = info.partialFee?.toString?.() || info.partialFee.toString();
         setEstimatedFee(formatBalance(partialFee, { withUnit: true, withSi: false }));
+        setEstimatedFeePlanck(BigInt(partialFee));
+
+        // existential deposit
+        const edConst = api.consts.balances.existentialDeposit;
+        setExistentialDepositPlanck(BigInt(edConst.toString()));
       } catch (error) {
         console.error('Fee estimation error', error);
         setEstimateError(error instanceof Error ? error.message : 'Unknown error');
@@ -263,6 +256,38 @@ function App() {
 
     estimate();
   }, [isConfirmOpen, parsedCommand, recognizedContact, selectedAccount]);
+
+  // --- Preflight checks whenever inputs/estimates change ---
+  useEffect(() => {
+    if (!parsedCommand || chainDecimals == null || accountBalancePlanck == null) {
+      setHasSufficientBalance(true);
+      setReapRiskWarning('');
+      return;
+    }
+
+    try {
+      const amountPlanck = toPlanckFromDecimal(parsedCommand.amount, chainDecimals);
+      const feePlanck = estimatedFeePlanck ?? BigInt(0);
+      const required = amountPlanck + feePlanck;
+      const sufficient = accountBalancePlanck >= required;
+      setHasSufficientBalance(sufficient);
+
+      if (existentialDepositPlanck != null) {
+        const remaining = accountBalancePlanck - required;
+        if (remaining < existentialDepositPlanck) {
+          setReapRiskWarning('Warning: Balance after transfer may be below existential deposit (account reaping risk).');
+        } else {
+          setReapRiskWarning('');
+        }
+      } else {
+        setReapRiskWarning('');
+      }
+    } catch (e) {
+      // On parse error, be conservative
+      setHasSufficientBalance(true);
+      setReapRiskWarning('');
+    }
+  }, [parsedCommand, chainDecimals, accountBalancePlanck, estimatedFeePlanck, existentialDepositPlanck]);
 
   // --- Wallet Connection Logic ---
   const handleConnectWallet = async () => {
@@ -402,6 +427,10 @@ function App() {
       setResponseMessage('Missing parsed command or recipient.');
       return;
     }
+    if (!hasSufficientBalance) {
+      setResponseMessage('Insufficient balance for amount + fee.');
+      return;
+    }
 
     setIsSubmitting(true);
     setResponseMessage('Submitting transfer...');
@@ -439,6 +468,8 @@ function App() {
           setLastTxHash(txHash?.toString() || '');
         } else if (status.isFinalized) {
           setResponseMessage(`Finalized. Tx: ${txHash?.toString()}`);
+          // persist recent recipient
+          if (recognizedContact) addRecentRecipient(recognizedContact);
           setIsSubmitting(false);
           unsub();
         } else {
@@ -454,6 +485,61 @@ function App() {
         try { await api.disconnect(); } catch {}
       }
     }
+  };
+
+  // Compute suggestions for typed recipient
+  const currentSuggestions: ContactSuggestion[] = useMemo(() => {
+    if (!showSuggestions) return [];
+    const q = typedRecipient.trim();
+    if (!q) {
+      // map recent recipients to suggestions with default score
+      return recentRecipients.map(c => ({ contact: c, score: 0.5 })).slice(0, 5);
+    }
+    return contactSearcher.suggest(q, 5);
+  }, [showSuggestions, typedRecipient, recentRecipients, contactSearcher]);
+
+  // Open confirm from typed form
+  const openConfirmFromTyped = () => {
+    const result = validateTyped();
+    if (!result) return;
+
+    const provisional: ParsedCommand = {
+      action: 'pay',
+      amount: Number(typedAmount.replace(/,/g, '.')),
+      token: typedToken.toUpperCase(),
+      recipientName: result.contact!.name,
+      recipientAddress: result.contact!.address,
+    };
+
+    setParsedCommand(provisional);
+    setRecognizedContact(result.contact);
+    setIsConfirmOpen(true);
+  };
+
+  // Validate typed form
+  const validateTyped = (): { contact: Contact | null } | null => {
+    setTypedErrors('');
+
+    if (!typedAmount || !/^\d+(?:[.,]\d+)?$/.test(typedAmount)) {
+      setTypedErrors('Enter a valid amount.');
+      return null;
+    }
+    if (!typedToken || !/^[A-Za-z]{2,5}$/.test(typedToken)) {
+      setTypedErrors('Enter a valid token symbol (2-5 letters).');
+      return null;
+    }
+    if (!typedRecipient) {
+      setTypedErrors('Enter a recipient name or address.');
+      return null;
+    }
+
+    const match = contactSearcher.searchByNameOrAddress(typedRecipient);
+    if (!match) {
+      setTypedErrors('Could not match recipient. Check the name/address.');
+      return null;
+    }
+
+    return { contact: match };
   };
 
   return (
@@ -591,13 +677,38 @@ function App() {
             </div>
             <div>
               <label>Recipient (name or address)</label>
-              <input
-                type="text"
-                value={typedRecipient}
-                onChange={(e) => setTypedRecipient(e.target.value)}
-                placeholder="Alice"
-                style={{ width: '100%' }}
-              />
+              <div className="suggestions">
+                <input
+                  type="text"
+                  value={typedRecipient}
+                  onChange={(e) => setTypedRecipient(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  placeholder="Alice"
+                  style={{ width: '100%' }}
+                />
+                {showSuggestions && currentSuggestions.length > 0 && (
+                  <div className="suggestions-list">
+                    {currentSuggestions.map((s) => (
+                      <div
+                        key={s.contact.address}
+                        className="suggestions-item"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setTypedRecipient(s.contact.name);
+                          setShowSuggestions(false);
+                        }}
+                        title={s.contact.address}
+                      >
+                        <strong>{s.contact.name}</strong>
+                        <div style={{ fontSize: '0.8em', opacity: 0.8 }}>
+                          {s.contact.address.substring(0, 8)}...{s.contact.address.substring(s.contact.address.length - 8)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           {typedErrors && <p style={{ color: 'orange', marginTop: '8px' }}>{typedErrors}</p>}
@@ -616,8 +727,14 @@ function App() {
             <p>
               <strong>Estimated Fee</strong>: {isEstimatingFee ? 'Estimating...' : (estimateError ? `Error: ${estimateError}` : (estimatedFee || 'N/A'))}
             </p>
+            {!hasSufficientBalance && (
+              <p style={{ color: 'salmon' }}>Insufficient funds for amount + estimated fee.</p>
+            )}
+            {reapRiskWarning && (
+              <p style={{ color: 'khaki' }}>{reapRiskWarning}</p>
+            )}
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-              <button disabled={isSubmitting} onClick={() => { setIsConfirmOpen(false); executeOnChainTransfer(); }}>Confirm</button>
+              <button disabled={isSubmitting || !hasSufficientBalance} onClick={() => { setIsConfirmOpen(false); executeOnChainTransfer(); }}>Confirm</button>
               <button disabled={isSubmitting} onClick={() => setIsConfirmOpen(false)}>Cancel</button>
               <button disabled={isSubmitting || isEstimatingFee} onClick={() => setIsConfirmOpen(true)}>
                 Re-estimate
