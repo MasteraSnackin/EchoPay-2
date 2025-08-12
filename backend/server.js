@@ -112,7 +112,8 @@ app.post('/api/process-command', async (req, res) => {
         parsedCommand: parsedCommand,
         confirmationId: parsedCommand.confirmationId,
         confirmationText: parsedCommand.confirmationText,
-        timeout: parsedCommand.timeout
+        timeout: parsedCommand.timeout,
+        detectedLanguage: parsedCommand.detectedLanguage
       });
     }
     
@@ -193,28 +194,24 @@ async function executeCommand(parsedCommand) {
         };
       }
 
-      // Execute real blockchain transaction if blockchain is connected
+      // Execute real blockchain transaction if secure wallet is connected
       let transactionResult;
-      if (blockchain.getConnectionStatus().isConnected) {
+      if (secureWallet.getConnectionStatus() === 'connected') {
         try {
-          // For demo purposes, use a mock private key
-          // In production, this would come from secure wallet integration
-          const mockPrivateKey = '0x' + '1'.repeat(64);
+          // For demo purposes, use mock transaction
+          // In production, this would use secure wallet integration
+          console.log('Secure wallet connected, would execute real transaction here');
+          transactionResult = {
+            hash: 'mock_tx_' + Date.now(),
+            status: 'pending',
+            from: 'mock_address',
+            to: recipientContact.address,
+            amount: parsedCommand.amount.toString(),
+            network: 'mock'
+          };
           
-          // Convert amount to proper format
-          const network = blockchain.getCurrentNetwork();
-          const amountInSmallestUnit = parsedCommand.amount * Math.pow(10, network.decimals);
-          
-          transactionResult = await blockchain.executeTransfer(
-            mockPrivateKey,
-            recipientContact.address,
-            amountInSmallestUnit.toString()
-          );
-          
-          console.log('Blockchain transaction executed:', transactionResult);
-          
-        } catch (blockchainError) {
-          console.error('Blockchain transaction failed, falling back to mock:', blockchainError);
+        } catch (walletError) {
+          console.error('Secure wallet transaction failed, falling back to mock:', walletError);
           transactionResult = null;
         }
       }
@@ -235,7 +232,7 @@ async function executeCommand(parsedCommand) {
         amount: parsedCommand.amount,
         recipient: parsedCommand.recipient,
         recipientAddress: recipientContact.address,
-        currency: parsedCommand.currency || blockchain.getCurrentNetwork().currency,
+        currency: parsedCommand.currency || secureWallet.getCurrentNetwork().currency,
         status: 'completed',
         confidence: parsedCommand.confidence,
         timestamp: new Date().toISOString(),
@@ -244,7 +241,7 @@ async function executeCommand(parsedCommand) {
         confirmed: true,
         language: parsedCommand.detectedLanguage || 'en',
         blockchainMethod: transactionResult.method,
-        network: blockchain.getCurrentNetwork().name
+        network: secureWallet.getCurrentNetwork().name
       };
       
       transactions.push(transaction);
@@ -254,7 +251,8 @@ async function executeCommand(parsedCommand) {
         message: `Successfully sent ${parsedCommand.amount} ${transaction.currency} to ${parsedCommand.recipient}`,
         transaction: transaction,
         parsedCommand: parsedCommand,
-        blockchainResult: transactionResult
+        blockchainResult: transactionResult,
+        detectedLanguage: parsedCommand.detectedLanguage
       };
       
     case 'balance_check':
@@ -262,7 +260,8 @@ async function executeCommand(parsedCommand) {
         status: 'success',
         message: 'Balance check requested',
         parsedCommand: parsedCommand,
-        suggestedResponse: 'Your current balance is 1,250 WND'
+        suggestedResponse: 'Your current balance is 1,250 WND',
+        detectedLanguage: parsedCommand.detectedLanguage
       };
       
     case 'transaction_history':
@@ -270,7 +269,8 @@ async function executeCommand(parsedCommand) {
         status: 'success',
         message: `Showing ${transactions.length} recent transactions`,
         transactions: transactions.slice(-5), // Last 5 transactions
-        parsedCommand: parsedCommand
+        parsedCommand: parsedCommand,
+        detectedLanguage: parsedCommand.detectedLanguage
       };
 
     case 'add_contact':
@@ -355,7 +355,7 @@ async function executeCommand(parsedCommand) {
         id: recurringPaymentId++,
         amount: parsedCommand.amount,
         recipient: parsedCommand.recipient,
-        currency: parsedCommand.currency || blockchain.getCurrentNetwork().currency,
+        currency: parsedCommand.currency || secureWallet.getCurrentNetwork().currency,
         frequency: 'monthly', // Default frequency
         status: 'active',
         createdAt: new Date().toISOString(),
@@ -366,7 +366,7 @@ async function executeCommand(parsedCommand) {
 
       return {
         status: 'success',
-        message: `Recurring payment of ${parsedCommand.amount} ${parsedCommand.currency || blockchain.getCurrentNetwork().currency} to ${parsedCommand.recipient} set up successfully`,
+        message: `Recurring payment of ${parsedCommand.amount} ${parsedCommand.currency || secureWallet.getCurrentNetwork().currency} to ${parsedCommand.recipient} set up successfully`,
         recurringPayment: recurringPayment,
         parsedCommand: parsedCommand
       };
@@ -385,7 +385,7 @@ app.post('/api/blockchain/connect', async (req, res) => {
   const { network } = req.body;
   
   try {
-    const result = await blockchain.initialize(network || 'moonbaseAlpha');
+    const result = await secureWallet.initialize(network || 'moonbaseAlpha');
     res.json({
       status: 'success',
       message: `Connected to ${result.network}`,
@@ -403,8 +403,8 @@ app.post('/api/blockchain/connect', async (req, res) => {
 app.get('/api/blockchain/status', (req, res) => {
   res.json({
     status: 'success',
-    connection: blockchain.getConnectionStatus(),
-    networks: blockchain.getAvailableNetworks()
+    connection: secureWallet.getConnectionStatus(),
+    networks: secureWallet.getAvailableNetworks()
   });
 });
 
@@ -412,7 +412,7 @@ app.post('/api/blockchain/switch-network', async (req, res) => {
   const { network } = req.body;
   
   try {
-    const result = await blockchain.switchNetwork(network);
+    const result = await secureWallet.switchNetwork(network);
     res.json({
       status: 'success',
       message: `Switched to ${result.network}`,
@@ -431,7 +431,7 @@ app.get('/api/blockchain/balance/:address', async (req, res) => {
   const { address } = req.params;
   
   try {
-    const balance = await blockchain.getBalance(address);
+    const balance = await secureWallet.getBalance(address);
     res.json({
       status: 'success',
       balance: balance
@@ -449,7 +449,7 @@ app.post('/api/blockchain/estimate-fees', async (req, res) => {
   const { fromAddress, toAddress, amount } = req.body;
   
   try {
-    const fees = await blockchain.estimateFees(fromAddress, toAddress, amount);
+    const fees = await secureWallet.estimateFees(fromAddress, toAddress, amount);
     res.json({
       status: 'success',
       fees: fees
@@ -465,7 +465,7 @@ app.post('/api/blockchain/estimate-fees', async (req, res) => {
 
 app.get('/api/blockchain/stats', async (req, res) => {
   try {
-    const stats = await blockchain.getBlockchainStats();
+    const stats = await secureWallet.getBlockchainStats();
     res.json({
       status: 'success',
       stats: stats
@@ -483,7 +483,7 @@ app.get('/api/blockchain/transaction/:txHash', async (req, res) => {
   const { txHash } = req.params;
   
   try {
-    const status = await blockchain.getTransactionStatus(txHash);
+    const status = await secureWallet.getTransactionStatus(txHash);
     res.json({
       status: 'success',
       transaction: status
