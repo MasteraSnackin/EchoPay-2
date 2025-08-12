@@ -615,6 +615,7 @@ app.get('/api/wallet/balance/:address', async (req, res) => {
     const balance = await secureWallet.getBalance(address);
     res.json({
       status: 'success',
+      address,
       balance
     });
   } catch (error) {

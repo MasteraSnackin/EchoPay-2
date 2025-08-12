@@ -104,14 +104,22 @@ const confirmSchema = z.object({
   user_id: z.string()
 });
 
+function simpleYesNo(transcript: string): boolean | null {
+  const t = transcript.toLowerCase();
+  if (/(^|\b)(yes|yeah|yep|confirm|proceed)($|\b)/.test(t)) return true;
+  if (/(^|\b)(no|nope|cancel|stop)($|\b)/.test(t)) return false;
+  return null;
+}
+
 router.post('/confirm', validator('json', confirmSchema), async (c) => {
   const body = c.req.valid('json');
   const db = getDb(c.env);
 
-  // TODO: ElevenLabs STT for yes/no
-  const userSaidYes = true; // placeholder
+  const transcript = body.audio_data ? await elevenLabsSTT(c.env.ELEVENLABS_API_KEY, body.audio_data, 'mp3') : 'yes';
+  const decision = simpleYesNo(transcript);
+  if (decision === null) return c.json({ status: 'clarification', message: 'Please say Yes or No' }, 400);
 
-  if (!userSaidYes) {
+  if (!decision) {
     await db.update(transactions).set({ status: 'failed' }).where(eq(transactions.id, body.transaction_id));
     return c.json({ status: 'cancelled', message: 'Transaction cancelled by user' });
   }

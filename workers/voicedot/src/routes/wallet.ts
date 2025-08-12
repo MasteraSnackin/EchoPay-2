@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { validator } from '@hono/zod-validator';
 
-const router = new Hono<{ Bindings: { POLKADOT_RPC_ENDPOINT: string } }>();
+const router = new Hono<{ Bindings: { POLKADOT_RPC_ENDPOINT: string; RELAYER_URL: string } }>();
 
 const connectSchema = z.object({
   wallet_address: z.string(),
@@ -11,18 +11,24 @@ const connectSchema = z.object({
 });
 
 router.post('/connect', validator('json', connectSchema), async (c) => {
-  // TODO: Verify signature against message and wallet_address
-  return c.json({ status: 'success', message: 'Wallet verified (stub)' });
+  // Proxy signature verification to backend
+  const body = c.req.valid('json');
+  const resp = await fetch(`${c.env.RELAYER_URL}/api/wallet/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await resp.json();
+  return c.json(data, resp.status);
 });
 
 router.get('/balance', async (c) => {
   const url = new URL(c.req.url);
   const wallet_address = url.searchParams.get('wallet_address');
-  const token_symbols = (url.searchParams.get('token_symbols') || 'DOT').split(',');
   if (!wallet_address) return c.json({ status: 'error', message: 'wallet_address required' }, 400);
-  // TODO: Query balances via PAPI endpoints (relay+parachains)
-  const balances = Object.fromEntries(token_symbols.map((t) => [t, '0.0']));
-  return c.json({ status: 'success', wallet_address, balances });
+  const resp = await fetch(`${c.env.RELAYER_URL}/api/wallet/balance/${wallet_address}`);
+  const data = await resp.json();
+  return c.json(data, resp.status);
 });
 
 export default router;
