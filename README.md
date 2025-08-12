@@ -1,31 +1,8 @@
-<<<<<<< HEAD
-# EchoPay-2
-EchoPay is a voice-activated Ethereum transaction application that interacts with the Moonbase Alpha network (a test network for the Moonbeam blockchain). It allows users to send transactions and check balances using voice commands.
-1. Security Improvements
-Private Key Handling: 
-Input Validation: 
-2. Improving the Command Parsing
-Enhance NLP Accuracy: 
-Command Confirmation: 
-3. Error Handling and Feedback
-User Feedback: 
-Detailed Error Messages: 
-4. Enhance Web3 Integration
-Network Switch Prompt:
-Gas Estimation: 
-5. Code Optimization and Best Practices
-Async/Await in Loops: 
-Separate Concerns: 
-6. UI/UX Improvements
-Progress Indicators:
-Responsive Design: 
-7. Extending Functionality
-Additional Commands: Consider adding more voice commands, such as checking the transaction history, setting up recurring payments, or interacting with smart contracts beyond simple token transfers.
-Multi-language Support: Depending on your target audience, you might want to implement support for multiple languages in voice commands.
-=======
 # EchoPay: Voice-Activated Cross-Chain Payment System (Proof of Concept)
 
 EchoPay is an innovative payment platform concept enabling users to conduct secure, cross-chain transactions through voice commands. This repository contains the initial proof-of-concept implementation focusing on the frontend interface, wallet connection, and voice input simulation.
+
+Demo: https://www.youtube.com/watch?v=lrFvO2qnxU0
 
 ## Overview (Vision)
 
@@ -51,6 +28,18 @@ By integrating advanced AI voice recognition with Polkadot’s blockchain infras
 *   **Blockchain Interaction (Client-side):** `@polkadot/api`, `@polkadot/extension-dapp`, `@polkadot/util`
 *   **Voice Input:** Web Speech API (Browser-native)
 *   **Mock Backend:** Node.js, Express, CORS
+
+
+Technical consideration regarding how smart contract work on polkadot
+![Technical consideration regarding how smart contract work on polkadot
+](docs/Screenshot%202025-04-19%20174748.png)
+
+Smart Contract Plan (ink!)
+![Smart Contract Plan (ink!)](docs/Screenshot%202025-04-19%20175055.png)
+
+Summary of Workflow:
+![Summary of Workflow:](docs/Screenshot%202025-04-19%20175150.png)
+
 
 ## Project Structure
 
@@ -142,8 +131,20 @@ This is a proof-of-concept demonstrating the basic UI flow and integration point
 *   **Backend Logic:** Replace the mock backend with actual logic to parse commands and construct transactions.
 *   **AI/ML Integration:** Integrate a real voice processing pipeline (like the envisioned Gemma model) to parse natural language commands into structured transaction data.
 *   **Parachain/Smart Contract:** Connect to the actual EchoPay parachain runtime or smart contracts on Westend/Polkadot.
-*   **Cross-Chain Functionality:** Implement XCM calls or bridge interactions based on parsed commands.
 *   **Dynamic Contact List:** Fetch contacts from on-chain storage, user settings, or other sources.
 *   **Error Handling:** More robust error handling and user feedback.
 *   **UI/UX Refinements:** Improve the overall user experience.
->>>>>>> master
+
+UPDATE:
+*  Colour scheme
+*  GUI interefe from CLI
+*  Link to subWallet / Acitivation 
+*  Animation for loading
+*  Better Layout
+*  Better AI for voice input
+*  Create dedicated status message area
+*  Responsive layout (stacking columns)
+*  Can now read the balance from wallet 
+*  By signing out of wallet from echo pay doesn't sign up or lock you out of subwallet
+*  Let you select multiple wallet
+*  Moved off moonbase network
