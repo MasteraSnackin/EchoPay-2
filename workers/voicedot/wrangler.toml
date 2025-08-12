@@ -1,0 +1,14 @@
+name = "voicedot-worker"
+main = "src/index.ts"
+compatibility_date = "2024-04-05"
+
+[vars]
+# Set these via `wrangler secret put` in real environments
+ELEVENLABS_API_KEY = ""
+POLKADOT_RPC_ENDPOINT = "wss://rpc.polkadot.io"
+ENCRYPTION_KEY = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "voicedot_db"
+database_id = "00000000-0000-0000-0000-000000000000" # replace with real id via wrangler
