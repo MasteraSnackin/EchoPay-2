@@ -5,8 +5,7 @@ const MultiLanguageProcessor = require('./multiLanguageProcessor');
 const CommandConfirmation = require('./commandConfirmation');
 const SecureWalletIntegration = require('./secureWalletIntegration');
 const { signatureVerify } = require('@polkadot/util-crypto');
-const { ApiPromise } = require('@polkadot/api');
-const { WsProvider } = require('@polkadot/api/node/providers');
+const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { 
   apiLimiter, 
   authLimiter, 
@@ -49,6 +48,27 @@ let contacts = [
   { id: 3, name: 'Charlie', address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59K', balance: 750 },
   { id: 4, name: 'Dave', address: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy', balance: 300 }
 ];
+
+// Simple multilingual contact alias map to normalize recipient names
+const contactAliases = {
+  alice: ['alice', 'alicia'],
+  bob: ['bob'],
+  charlie: ['charlie', 'charles'],
+  dave: ['dave', 'david']
+};
+
+function normalizeRecipientName(recipientRaw) {
+  if (!recipientRaw) return null;
+  const lower = recipientRaw.toLowerCase();
+  for (const [canonical, aliases] of Object.entries(contactAliases)) {
+    if (aliases.includes(lower)) {
+      // return canonical with proper casing using contacts list
+      const contact = contacts.find(c => c.name.toLowerCase() === canonical);
+      return contact ? contact.name : recipientRaw;
+    }
+  }
+  return recipientRaw;
+}
 
 // Mock database for recurring payments
 let recurringPayments = [];
@@ -205,9 +225,12 @@ async function executeCommand(parsedCommand) {
         };
       }
 
+      // Normalize multilingual variants of recipient names
+      const normalizedRecipient = normalizeRecipientName(parsedCommand.recipient);
+
       // Check if recipient exists in contacts
       const recipientContact = contacts.find(c => 
-        c.name.toLowerCase() === parsedCommand.recipient.toLowerCase()
+        c.name.toLowerCase() === normalizedRecipient.toLowerCase()
       );
 
       if (!recipientContact) {
@@ -254,7 +277,7 @@ async function executeCommand(parsedCommand) {
         id: transactionId++,
         type: 'payment',
         amount: parsedCommand.amount,
-        recipient: parsedCommand.recipient,
+        recipient: recipientContact.name,
         recipientAddress: recipientContact.address,
         currency: parsedCommand.currency || secureWallet.getCurrentNetwork().currency,
         status: 'completed',
