@@ -1,4 +1,4 @@
-# EchoPay: Voice-Activated Cross-Chain Payment System (Proof of Concept)
+# EchoPay: Voice-Activated Cross-Chain Payment System (Proof of Concept).
 
 EchoPay is an innovative payment platform concept enabling users to conduct secure, cross-chain transactions through voice commands. This repository contains the initial proof-of-concept implementation focusing on the frontend interface, wallet connection, and voice input simulation.
 
